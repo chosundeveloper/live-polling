@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>답변하기</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body class="answer-body">
+    <div class="answer-container">
+        <div class="answer-header">
+            <h1>✍️ 답변하기</h1>
+        </div>
+
+        <div class="question-display">
+            <div class="question-label">질문</div>
+            <h2 id="questionText" class="question-text">질문을 불러오는 중...</h2>
+        </div>
+
+        <form id="answerForm" class="answer-form">
+            <div class="form-group">
+                <label for="answerInput">당신의 답변</label>
+                <textarea
+                    id="answerInput"
+                    class="answer-input"
+                    rows="5"
+                    placeholder="여기에 답변을 입력하세요..."
+                    required
+                    maxlength="500"
+                ></textarea>
+                <div class="char-count">
+                    <span id="charCount">0</span> / 500
+                </div>
+            </div>
+
+            <button type="submit" class="btn btn-submit" id="submitBtn">
+                📤 답변 제출하기
+            </button>
+        </form>
+
+        <div id="successMessage" class="success-message" style="display: none;">
+            <div class="success-icon">✅</div>
+            <h3>답변이 제출되었습니다!</h3>
+            <p>소중한 의견 감사합니다.</p>
+            <button class="btn btn-secondary" onclick="resetForm()">다시 답변하기</button>
+        </div>
+
+        <div id="errorMessage" class="error-message" style="display: none;">
+            <div class="error-icon">❌</div>
+            <h3>제출 실패</h3>
+            <p id="errorText">오류가 발생했습니다. 다시 시도해주세요.</p>
+            <button class="btn btn-secondary" onclick="hideError()">확인</button>
+        </div>
+    </div>
+
+    <script src="supabase-config.js"></script>
+    <script>
+        class AnswerPage {
+            constructor() {
+                this.questionId = this.getQuestionId();
+                this.question = QUESTIONS.find(q => q.id === this.questionId);
+
+                this.form = document.getElementById('answerForm');
+                this.input = document.getElementById('answerInput');
+                this.submitBtn = document.getElementById('submitBtn');
+                this.charCount = document.getElementById('charCount');
+
+                this.init();
+            }
+
+            getQuestionId() {
+                const params = new URLSearchParams(window.location.search);
+                return parseInt(params.get('q')) || 1;
+            }
+
+            init() {
+                if (!this.question) {
+                    alert('잘못된 질문 ID입니다.');
+                    window.location.href = 'index.html';
+                    return;
+                }
+
+                // 질문 표시
+                const questionText = document.getElementById('questionText');
+                questionText.textContent = this.question.question;
+                questionText.style.color = this.question.color;
+
+                // Placeholder 설정
+                this.input.placeholder = this.question.placeholder;
+
+                // 이벤트 리스너
+                this.input.addEventListener('input', () => this.updateCharCount());
+                this.form.addEventListener('submit', (e) => this.handleSubmit(e));
+            }
+
+            updateCharCount() {
+                const length = this.input.value.length;
+                this.charCount.textContent = length;
+
+                if (length > 450) {
+                    this.charCount.style.color = '#dc3545';
+                } else {
+                    this.charCount.style.color = '#6c757d';
+                }
+            }
+
+            async handleSubmit(e) {
+                e.preventDefault();
+
+                const answerText = this.input.value.trim();
+
+                if (!answerText) {
+                    this.showError('답변을 입력해주세요.');
+                    return;
+                }
+
+                if (answerText.length < 2) {
+                    this.showError('최소 2자 이상 입력해주세요.');
+                    return;
+                }
+
+                // 버튼 비활성화
+                this.submitBtn.disabled = true;
+                this.submitBtn.textContent = '제출 중...';
+
+                // 답변 제출
+                const result = await submitAnswer(this.questionId, answerText);
+
+                if (result.success) {
+                    this.showSuccess();
+                } else {
+                    this.showError(result.error || '제출에 실패했습니다.');
+                    this.submitBtn.disabled = false;
+                    this.submitBtn.textContent = '📤 답변 제출하기';
+                }
+            }
+
+            showSuccess() {
+                this.form.style.display = 'none';
+                document.querySelector('.question-display').style.display = 'none';
+                document.getElementById('successMessage').style.display = 'block';
+            }
+
+            showError(message) {
+                document.getElementById('errorText').textContent = message;
+                document.getElementById('errorMessage').style.display = 'block';
+            }
+        }
+
+        function resetForm() {
+            location.reload();
+        }
+
+        function hideError() {
+            document.getElementById('errorMessage').style.display = 'none';
+        }
+
+        // 페이지 로드 시 초기화
+        document.addEventListener('DOMContentLoaded', () => {
+            new AnswerPage();
+        });
+    </script>
+</body>
+</html>

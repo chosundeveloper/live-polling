@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>디스플레이 화면</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
+</head>
+<body class="display-body">
+    <div class="display-container">
+        <!-- 헤더 영역 -->
+        <header class="display-header">
+            <h1 id="questionText" class="display-question">질문을 불러오는 중...</h1>
+            <div class="status-indicator">
+                <span class="pulse"></span>
+                <span id="answerCount">0</span> 답변
+            </div>
+        </header>
+
+        <!-- QR 코드 영역 -->
+        <div class="qr-section">
+            <div class="qr-container">
+                <div id="qrcode"></div>
+            </div>
+            <p class="qr-instruction">📱 QR 코드를 스캔하여 답변해주세요!</p>
+        </div>
+
+        <!-- 답변 표시 영역 -->
+        <div class="answers-section">
+            <h2 class="section-title">💬 실시간 답변</h2>
+            <div id="answersContainer" class="answers-grid">
+                <p class="placeholder">아직 답변이 없습니다. QR 코드를 스캔해서 첫 번째 답변을 남겨주세요!</p>
+            </div>
+        </div>
+    </div>
+
+    <script src="supabase-config.js"></script>
+    <script>
+        class DisplayScreen {
+            constructor() {
+                this.questionId = this.getQuestionId();
+                this.question = QUESTIONS.find(q => q.id === this.questionId);
+                this.pollingInterval = null;
+                this.answers = [];
+
+                this.init();
+            }
+
+            getQuestionId() {
+                const params = new URLSearchParams(window.location.search);
+                return parseInt(params.get('q')) || 1;
+            }
+
+            init() {
+                if (!this.question) {
+                    alert('잘못된 질문 ID입니다.');
+                    window.location.href = 'index.html';
+                    return;
+                }
+
+                // 질문 표시
+                document.getElementById('questionText').textContent = this.question.question;
+                document.getElementById('questionText').style.color = this.question.color;
+
+                // QR 코드 생성
+                this.generateQRCode();
+
+                // 답변 polling 시작
+                this.startPolling();
+
+                // 초기 답변 로드
+                this.loadAnswers();
+            }
+
+            generateQRCode() {
+                const answerUrl = `${window.location.origin}${window.location.pathname.replace('display.html', 'answer.html')}?q=${this.questionId}`;
+
+                new QRCode(document.getElementById('qrcode'), {
+                    text: answerUrl,
+                    width: 256,
+                    height: 256,
+                    colorDark: this.question.color,
+                    colorLight: '#ffffff',
+                    correctLevel: QRCode.CorrectLevel.H
+                });
+            }
+
+            startPolling() {
+                // 2초마다 새 답변 체크
+                this.pollingInterval = setInterval(() => {
+                    this.loadAnswers();
+                }, 2000);
+            }
+
+            async loadAnswers() {
+                const result = await getAnswers(this.questionId, 50);
+
+                if (result.success) {
+                    this.answers = result.data;
+                    this.displayAnswers();
+                    this.updateCount();
+                }
+            }
+
+            displayAnswers() {
+                const container = document.getElementById('answersContainer');
+
+                if (this.answers.length === 0) {
+                    container.innerHTML = '<p class="placeholder">아직 답변이 없습니다. QR 코드를 스캔해서 첫 번째 답변을 남겨주세요!</p>';
+                    return;
+                }
+
+                container.innerHTML = this.answers.map((answer, index) => `
+                    <div class="answer-card" style="animation-delay: ${index * 0.05}s;">
+                        <div class="answer-text">${this.escapeHtml(answer.answer_text)}</div>
+                        <div class="answer-time">${this.formatTime(answer.created_at)}</div>
+                    </div>
+                `).join('');
+            }
+
+            updateCount() {
+                document.getElementById('answerCount').textContent = this.answers.length;
+            }
+
+            formatTime(timestamp) {
+                const date = new Date(timestamp);
+                const now = new Date();
+                const diff = Math.floor((now - date) / 1000); // seconds
+
+                if (diff < 60) return '방금 전';
+                if (diff < 3600) return `${Math.floor(diff / 60)}분 전`;
+                if (diff < 86400) return `${Math.floor(diff / 3600)}시간 전`;
+                return date.toLocaleDateString('ko-KR');
+            }
+
+            escapeHtml(text) {
+                const div = document.createElement('div');
+                div.textContent = text;
+                return div.innerHTML;
+            }
+        }
+
+        // 페이지 로드 시 초기화
+        document.addEventListener('DOMContentLoaded', () => {
+            new DisplayScreen();
+        });
+    </script>
+</body>
+</html>

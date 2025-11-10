@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Live Polling - 질문 선택</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <header class="main-header">
+            <h1>📊 Live Polling</h1>
+            <p class="subtitle">실시간 질문 & 답변 시스템</p>
+        </header>
+
+        <div class="question-grid">
+            <div class="question-card" style="border-color: #667eea;">
+                <div class="question-number">질문 1</div>
+                <h2 class="question-title">오늘 가장 기억에 남는 순간은?</h2>
+                <div class="card-actions">
+                    <a href="display.html?q=1" class="btn btn-primary">
+                        📺 디스플레이 보기
+                    </a>
+                    <a href="answer.html?q=1" class="btn btn-secondary">
+                        ✍️ 답변하기
+                    </a>
+                </div>
+            </div>
+
+            <div class="question-card" style="border-color: #f093fb;">
+                <div class="question-number">질문 2</div>
+                <h2 class="question-title">이 자리에서 배운 것 한 가지는?</h2>
+                <div class="card-actions">
+                    <a href="display.html?q=2" class="btn btn-primary">
+                        📺 디스플레이 보기
+                    </a>
+                    <a href="answer.html?q=2" class="btn btn-secondary">
+                        ✍️ 답변하기
+                    </a>
+                </div>
+            </div>
+
+            <div class="question-card" style="border-color: #4facfe;">
+                <div class="question-number">질문 3</div>
+                <h2 class="question-title">한 단어로 오늘을 표현한다면?</h2>
+                <div class="card-actions">
+                    <a href="display.html?q=3" class="btn btn-primary">
+                        📺 디스플레이 보기
+                    </a>
+                    <a href="answer.html?q=3" class="btn btn-secondary">
+                        ✍️ 답변하기
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <div class="setup-notice">
+            <h3>⚙️ 설정 필요</h3>
+            <ol>
+                <li><a href="https://supabase.com" target="_blank">Supabase</a>에서 프로젝트 생성</li>
+                <li><code>supabase-config.js</code> 파일에서 URL과 KEY 설정</li>
+                <li>SQL Editor에서 테이블 생성 (코드는 파일 안에 있음)</li>
+            </ol>
+        </div>
+    </div>
+
+    <footer>
+        <p>Made with ❤️ by <a href="https://github.com/chosundeveloper" target="_blank">chosundeveloper</a></p>
+    </footer>
+</body>
+</html>
