@@ -415,12 +415,12 @@ body.display-body {
 .answer-card {
     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
     color: white;
-    padding: 25px;
+    padding: 30px;
     border-radius: 20px;
-    box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4);
+    box-shadow: 0 10px 30px rgba(102, 126, 234, 0.5);
     opacity: 0;
-    transform: scale(0.95) translateY(15px);
-    transition: all 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+    transform: scale(0.8) translateY(30px) rotate(-2deg);
+    transition: all 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
     position: relative;
     overflow: hidden;
 }
@@ -428,41 +428,60 @@ body.display-body {
 .answer-card::before {
     content: '';
     position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, transparent 100%);
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.2) 0%, transparent 50%, rgba(255, 255, 255, 0.1) 100%);
     pointer-events: none;
+    animation: shimmer 3s infinite;
+}
+
+@keyframes shimmer {
+    0% {
+        transform: translateX(-100%) translateY(-100%) rotate(45deg);
+    }
+    100% {
+        transform: translateX(100%) translateY(100%) rotate(45deg);
+    }
 }
 
 .answer-card.show {
     opacity: 1;
-    transform: scale(1) translateY(0);
+    transform: scale(1) translateY(0) rotate(0deg);
+    animation: bounceIn 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@keyframes bounceIn {
+    0% {
+        opacity: 0;
+        transform: scale(0.3) translateY(50px);
+    }
+    50% {
+        transform: scale(1.05) translateY(-10px);
+    }
+    70% {
+        transform: scale(0.95) translateY(5px);
+    }
+    100% {
+        opacity: 1;
+        transform: scale(1) translateY(0);
+    }
 }
 
 .answer-card:hover {
-    transform: scale(1.05) translateY(-5px);
-    box-shadow: 0 12px 35px rgba(102, 126, 234, 0.6);
+    transform: scale(1.08) translateY(-8px) rotate(1deg);
+    box-shadow: 0 15px 40px rgba(102, 126, 234, 0.7);
 }
 
 .answer-card-text {
-    font-size: 1.3em;
+    font-size: 1.4em;
     line-height: 1.7;
-    margin-bottom: 15px;
     word-wrap: break-word;
     font-weight: 600;
     position: relative;
     z-index: 1;
-}
-
-.answer-card-time {
-    font-size: 0.9em;
-    opacity: 0.85;
-    text-align: right;
-    font-weight: 400;
-    position: relative;
-    z-index: 1;
+    text-align: center;
 }
 
 /* 스크롤바 스타일 */
