@@ -30,7 +30,7 @@
                 </div>
 
                 <div class="answers-section">
-                    <div class="answers-flow" id="answersFlow1">
+                    <div class="answers-grid" id="answersGrid1">
                         <p class="placeholder">아직 답변이 없습니다</p>
                     </div>
                 </div>
@@ -67,7 +67,7 @@
                 </div>
 
                 <div class="answers-section">
-                    <div class="answers-flow" id="answersFlow2">
+                    <div class="answers-grid" id="answersGrid2">
                         <p class="placeholder">아직 답변이 없습니다</p>
                     </div>
                 </div>
@@ -103,7 +103,7 @@
                 </div>
 
                 <div class="answers-section">
-                    <div class="answers-flow" id="answersFlow3">
+                    <div class="answers-grid" id="answersGrid3">
                         <p class="placeholder">아직 답변이 없습니다</p>
                     </div>
                 </div>
@@ -198,7 +198,7 @@
             const result = await getAnswers(questionId, 100);
 
             if (result.success && result.data) {
-                const container = document.getElementById(`answersFlow${questionId}`);
+                const container = document.getElementById(`answersGrid${questionId}`);
                 const countElement = document.querySelectorAll('.slide')[questionId - 1].querySelector('.answer-count');
 
                 countElement.textContent = result.data.length;
@@ -211,39 +211,52 @@
                     const placeholder = container.querySelector('.placeholder');
                     if (placeholder) placeholder.remove();
 
-                    newAnswers.forEach(answer => {
+                    newAnswers.forEach((answer, index) => {
                         lastAnswerIds[questionId].add(answer.id);
-                        addAnswerWithAnimation(container, answer);
+                        setTimeout(() => {
+                            addAnswerCard(container, answer, questionId);
+                        }, index * 100); // 순차적으로 애니메이션
                     });
                 }
             }
         }
 
-        // 애니메이션과 함께 답변 추가
-        function addAnswerWithAnimation(container, answer) {
-            const bubble = document.createElement('div');
-            bubble.className = 'answer-bubble';
-            bubble.innerHTML = `
-                <div class="bubble-text">${escapeHtml(answer.answer_text)}</div>
-                <div class="bubble-time">${formatTime(answer.created_at)}</div>
+        // 답변 카드 추가
+        function addAnswerCard(container, answer, questionId) {
+            const card = document.createElement('div');
+            card.className = 'answer-card';
+            card.setAttribute('data-answer-id', answer.id);
+
+            const colors = ['#667eea', '#f093fb', '#4facfe'];
+            const color = colors[questionId - 1];
+
+            card.style.background = `linear-gradient(135deg, ${color} 0%, ${adjustColor(color, -20)} 100%)`;
+
+            card.innerHTML = `
+                <div class="answer-card-text">${escapeHtml(answer.answer_text)}</div>
+                <div class="answer-card-time">${formatTime(answer.created_at)}</div>
             `;
 
-            // 랜덤 위치에서 시작
-            const startX = Math.random() * 80 + 10; // 10-90%
-            bubble.style.left = `${startX}%`;
-
-            container.appendChild(bubble);
+            // 맨 앞에 추가 (최신이 위로)
+            container.insertBefore(card, container.firstChild);
 
             // 애니메이션 시작
             setTimeout(() => {
-                bubble.classList.add('show');
+                card.classList.add('show');
             }, 10);
+        }
 
-            // 10초 후 페이드아웃
-            setTimeout(() => {
-                bubble.classList.add('fade-out');
-                setTimeout(() => bubble.remove(), 1000);
-            }, 10000);
+        // 색상 조정 함수
+        function adjustColor(color, percent) {
+            const num = parseInt(color.replace('#', ''), 16);
+            const amt = Math.round(2.55 * percent);
+            const R = (num >> 16) + amt;
+            const G = (num >> 8 & 0x00FF) + amt;
+            const B = (num & 0x0000FF) + amt;
+            return '#' + (0x1000000 + (R < 255 ? R < 1 ? 0 : R : 255) * 0x10000 +
+                (G < 255 ? G < 1 ? 0 : G : 255) * 0x100 +
+                (B < 255 ? B < 1 ? 0 : B : 255))
+                .toString(16).slice(1);
         }
 
         // 시간 포맷
