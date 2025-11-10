@@ -227,16 +227,33 @@
             }
         }
 
-        // 답변 카드 추가
+        // 답변 카드 추가 - 재밌게!
         function addAnswerCard(container, answer, questionId) {
             const card = document.createElement('div');
             card.className = 'answer-card';
             card.setAttribute('data-answer-id', answer.id);
 
-            const colors = ['#667eea', '#f093fb', '#4facfe'];
-            const color = colors[questionId - 1];
+            // 랜덤 색상 팔레트
+            const colorPalettes = [
+                ['#667eea', '#764ba2'],
+                ['#f093fb', '#f5576c'],
+                ['#4facfe', '#00f2fe'],
+                ['#43e97b', '#38f9d7'],
+                ['#fa709a', '#fee140'],
+                ['#30cfd0', '#330867'],
+                ['#a8edea', '#fed6e3'],
+                ['#ff9a9e', '#fecfef'],
+                ['#ffecd2', '#fcb69f'],
+                ['#ff6e7f', '#bfe9ff']
+            ];
 
-            card.style.background = `linear-gradient(135deg, ${color} 0%, ${adjustColor(color, -20)} 100%)`;
+            const randomPalette = colorPalettes[Math.floor(Math.random() * colorPalettes.length)];
+            card.style.background = `linear-gradient(135deg, ${randomPalette[0]} 0%, ${randomPalette[1]} 100%)`;
+
+            // 랜덤 애니메이션 선택
+            const animations = ['bounce-in', 'slide-in', 'rotate-in', 'zoom-in', 'flip-in'];
+            const randomAnimation = animations[Math.floor(Math.random() * animations.length)];
+            card.classList.add(randomAnimation);
 
             card.innerHTML = `
                 <div class="answer-card-text">${escapeHtml(answer.answer_text)}</div>
@@ -249,6 +266,11 @@
             setTimeout(() => {
                 card.classList.add('show');
             }, 10);
+
+            // 3초 후 애니메이션 클래스 제거 (한 번만 실행)
+            setTimeout(() => {
+                card.classList.remove(randomAnimation);
+            }, 1000);
         }
 
         // 색상 조정 함수
