@@ -11,6 +11,17 @@
     <div class="answer-container">
         <div class="answer-header">
             <h1>✍️ 답변하기</h1>
+            <!-- 타이머 -->
+            <div class="timer-container">
+                <div class="timer-circle">
+                    <svg class="timer-svg" viewBox="0 0 100 100">
+                        <circle class="timer-bg" cx="50" cy="50" r="45"></circle>
+                        <circle class="timer-progress" id="timerProgress" cx="50" cy="50" r="45"></circle>
+                    </svg>
+                    <div class="timer-text" id="timerText">100</div>
+                </div>
+                <p class="timer-label">남은 시간 (초)</p>
+            </div>
         </div>
 
         <div class="question-display">
@@ -46,6 +57,13 @@
             <button class="btn btn-secondary" onclick="resetForm()">다시 답변하기</button>
         </div>
 
+        <div id="timeoutMessage" class="error-message" style="display: none;">
+            <div class="error-icon">⏱️</div>
+            <h3>시간이 만료되었습니다</h3>
+            <p>죄송합니다. 답변 시간(100초)이 초과되었습니다.</p>
+            <button class="btn btn-secondary" onclick="resetForm()">다시 시도하기</button>
+        </div>
+
         <div id="errorMessage" class="error-message" style="display: none;">
             <div class="error-icon">❌</div>
             <h3>제출 실패</h3>
@@ -65,6 +83,12 @@
                 this.input = document.getElementById('answerInput');
                 this.submitBtn = document.getElementById('submitBtn');
                 this.charCount = document.getElementById('charCount');
+
+                // 타이머
+                this.timeLeft = 100; // 100초
+                this.timerInterval = null;
+                this.timerProgress = document.getElementById('timerProgress');
+                this.timerText = document.getElementById('timerText');
 
                 this.init();
             }
@@ -92,6 +116,49 @@
                 // 이벤트 리스너
                 this.input.addEventListener('input', () => this.updateCharCount());
                 this.form.addEventListener('submit', (e) => this.handleSubmit(e));
+
+                // 타이머 시작
+                this.startTimer();
+            }
+
+            startTimer() {
+                const circumference = 2 * Math.PI * 45; // r=45
+                this.timerProgress.style.strokeDasharray = circumference;
+                this.timerProgress.style.strokeDashoffset = 0;
+
+                this.timerInterval = setInterval(() => {
+                    this.timeLeft--;
+                    this.updateTimer();
+
+                    if (this.timeLeft <= 0) {
+                        this.handleTimeout();
+                    }
+                }, 1000);
+            }
+
+            updateTimer() {
+                this.timerText.textContent = this.timeLeft;
+
+                const circumference = 2 * Math.PI * 45;
+                const offset = circumference * (1 - this.timeLeft / 100);
+                this.timerProgress.style.strokeDashoffset = offset;
+
+                // 색상 변경
+                if (this.timeLeft <= 10) {
+                    this.timerProgress.style.stroke = '#dc3545'; // 빨강
+                    this.timerText.style.color = '#dc3545';
+                } else if (this.timeLeft <= 30) {
+                    this.timerProgress.style.stroke = '#ffc107'; // 노랑
+                    this.timerText.style.color = '#ffc107';
+                }
+            }
+
+            handleTimeout() {
+                clearInterval(this.timerInterval);
+                this.form.style.display = 'none';
+                document.querySelector('.question-display').style.display = 'none';
+                document.querySelector('.timer-container').style.display = 'none';
+                document.getElementById('timeoutMessage').style.display = 'block';
             }
 
             updateCharCount() {
@@ -137,8 +204,10 @@
             }
 
             showSuccess() {
+                clearInterval(this.timerInterval);
                 this.form.style.display = 'none';
                 document.querySelector('.question-display').style.display = 'none';
+                document.querySelector('.timer-container').style.display = 'none';
                 document.getElementById('successMessage').style.display = 'block';
             }
 

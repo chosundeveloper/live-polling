@@ -3,148 +3,283 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>디스플레이 화면</title>
+    <title>Live Polling - 디스플레이</title>
     <link rel="stylesheet" href="style.css">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
 </head>
 <body class="display-body">
-    <div class="display-container">
-        <!-- 헤더 영역 -->
-        <header class="display-header">
-            <h1 id="questionText" class="display-question">질문을 불러오는 중...</h1>
-            <div class="status-indicator">
-                <span class="pulse"></span>
-                <span id="answerCount">0</span> 답변
-            </div>
-        </header>
+    <!-- 슬라이드 컨테이너 -->
+    <div class="slides-container" id="slidesContainer">
+        <!-- 질문 1 -->
+        <div class="slide" data-question-id="1">
+            <div class="slide-content">
+                <header class="display-header">
+                    <h1 class="display-question" style="color: #667eea;">오늘 가장 기억에 남는 순간은?</h1>
+                    <div class="status-indicator">
+                        <span class="pulse"></span>
+                        <span class="answer-count">0</span> 답변
+                    </div>
+                </header>
 
-        <!-- QR 코드 영역 -->
-        <div class="qr-section">
-            <div class="qr-container">
-                <div id="qrcode"></div>
+                <div class="qr-section">
+                    <div class="qr-container">
+                        <div class="qrcode" id="qrcode1"></div>
+                    </div>
+                    <p class="qr-instruction">📱 QR 코드를 스캔하여 답변해주세요!</p>
+                </div>
+
+                <div class="answers-section">
+                    <div class="answers-flow" id="answersFlow1">
+                        <p class="placeholder">아직 답변이 없습니다</p>
+                    </div>
+                </div>
             </div>
-            <p class="qr-instruction">📱 QR 코드를 스캔하여 답변해주세요!</p>
+
+            <!-- 슬라이드 인디케이터 -->
+            <div class="slide-nav">
+                <button class="nav-btn prev-btn" onclick="prevSlide()">‹</button>
+                <div class="slide-dots">
+                    <span class="dot active" onclick="goToSlide(0)"></span>
+                    <span class="dot" onclick="goToSlide(1)"></span>
+                    <span class="dot" onclick="goToSlide(2)"></span>
+                </div>
+                <button class="nav-btn next-btn" onclick="nextSlide()">›</button>
+            </div>
         </div>
 
-        <!-- 답변 표시 영역 -->
-        <div class="answers-section">
-            <h2 class="section-title">💬 실시간 답변</h2>
-            <div id="answersContainer" class="answers-grid">
-                <p class="placeholder">아직 답변이 없습니다. QR 코드를 스캔해서 첫 번째 답변을 남겨주세요!</p>
+        <!-- 질문 2 -->
+        <div class="slide" data-question-id="2">
+            <div class="slide-content">
+                <header class="display-header">
+                    <h1 class="display-question" style="color: #f093fb;">이 자리에서 배운 것 한 가지는?</h1>
+                    <div class="status-indicator">
+                        <span class="pulse"></span>
+                        <span class="answer-count">0</span> 답변
+                    </div>
+                </header>
+
+                <div class="qr-section">
+                    <div class="qr-container">
+                        <div class="qrcode" id="qrcode2"></div>
+                    </div>
+                    <p class="qr-instruction">📱 QR 코드를 스캔하여 답변해주세요!</p>
+                </div>
+
+                <div class="answers-section">
+                    <div class="answers-flow" id="answersFlow2">
+                        <p class="placeholder">아직 답변이 없습니다</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="slide-nav">
+                <button class="nav-btn prev-btn" onclick="prevSlide()">‹</button>
+                <div class="slide-dots">
+                    <span class="dot" onclick="goToSlide(0)"></span>
+                    <span class="dot active" onclick="goToSlide(1)"></span>
+                    <span class="dot" onclick="goToSlide(2)"></span>
+                </div>
+                <button class="nav-btn next-btn" onclick="nextSlide()">›</button>
+            </div>
+        </div>
+
+        <!-- 질문 3 -->
+        <div class="slide" data-question-id="3">
+            <div class="slide-content">
+                <header class="display-header">
+                    <h1 class="display-question" style="color: #4facfe;">한 단어로 오늘을 표현한다면?</h1>
+                    <div class="status-indicator">
+                        <span class="pulse"></span>
+                        <span class="answer-count">0</span> 답변
+                    </div>
+                </header>
+
+                <div class="qr-section">
+                    <div class="qr-container">
+                        <div class="qrcode" id="qrcode3"></div>
+                    </div>
+                    <p class="qr-instruction">📱 QR 코드를 스캔하여 답변해주세요!</p>
+                </div>
+
+                <div class="answers-section">
+                    <div class="answers-flow" id="answersFlow3">
+                        <p class="placeholder">아직 답변이 없습니다</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="slide-nav">
+                <button class="nav-btn prev-btn" onclick="prevSlide()">‹</button>
+                <div class="slide-dots">
+                    <span class="dot" onclick="goToSlide(0)"></span>
+                    <span class="dot" onclick="goToSlide(1)"></span>
+                    <span class="dot active" onclick="goToSlide(2)"></span>
+                </div>
+                <button class="nav-btn next-btn" onclick="nextSlide()">›</button>
             </div>
         </div>
     </div>
 
     <script src="supabase-config.js"></script>
     <script>
-        class DisplayScreen {
-            constructor() {
-                this.questionId = this.getQuestionId();
-                this.question = QUESTIONS.find(q => q.id === this.questionId);
-                this.pollingInterval = null;
-                this.answers = [];
+        let currentSlide = 0;
+        const totalSlides = 3;
+        let pollingIntervals = [];
+        let lastAnswerIds = { 1: new Set(), 2: new Set(), 3: new Set() };
 
-                this.init();
-            }
+        // 슬라이드 네비게이션
+        function goToSlide(index) {
+            currentSlide = index;
+            const container = document.getElementById('slidesContainer');
+            container.style.transform = `translateX(-${index * 100}vw)`;
 
-            getQuestionId() {
-                const params = new URLSearchParams(window.location.search);
-                return parseInt(params.get('q')) || 1;
-            }
+            // 모든 dot 업데이트
+            document.querySelectorAll('.slide-dots').forEach(dotsContainer => {
+                dotsContainer.querySelectorAll('.dot').forEach((dot, i) => {
+                    dot.classList.toggle('active', i === index);
+                });
+            });
+        }
 
-            init() {
-                if (!this.question) {
-                    alert('잘못된 질문 ID입니다.');
-                    window.location.href = 'index.html';
-                    return;
-                }
+        function nextSlide() {
+            goToSlide((currentSlide + 1) % totalSlides);
+        }
 
-                // 질문 표시
-                document.getElementById('questionText').textContent = this.question.question;
-                document.getElementById('questionText').style.color = this.question.color;
+        function prevSlide() {
+            goToSlide((currentSlide - 1 + totalSlides) % totalSlides);
+        }
 
-                // QR 코드 생성
-                this.generateQRCode();
+        // 키보드 네비게이션
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'ArrowLeft') prevSlide();
+            if (e.key === 'ArrowRight') nextSlide();
+        });
 
-                // 답변 polling 시작
-                this.startPolling();
+        // 터치 스와이프
+        let touchStartX = 0;
+        let touchEndX = 0;
 
-                // 초기 답변 로드
-                this.loadAnswers();
-            }
+        document.addEventListener('touchstart', e => {
+            touchStartX = e.changedTouches[0].screenX;
+        });
 
-            generateQRCode() {
-                const answerUrl = `${window.location.origin}${window.location.pathname.replace('display.html', 'answer.html')}?q=${this.questionId}`;
+        document.addEventListener('touchend', e => {
+            touchEndX = e.changedTouches[0].screenX;
+            handleSwipe();
+        });
 
-                new QRCode(document.getElementById('qrcode'), {
+        function handleSwipe() {
+            if (touchEndX < touchStartX - 50) nextSlide();
+            if (touchEndX > touchStartX + 50) prevSlide();
+        }
+
+        // QR 코드 생성
+        function generateQRCodes() {
+            const colors = ['#667eea', '#f093fb', '#4facfe'];
+
+            QUESTIONS.forEach((question, index) => {
+                const qrId = `qrcode${question.id}`;
+                const answerUrl = `${window.location.origin}${window.location.pathname.replace('display.html', 'answer.html')}?q=${question.id}`;
+
+                new QRCode(document.getElementById(qrId), {
                     text: answerUrl,
-                    width: 256,
-                    height: 256,
-                    colorDark: this.question.color,
+                    width: 200,
+                    height: 200,
+                    colorDark: colors[index],
                     colorLight: '#ffffff',
                     correctLevel: QRCode.CorrectLevel.H
                 });
-            }
+            });
+        }
 
-            startPolling() {
-                // 2초마다 새 답변 체크
-                this.pollingInterval = setInterval(() => {
-                    this.loadAnswers();
-                }, 2000);
-            }
+        // 답변 로드
+        async function loadAnswers(questionId) {
+            const result = await getAnswers(questionId, 100);
 
-            async loadAnswers() {
-                const result = await getAnswers(this.questionId, 50);
+            if (result.success && result.data) {
+                const container = document.getElementById(`answersFlow${questionId}`);
+                const countElement = document.querySelectorAll('.slide')[questionId - 1].querySelector('.answer-count');
 
-                if (result.success) {
-                    this.answers = result.data;
-                    this.displayAnswers();
-                    this.updateCount();
+                countElement.textContent = result.data.length;
+
+                // 새로운 답변만 추가
+                const newAnswers = result.data.filter(answer => !lastAnswerIds[questionId].has(answer.id));
+
+                if (newAnswers.length > 0) {
+                    // placeholder 제거
+                    const placeholder = container.querySelector('.placeholder');
+                    if (placeholder) placeholder.remove();
+
+                    newAnswers.forEach(answer => {
+                        lastAnswerIds[questionId].add(answer.id);
+                        addAnswerWithAnimation(container, answer);
+                    });
                 }
-            }
-
-            displayAnswers() {
-                const container = document.getElementById('answersContainer');
-
-                if (this.answers.length === 0) {
-                    container.innerHTML = '<p class="placeholder">아직 답변이 없습니다. QR 코드를 스캔해서 첫 번째 답변을 남겨주세요!</p>';
-                    return;
-                }
-
-                container.innerHTML = this.answers.map((answer, index) => `
-                    <div class="answer-card" style="animation-delay: ${index * 0.05}s;">
-                        <div class="answer-text">${this.escapeHtml(answer.answer_text)}</div>
-                        <div class="answer-time">${this.formatTime(answer.created_at)}</div>
-                    </div>
-                `).join('');
-            }
-
-            updateCount() {
-                document.getElementById('answerCount').textContent = this.answers.length;
-            }
-
-            formatTime(timestamp) {
-                const date = new Date(timestamp);
-                const now = new Date();
-                const diff = Math.floor((now - date) / 1000); // seconds
-
-                if (diff < 60) return '방금 전';
-                if (diff < 3600) return `${Math.floor(diff / 60)}분 전`;
-                if (diff < 86400) return `${Math.floor(diff / 3600)}시간 전`;
-                return date.toLocaleDateString('ko-KR');
-            }
-
-            escapeHtml(text) {
-                const div = document.createElement('div');
-                div.textContent = text;
-                return div.innerHTML;
             }
         }
 
-        // 페이지 로드 시 초기화
+        // 애니메이션과 함께 답변 추가
+        function addAnswerWithAnimation(container, answer) {
+            const bubble = document.createElement('div');
+            bubble.className = 'answer-bubble';
+            bubble.innerHTML = `
+                <div class="bubble-text">${escapeHtml(answer.answer_text)}</div>
+                <div class="bubble-time">${formatTime(answer.created_at)}</div>
+            `;
+
+            // 랜덤 위치에서 시작
+            const startX = Math.random() * 80 + 10; // 10-90%
+            bubble.style.left = `${startX}%`;
+
+            container.appendChild(bubble);
+
+            // 애니메이션 시작
+            setTimeout(() => {
+                bubble.classList.add('show');
+            }, 10);
+
+            // 10초 후 페이드아웃
+            setTimeout(() => {
+                bubble.classList.add('fade-out');
+                setTimeout(() => bubble.remove(), 1000);
+            }, 10000);
+        }
+
+        // 시간 포맷
+        function formatTime(timestamp) {
+            const date = new Date(timestamp);
+            const now = new Date();
+            const diff = Math.floor((now - date) / 1000);
+
+            if (diff < 60) return '방금 전';
+            if (diff < 3600) return `${Math.floor(diff / 60)}분 전`;
+            return date.toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' });
+        }
+
+        // HTML 이스케이프
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        // 모든 질문 polling 시작
+        function startPolling() {
+            [1, 2, 3].forEach(questionId => {
+                // 즉시 로드
+                loadAnswers(questionId);
+
+                // 2초마다 polling
+                const interval = setInterval(() => loadAnswers(questionId), 2000);
+                pollingIntervals.push(interval);
+            });
+        }
+
+        // 초기화
         document.addEventListener('DOMContentLoaded', () => {
-            new DisplayScreen();
+            generateQRCodes();
+            startPolling();
         });
     </script>
 </body>
