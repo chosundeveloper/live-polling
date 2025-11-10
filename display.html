@@ -31,8 +31,17 @@
                     </aside>
 
                     <div class="answers-main">
-                        <div class="answers-grid" id="answersGrid1">
-                            <p class="placeholder">아직 답변이 없습니다<br><small>QR 코드를 스캔해주세요!</small></p>
+                        <div class="brainstorm-board">
+                            <div class="question-bubble">
+                                <span class="bubble-label">Brainstorm</span>
+                                <p class="question-bubble-text"></p>
+                            </div>
+                            <div class="brainstorm-ring ring-1"></div>
+                            <div class="brainstorm-ring ring-2"></div>
+                            <div class="brainstorm-ring ring-3"></div>
+                            <div class="answers-grid" id="answersGrid1">
+                                <p class="placeholder">아직 답변이 없습니다<br><small>QR 코드를 스캔해주세요!</small></p>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -70,8 +79,17 @@
                     </aside>
 
                     <div class="answers-main">
-                        <div class="answers-grid" id="answersGrid2">
-                            <p class="placeholder">아직 답변이 없습니다<br><small>QR 코드를 스캔해주세요!</small></p>
+                        <div class="brainstorm-board">
+                            <div class="question-bubble">
+                                <span class="bubble-label">Brainstorm</span>
+                                <p class="question-bubble-text"></p>
+                            </div>
+                            <div class="brainstorm-ring ring-1"></div>
+                            <div class="brainstorm-ring ring-2"></div>
+                            <div class="brainstorm-ring ring-3"></div>
+                            <div class="answers-grid" id="answersGrid2">
+                                <p class="placeholder">아직 답변이 없습니다<br><small>QR 코드를 스캔해주세요!</small></p>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -108,8 +126,17 @@
                     </aside>
 
                     <div class="answers-main">
-                        <div class="answers-grid" id="answersGrid3">
-                            <p class="placeholder">아직 답변이 없습니다<br><small>QR 코드를 스캔해주세요!</small></p>
+                        <div class="brainstorm-board">
+                            <div class="question-bubble">
+                                <span class="bubble-label">Brainstorm</span>
+                                <p class="question-bubble-text"></p>
+                            </div>
+                            <div class="brainstorm-ring ring-1"></div>
+                            <div class="brainstorm-ring ring-2"></div>
+                            <div class="brainstorm-ring ring-3"></div>
+                            <div class="answers-grid" id="answersGrid3">
+                                <p class="placeholder">아직 답변이 없습니다<br><small>QR 코드를 스캔해주세요!</small></p>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -233,44 +260,90 @@
             card.className = 'answer-card';
             card.setAttribute('data-answer-id', answer.id);
 
-            // 랜덤 색상 팔레트
-            const colorPalettes = [
-                ['#667eea', '#764ba2'],
-                ['#f093fb', '#f5576c'],
-                ['#4facfe', '#00f2fe'],
-                ['#43e97b', '#38f9d7'],
-                ['#fa709a', '#fee140'],
-                ['#30cfd0', '#330867'],
-                ['#a8edea', '#fed6e3'],
-                ['#ff9a9e', '#fecfef'],
-                ['#ffecd2', '#fcb69f'],
-                ['#ff6e7f', '#bfe9ff']
+            // 포스트잇 색상 (파스텔)
+            const stickyColors = [
+                '#FFE66D', // 노란색
+                '#FF6B6B', // 빨간색
+                '#4ECDC4', // 청록색
+                '#95E1D3', // 민트색
+                '#FFB6C1', // 핑크색
+                '#B4E7CE', // 연두색
+                '#DDA15E', // 주황색
+                '#C9ADA7', // 베이지색
+                '#A8DADC', // 하늘색
+                '#E0ACD5'  // 보라색
             ];
 
-            const randomPalette = colorPalettes[Math.floor(Math.random() * colorPalettes.length)];
-            card.style.background = `linear-gradient(135deg, ${randomPalette[0]} 0%, ${randomPalette[1]} 100%)`;
+            const randomColor = stickyColors[Math.floor(Math.random() * stickyColors.length)];
+            card.style.background = randomColor;
+
+            // 랜덤 각도 (포스트잇 느낌)
+            const randomRotation = Math.random() * 8 - 4; // -4도 ~ 4도
+            card.style.setProperty('--rotation', `${randomRotation}deg`);
+
+            const ideaTags = ['✨ 새로운 시선', '💭 메모', '🧠 Insight', '🚀 다음 액션', '🎯 핵심 한마디'];
+            const ideaIcons = ['💡', '🌟', '🌀', '🔥', '💬', '⚡'];
+            const randomTag = ideaTags[Math.floor(Math.random() * ideaTags.length)];
+            const randomIcon = ideaIcons[Math.floor(Math.random() * ideaIcons.length)];
 
             // 랜덤 애니메이션 선택
-            const animations = ['bounce-in', 'slide-in', 'rotate-in', 'zoom-in', 'flip-in'];
+            const animations = ['pop-in', 'stick-in', 'float-in'];
             const randomAnimation = animations[Math.floor(Math.random() * animations.length)];
             card.classList.add(randomAnimation);
 
             card.innerHTML = `
+                <span class="card-pin"></span>
+                <div class="answer-card-emoji">${randomIcon}</div>
                 <div class="answer-card-text">${escapeHtml(answer.answer_text)}</div>
+                <div class="answer-card-meta">
+                    <span class="idea-tag">${randomTag}</span>
+                    <span class="idea-time">${formatTime(answer.created_at)}</span>
+                </div>
             `;
 
-            // 맨 앞에 추가 (최신이 위로)
-            container.insertBefore(card, container.firstChild);
+            // 랜덤 위치 설정 (영역 안에서)
+            const containerWidth = container.clientWidth;
+            const containerHeight = container.clientHeight;
+
+            const cardWidth = 260;
+            const cardHeight = 170;
+            const safeMarginX = 40;
+            const safeMarginTop = 120;
+            const safeMarginBottom = 60;
+
+            const maxX = Math.max(0, containerWidth - cardWidth - safeMarginX * 2);
+            const maxY = Math.max(0, containerHeight - cardHeight - safeMarginTop - safeMarginBottom);
+
+            const randomX = safeMarginX + Math.random() * maxX;
+            const randomY = safeMarginTop + Math.random() * maxY;
+
+            card.style.left = `${randomX}px`;
+            card.style.top = `${randomY}px`;
+
+            // 컨테이너에 추가
+            container.appendChild(card);
 
             // 애니메이션 시작
             setTimeout(() => {
                 card.classList.add('show');
             }, 10);
 
-            // 3초 후 애니메이션 클래스 제거 (한 번만 실행)
+            // 애니메이션 클래스 제거
             setTimeout(() => {
                 card.classList.remove(randomAnimation);
             }, 1000);
+        }
+
+        // 질문 텍스트를 브레인스토밍 버블에 복사
+        function syncQuestionBubbles() {
+            document.querySelectorAll('.slide').forEach(slide => {
+                const questionText = slide.querySelector('.display-question')?.textContent?.trim();
+                const bubbleText = slide.querySelector('.question-bubble-text');
+
+                if (bubbleText && questionText) {
+                    bubbleText.textContent = questionText;
+                }
+            });
         }
 
         // 색상 조정 함수
@@ -319,6 +392,7 @@
         // 초기화
         document.addEventListener('DOMContentLoaded', () => {
             generateQRCodes();
+            syncQuestionBubbles();
             startPolling();
         });
     </script>

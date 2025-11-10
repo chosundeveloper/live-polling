@@ -402,133 +402,185 @@ body.display-body {
     min-width: 0;
 }
 
-.answers-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-    gap: 20px;
-    max-height: 600px;
-    overflow-y: auto;
-    padding: 10px;
-}
-
-/* 답변 카드 - 재밌게! */
-.answer-card {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    color: white;
-    padding: 25px 30px;
-    border-radius: 18px;
-    border: 4px solid rgba(255, 255, 255, 0.3);
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
-    opacity: 0;
+.brainstorm-board {
     position: relative;
+    min-height: 620px;
+    padding: 30px;
+    border-radius: 30px;
+    background: radial-gradient(circle at top, rgba(255, 255, 255, 0.65), rgba(255, 255, 255, 0.25)),
+        linear-gradient(135deg, rgba(102, 126, 234, 0.15), rgba(118, 75, 162, 0.15));
+    box-shadow: 0 25px 60px rgba(0, 0, 0, 0.08);
     overflow: hidden;
-    transition: all 0.3s ease;
 }
 
-.answer-card::before {
+.brainstorm-board::before {
     content: '';
     position: absolute;
-    top: -2px;
-    left: -2px;
-    right: -2px;
-    bottom: -2px;
-    background: linear-gradient(45deg,
-        rgba(255, 255, 255, 0.4) 0%,
-        rgba(255, 255, 255, 0.1) 50%,
-        rgba(255, 255, 255, 0.4) 100%);
-    border-radius: 18px;
-    z-index: -1;
-    animation: borderShine 3s infinite;
+    inset: 0;
+    background-image: radial-gradient(rgba(255, 255, 255, 0.45) 1px, transparent 1px);
+    background-size: 40px 40px;
+    opacity: 0.4;
+    pointer-events: none;
 }
 
-@keyframes borderShine {
-    0%, 100% { opacity: 0.3; }
-    50% { opacity: 0.8; }
+.brainstorm-ring {
+    position: absolute;
+    border: 2px dashed rgba(102, 126, 234, 0.25);
+    border-radius: 50%;
+    pointer-events: none;
+    animation: pulseRing 8s linear infinite;
 }
 
-/* 다양한 등장 애니메이션 */
-.answer-card.bounce-in.show {
-    animation: bounceIn 0.8s cubic-bezier(0.68, -0.55, 0.265, 1.55);
-}
-
-@keyframes bounceIn {
+@keyframes pulseRing {
     0% {
-        opacity: 0;
-        transform: scale(0.3) translateY(100px);
+        transform: scale(0.9);
+        opacity: 0.3;
     }
     50% {
-        opacity: 1;
-        transform: scale(1.1) translateY(-20px);
-    }
-    70% {
-        transform: scale(0.9) translateY(10px);
+        transform: scale(1.05);
+        opacity: 0.7;
     }
     100% {
-        opacity: 1;
-        transform: scale(1) translateY(0);
+        transform: scale(0.9);
+        opacity: 0.3;
     }
 }
 
-.answer-card.slide-in.show {
-    animation: slideIn 0.6s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+.ring-1 {
+    width: 240px;
+    height: 240px;
+    top: 70px;
+    left: calc(50% - 120px);
 }
 
-@keyframes slideIn {
+.ring-2 {
+    width: 360px;
+    height: 360px;
+    top: 20px;
+    left: calc(50% - 180px);
+    animation-delay: 2s;
+}
+
+.ring-3 {
+    width: 520px;
+    height: 520px;
+    top: -60px;
+    left: calc(50% - 260px);
+    animation-delay: 4s;
+}
+
+.question-bubble {
+    position: absolute;
+    top: 35px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: white;
+    border-radius: 24px;
+    padding: 25px 40px;
+    box-shadow: 0 15px 35px rgba(102, 126, 234, 0.2);
+    max-width: 70%;
+    text-align: center;
+    z-index: 5;
+    border: 3px solid rgba(102, 126, 234, 0.2);
+}
+
+.bubble-label {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.8em;
+    letter-spacing: 1px;
+    color: #667eea;
+    font-weight: 700;
+    text-transform: uppercase;
+    background: rgba(102, 126, 234, 0.1);
+    padding: 4px 12px;
+    border-radius: 999px;
+    margin-bottom: 12px;
+}
+
+.question-bubble-text {
+    font-size: 1.4em;
+    color: #2c3e50;
+    line-height: 1.4;
+    font-weight: 700;
+}
+
+.answers-grid {
+    position: relative;
+    min-height: 560px;
+    overflow: hidden;
+    padding: 30px;
+}
+
+/* 답변 - 순수한 단어만! */
+.answer-card {
+    position: absolute;
+    width: 260px;
+    min-height: 160px;
+    background: white;
+    color: #2c3e50;
+    padding: 24px 20px 18px;
+    opacity: 0;
+    transform: rotate(var(--rotation, 0deg));
+    transition: all 0.3s ease;
+    cursor: pointer;
+    border-radius: 22px 22px 30px 22px;
+    box-shadow: 0 15px 35px rgba(0, 0, 0, 0.15);
+    filter: drop-shadow(0 10px 25px rgba(0, 0, 0, 0.18));
+    border: 3px solid rgba(255, 255, 255, 0.4);
+}
+
+/* 재밌는 등장 애니메이션 */
+.answer-card.pop-in.show {
+    animation: popIn 0.6s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+}
+
+@keyframes popIn {
     0% {
         opacity: 0;
-        transform: translateX(-100px) rotate(-10deg);
-    }
-    100% {
-        opacity: 1;
-        transform: translateX(0) rotate(0deg);
-    }
-}
-
-.answer-card.rotate-in.show {
-    animation: rotateIn 0.7s cubic-bezier(0.68, -0.55, 0.265, 1.55);
-}
-
-@keyframes rotateIn {
-    0% {
-        opacity: 0;
-        transform: rotate(-180deg) scale(0.3);
-    }
-    100% {
-        opacity: 1;
-        transform: rotate(0deg) scale(1);
-    }
-}
-
-.answer-card.zoom-in.show {
-    animation: zoomIn 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55);
-}
-
-@keyframes zoomIn {
-    0% {
-        opacity: 0;
-        transform: scale(0);
+        transform: scale(0) rotate(var(--rotation, 0deg));
     }
     50% {
-        transform: scale(1.2);
+        transform: scale(1.2) rotate(calc(var(--rotation, 0deg) * 1.5));
     }
     100% {
         opacity: 1;
-        transform: scale(1);
+        transform: scale(1) rotate(var(--rotation, 0deg));
     }
 }
 
-.answer-card.flip-in.show {
-    animation: flipIn 0.6s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+.answer-card.stick-in.show {
+    animation: stickIn 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
-@keyframes flipIn {
+@keyframes stickIn {
     0% {
         opacity: 0;
-        transform: rotateY(90deg) scale(0.5);
+        transform: translateY(-100px) rotate(calc(var(--rotation, 0deg) + 20deg)) scale(0.5);
     }
     100% {
         opacity: 1;
-        transform: rotateY(0deg) scale(1);
+        transform: translateY(0) rotate(var(--rotation, 0deg)) scale(1);
+    }
+}
+
+.answer-card.float-in.show {
+    animation: floatIn 0.8s ease-out;
+}
+
+@keyframes floatIn {
+    0% {
+        opacity: 0;
+        transform: translateY(50px) scale(0.8) rotate(var(--rotation, 0deg));
+    }
+    60% {
+        opacity: 0.8;
+        transform: translateY(-10px) scale(1.05) rotate(calc(var(--rotation, 0deg) * 0.8));
+    }
+    100% {
+        opacity: 1;
+        transform: translateY(0) scale(1) rotate(var(--rotation, 0deg));
     }
 }
 
@@ -537,20 +589,73 @@ body.display-body {
 }
 
 .answer-card:hover {
-    transform: translateY(-8px) rotate(2deg) scale(1.05);
-    box-shadow: 0 15px 40px rgba(0, 0, 0, 0.4);
-    border-color: rgba(255, 255, 255, 0.6);
+    transform: rotate(calc(var(--rotation, 0deg) * 1.3)) scale(1.15);
+    filter: drop-shadow(4px 4px 8px rgba(0, 0, 0, 0.3));
+    z-index: 100;
+}
+
+.card-pin {
+    position: absolute;
+    width: 18px;
+    height: 18px;
+    background: radial-gradient(circle, #fefefe 30%, #f9d976 60%, #f6b262 100%);
+    border-radius: 50%;
+    top: 10px;
+    right: 30px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+}
+
+.answer-card-emoji {
+    font-size: 1.8em;
+    margin-bottom: 10px;
 }
 
 .answer-card-text {
-    font-size: 1.35em;
-    line-height: 1.6;
+    font-size: 1.4em;
+    line-height: 1.4;
     word-wrap: break-word;
     font-weight: 700;
-    position: relative;
-    z-index: 1;
+    text-align: left;
+    font-family: 'Comic Sans MS', 'Marker Felt', 'Chalkboard', cursive, sans-serif;
+    margin-bottom: 14px;
+}
+
+.answer-card-meta {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 0.8em;
+    color: #415a77;
+    font-weight: 600;
+}
+
+.idea-tag {
+    background: rgba(0, 0, 0, 0.1);
+    padding: 4px 10px;
+    border-radius: 999px;
+    font-size: 0.75em;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.idea-time {
+    font-family: 'Menlo', 'Roboto Mono', monospace;
+    opacity: 0.7;
+}
+
+.answers-grid .placeholder {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
     text-align: center;
-    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    color: rgba(44, 62, 80, 0.7);
+    font-weight: 600;
+    line-height: 1.6;
+    background: rgba(255, 255, 255, 0.8);
+    padding: 20px 30px;
+    border-radius: 20px;
+    box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
 }
 
 /* 스크롤바 스타일 */
@@ -634,12 +739,15 @@ body.display-body {
 }
 
 .placeholder {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
     text-align: center;
     color: #adb5bd;
     font-style: italic;
-    padding: 100px 20px;
     font-size: 1.4em;
-    grid-column: 1 / -1;
+    width: 100%;
 }
 
 .placeholder small {
@@ -882,6 +990,20 @@ footer a:hover {
         padding: 20px;
     }
 
+    .brainstorm-board {
+        min-height: 520px;
+        padding: 20px;
+    }
+
+    .question-bubble {
+        position: relative;
+        top: auto;
+        left: auto;
+        transform: none;
+        max-width: 100%;
+        margin-bottom: 20px;
+    }
+
     .qr-sidebar {
         width: 100%;
         display: flex;
@@ -896,7 +1018,8 @@ footer a:hover {
 
     .answers-grid {
         grid-template-columns: 1fr;
-        max-height: 450px;
+        min-height: 420px;
+        padding: 20px;
     }
 
     .answer-container {
