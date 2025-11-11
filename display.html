@@ -257,7 +257,7 @@
             conceptStatus.textContent = '모의 모드 (실시간)';
             
             simulationInterval = setInterval(() => {
-                if (count >= 100) {
+                if (count >= 300) {
                     clearInterval(simulationInterval);
                     simulationInterval = null;
                     conceptStatus.textContent = '모의 모드 (완료)';
