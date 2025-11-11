@@ -182,7 +182,9 @@
             const palette = ['#ef4444', '#f97316', '#facc15', '#22c55e', '#14b8a6', '#0ea5e9', '#3b82f6', '#6366f1', '#a855f7', '#ec4899'];
             const containerWidth = wordsLayer.offsetWidth, containerHeight = wordsLayer.offsetHeight;
             const centerW = containerWidth / 2, centerH = containerHeight / 2;
-            const layers = 5, wordsPerLayer = Math.ceil(limited.length / layers);
+            
+            const layers = 8; // More layers
+            const wordsPerLayer = Math.ceil(limited.length / layers);
 
             limited.forEach((item, index) => {
                 if (existingWordEls.has(item.text)) return;
@@ -193,7 +195,7 @@
 
                 const weight = items.frequency.get(item.text) || 1;
                 const weightRatio = weight / maxWeight;
-                word.style.fontSize = `${(0.8 + weightRatio * 1.0).toFixed(2)}rem`;
+                word.style.fontSize = `${(0.8 + weightRatio * 0.4).toFixed(2)}rem`; // Less font size variation
                 word.style.color = palette[index % palette.length];
                 word.style.opacity = (0.7 + weightRatio * 0.3).toFixed(2);
 
@@ -204,8 +206,8 @@
                 if (!pos) {
                     const layer = Math.floor(wordPositions.size / wordsPerLayer);
                     const angle = (wordPositions.size % wordsPerLayer / wordsPerLayer) * 2 * Math.PI + (layer * 0.5);
-                    const radiusX = (layer + 1.5) * (centerW / (layers * 1.8));
-                    const radiusY = (layer + 1.5) * (centerH / (layers * 1.8));
+                    const radiusX = (layer + 1.5) * (centerW / (layers * 2.2)); // Wider radius
+                    const radiusY = (layer + 1.5) * (centerH / (layers * 2.2)); // Wider radius
                     pos = { x: centerW + radiusX * Math.cos(angle), y: centerH + radiusY * Math.sin(angle) };
                     wordPositions.set(item.text, pos);
                 }
