@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Live Polling - Keyword Canvas</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body class="concept-body">
+    <div class="concept-wrapper">
+        <header class="concept-top">
+            <div class="concept-select">
+                <label class="concept-label" for="questionSelect">질문 선택</label>
+                <div class="concept-select-pill">
+                    <select id="questionSelect" aria-label="질문 선택"></select>
+                    <span class="concept-status" id="conceptStatus">로딩 중…</span>
+                </div>
+                <div class="concept-question-inline">
+                    <h2 id="conceptQuestion">질문</h2>
+                    <p class="concept-question-desc">답변에서 추출된 단어만을 미니멀하게 배치합니다</p>
+                </div>
+            </div>
+            <div class="concept-brand-icon" aria-hidden="true">
+                <span></span>
+                <span></span>
+            </div>
+        </header>
+
+        <main class="concept-cloud">
+            <div class="concept-words" id="conceptWords"></div>
+        </main>
+
+        <footer class="concept-bottom">
+            <div class="concept-link">
+                <span>참여 링크</span>
+                <p id="conceptLink"></p>
+            </div>
+            <div class="concept-meta-controls">
+                <div class="concept-meta">
+                    <div>
+                        <p class="concept-label">누적 답변</p>
+                        <p class="concept-value" id="conceptTotal">0</p>
+                    </div>
+                    <div>
+                        <p class="concept-label">업데이트</p>
+                        <p class="concept-value" id="conceptUpdated">-</p>
+                    </div>
+                </div>
+                <div class="concept-actions">
+                    <button class="concept-action" id="toggleMock">모의</button>
+                    <button class="concept-action" id="shuffleWords">재배치</button>
+                </div>
+            </div>
+        </footer>
+    </div>
+
+    <script src="supabase-config.js"></script>
+    <script>
+        const questionSelect = document.getElementById('questionSelect');
+        const conceptQuestion = document.getElementById('conceptQuestion');
+        const conceptStatus = document.getElementById('conceptStatus');
+        const wordsLayer = document.getElementById('conceptWords');
+        const conceptTotal = document.getElementById('conceptTotal');
+        const conceptUpdated = document.getElementById('conceptUpdated');
+        const conceptLink = document.getElementById('conceptLink');
+        const toggleMockBtn = document.getElementById('toggleMock');
+        const shuffleBtn = document.getElementById('shuffleWords');
+
+        const params = new URLSearchParams(window.location.search);
+        let currentQuestionId = QUESTIONS[0].id;
+        let isMockMode = params.get('mock') === '1';
+        let pollingInterval;
+        let currentWordItems = [];
+        const wordPositions = new Map();
+
+        function initSelect() {
+            QUESTIONS.forEach((q) => {
+                const option = document.createElement('option');
+                option.value = q.id;
+                option.textContent = q.question;
+                questionSelect.appendChild(option);
+            });
+
+            const initial = Number(params.get('question'));
+            if (initial && QUESTIONS.find(q => q.id === initial)) {
+                currentQuestionId = initial;
+            }
+            questionSelect.value = currentQuestionId;
+        }
+
+        function updateQuestionMeta(question) {
+            conceptQuestion.textContent = question.question;
+            document.documentElement.style.setProperty('--concept-accent', question.color || '#7c3aed');
+
+            const answerUrl = new URL(window.location.href);
+            answerUrl.pathname = answerUrl.pathname.replace(/[^/]+$/, 'answer.html');
+            answerUrl.search = `?question=${question.id}`;
+            answerUrl.hash = '';
+            conceptLink.textContent = answerUrl.toString();
+            wordPositions.clear(); // 질문 변경 시 위치 초기화
+        }
+
+        function generateMockAnswers(questionId) {
+            const keywords = [
+                '연결', '성장', '도전', '몰입', '설렘', '공감', '협업', '집중', '영감', '감동',
+                '시너지', '에너지', '환대', '몰두', '발견', '혁신', '팀워크', '지원', '아이디어', '탐험',
+                '성찰', '축제', '유연함', '치열함', '여유', '흥미', '모험', '발표', '피드백', '브레인스토밍',
+                'collaboration', 'momentum', 'breakthrough', 'catalyst', 'insight', 'iteration',
+                'community', 'confidence', 'empathy', 'curiosity'
+            ];
+            const prefixes = ['따뜻한', '깊은', '새로운', '반짝이는', '집중의', '장난기 있는', '강렬한', '잔잔한', '선명한'];
+            const suffixes = ['무드', '아이디어', '영감', '에너지', '발견', '시간', '순간', '대화', '시선'];
+            const mockAnswers = [];
+
+            for (let i = 0; i < 300; i++) {
+                const word = keywords[i % keywords.length];
+                const prefix = prefixes[Math.floor(Math.random() * prefixes.length)];
+                const suffix = suffixes[Math.floor(Math.random() * suffixes.length)];
+                const mode = Math.random();
+                const text = mode < 0.3 ? `${prefix} ${word}` : mode < 0.6 ? `${word} ${suffix}` : word;
+                mockAnswers.push({
+                    id: `${questionId}-${i}`,
+                    question_id: questionId,
+                    answer_text: text,
+                    created_at: new Date(Date.now() - i * 1000 * 2).toISOString()
+                });
+            }
+            return mockAnswers;
+        }
+
+        function extractWordInstances(answers) {
+            const frequency = new Map();
+            const instances = [];
+            answers.forEach((answer, answerIndex) => {
+                if (!answer.answer_text) return;
+                const answerId = answer.id || `ans-${answerIndex}`;
+                const tokens = answer.answer_text
+                    .split(/[\s,.;!?"'()\[\]{}]+/)
+                    .map(token => token.replace(/^[^0-9a-zA-Z가-힣]+|[^0-9a-zA-Z가-힣]+$/g, '').trim())
+                    .filter(token => token.length > 1);
+
+                tokens.forEach((token, tokenIndex) => {
+                    frequency.set(token, (frequency.get(token) || 0) + 1);
+                    instances.push({
+                        text: token,
+                        instanceId: `${answerId}-${tokenIndex}`,
+                    });
+                });
+            });
+            return { instances, frequency };
+        }
+
+        function renderWords(items) {
+            const existingWordEls = new Map();
+            wordsLayer.querySelectorAll('.concept-word').forEach(el => {
+                existingWordEls.set(el.textContent, el);
+            });
+
+            if (!items.instances.length && !existingWordEls.size) {
+                wordsLayer.innerHTML = '';
+                const empty = document.createElement('div');
+                empty.className = 'concept-empty';
+                empty.textContent = '첫 번째 단어를 기다리고 있어요';
+                wordsLayer.appendChild(empty);
+                return;
+            } else if (items.instances.length > 0 && wordsLayer.querySelector('.concept-empty')) {
+                wordsLayer.innerHTML = '';
+            }
+
+            const uniqueWords = [...new Map(items.instances.map(item => [item.text, item])).values()];
+            const maxWords = 300;
+            const limited = uniqueWords.slice(0, maxWords);
+            const newWordTexts = new Set(limited.map(item => item.text));
+
+            // Remove words that are no longer in the list
+            existingWordEls.forEach((el, text) => {
+                if (!newWordTexts.has(text)) {
+                    el.classList.add('concept-word-hidden');
+                    setTimeout(() => el.remove(), 300);
+                    wordPositions.delete(text);
+                }
+            });
+
+            const maxWeight = Math.max(...limited.map(item => items.frequency.get(item.text) || 1));
+            const palette = ['#ef4444', '#f97316', '#facc15', '#22c55e', '#14b8a6', '#0ea5e9', '#3b82f6', '#6366f1', '#a855f7', '#ec4899'];
+
+            const containerWidth = wordsLayer.offsetWidth;
+            const containerHeight = wordsLayer.offsetHeight;
+            const centerW = containerWidth / 2;
+            const centerH = containerHeight / 2;
+
+            const layers = 5;
+            const wordsPerLayer = Math.ceil(limited.length / layers);
+
+            limited.forEach((item, index) => {
+                // If word already exists, skip creation
+                if (existingWordEls.has(item.text)) {
+                    return;
+                }
+
+                const word = document.createElement('span');
+                word.className = 'concept-word';
+                word.textContent = item.text;
+
+                const weight = items.frequency.get(item.text) || 1;
+                const weightRatio = weight / maxWeight;
+                const fontSize = 0.8 + weightRatio * 1.0;
+                word.style.fontSize = `${fontSize.toFixed(2)}rem`;
+                word.style.color = palette[index % palette.length];
+                word.style.opacity = (0.7 + weightRatio * 0.3).toFixed(2);
+
+                if (weightRatio > 0.7) word.classList.add('concept-word-hero');
+                else if (weightRatio > 0.4) word.classList.add('concept-word-accent');
+
+                let pos = wordPositions.get(item.text);
+                if (!pos) {
+                    const layer = Math.floor(wordPositions.size / wordsPerLayer);
+                    const angle = (wordPositions.size % wordsPerLayer / wordsPerLayer) * 2 * Math.PI + (layer * 0.5);
+                    const radiusX = (layer + 1.5) * (centerW / (layers * 1.8));
+                    const radiusY = (layer + 1.5) * (centerH / (layers * 1.8));
+                    
+                    const x = centerW + radiusX * Math.cos(angle);
+                    const y = centerH + radiusY * Math.sin(angle);
+                    pos = { x, y };
+                    wordPositions.set(item.text, pos);
+                }
+
+                word.style.left = `${pos.x.toFixed(2)}px`;
+                word.style.top = `${pos.y.toFixed(2)}px`;
+                word.style.transform = `translate(-50%, -50%) scale(${1 + weightRatio * 0.1})`;
+
+                word.addEventListener('click', () => {
+                    word.classList.add('concept-word-hidden');
+                    setTimeout(() => {
+                        word.remove();
+                        wordPositions.delete(item.text);
+                    }, 300);
+                });
+
+                wordsLayer.appendChild(word);
+            });
+        }
+
+
+        async function loadAnswers() {
+            const question = QUESTIONS.find(q => q.id === Number(currentQuestionId));
+            if (!question) return;
+
+            conceptStatus.textContent = '동기화 중…';
+
+            let answers;
+            if (isMockMode) {
+                answers = generateMockAnswers(question.id);
+            } else {
+                const { success, data } = await getAnswers(question.id, 300);
+                answers = success ? data : [];
+            }
+
+            currentWordItems = extractWordInstances(answers);
+            renderWords(currentWordItems);
+            conceptTotal.textContent = answers.length;
+            conceptUpdated.textContent = new Date().toLocaleTimeString();
+            conceptStatus.textContent = isMockMode ? '모의 모드' : '실시간';
+        }
+
+        function startPolling() {
+            if (pollingInterval) clearInterval(pollingInterval);
+            pollingInterval = setInterval(loadAnswers, 2000);
+        }
+
+        questionSelect.addEventListener('change', () => {
+            currentQuestionId = Number(questionSelect.value);
+            const question = QUESTIONS.find(q => q.id === currentQuestionId);
+            updateQuestionMeta(question);
+            wordsLayer.innerHTML = ''; // Clear layer on question change
+            loadAnswers();
+        });
+
+        toggleMockBtn.addEventListener('click', () => {
+            isMockMode = !isMockMode;
+            toggleMockBtn.classList.toggle('active', isMockMode);
+            wordPositions.clear();
+            wordsLayer.innerHTML = '';
+            loadAnswers();
+        });
+
+        shuffleBtn.addEventListener('click', () => {
+            if (!currentWordItems.instances?.length) return;
+            wordPositions.clear();
+            wordsLayer.innerHTML = '';
+            renderWords(currentWordItems);
+        });
+        
+        let resizeTimeout;
+        window.addEventListener('resize', () => {
+            clearTimeout(resizeTimeout);
+            resizeTimeout = setTimeout(() => {
+                if (currentWordItems.instances?.length) {
+                    wordPositions.clear();
+                    wordsLayer.innerHTML = '';
+                    renderWords(currentWordItems);
+                }
+            }, 200);
+        });
+
+        initSelect();
+        const initialQuestion = QUESTIONS.find(q => q.id === currentQuestionId);
+        updateQuestionMeta(initialQuestion);
+        if (isMockMode) toggleMockBtn.classList.add('active');
+        
+        // Initial load after a short delay to ensure layout is stable
+        setTimeout(() => {
+            loadAnswers();
+            startPolling();
+        }, 100);
+    </script>
+</body>
+</html>
