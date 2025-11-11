@@ -325,13 +325,21 @@
             resetDisplay();
             let count = 0;
             const question = QUESTIONS[currentQuestionIndex];
-            // conceptStatus.textContent = '모의 모드 (실시간)'; // Removed
             
+            // Moved generateSingleMockAnswer inside to ensure scope
+            function generateSingleMockAnswer(questionId, index) {
+                const word = KEYWORDS[index % KEYWORDS.length];
+                const prefix = PREFIXES[Math.floor(Math.random() * PREFIXES.length)];
+                const suffix = SUFFIXES[Math.floor(Math.random() * SUFFIXES.length)];
+                const mode = Math.random();
+                const text = mode < 0.3 ? `${prefix} ${word}` : mode < 0.6 ? `${word} ${suffix}` : word;
+                return { id: `${questionId}-${index}-${Date.now()}`, question_id: questionId, answer_text: text, created_at: new Date().toISOString() };
+            }
+
             simulationInterval = setInterval(() => {
                 if (count >= 300) {
                     clearInterval(simulationInterval);
                     simulationInterval = null;
-                    // conceptStatus.textContent = '모의 모드 (완료)'; // Removed
                     return;
                 }
                 const newAnswer = generateSingleMockAnswer(question.id, count);
