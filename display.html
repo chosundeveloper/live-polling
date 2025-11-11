@@ -232,6 +232,8 @@
                     wordEl.textContent = text;
                     wordEl.style.color = palette[index % palette.length];
                     wordEl.style.opacity = 1; // Instant appearance
+                    wordEl.style.left = '0px'; // Explicitly set left
+                    wordEl.style.top = '0px'; // Explicitly set top
                     
                     const initialFontSize = 0.8;
                     wordEl.style.fontSize = `${initialFontSize}rem`;
@@ -343,7 +345,7 @@
                 conceptTotal.textContent = mockAnswers.length;
                 conceptUpdated.textContent = new Date().toLocaleTimeString();
                 count++;
-            }, 500); // Changed from 1000 to 500
+            }, 500);
             
             // Simulation loop is started by renderWords if words exist
         }
