@@ -187,7 +187,6 @@
         }
 
         function renderWords(frequencyMap) {
-            console.log('renderWords called with frequencyMap:', frequencyMap);
             const existingParticles = new Map();
             wordParticles.forEach(p => existingParticles.set(p.el.textContent, p));
 
@@ -277,18 +276,14 @@
             if (!animationFrameId && wordParticles.length > 0) {
                 simulationLoop();
             }
-            console.log('renderWords finished. wordParticles.length:', wordParticles.length);
         }
 
         // --- Data Fetching & Control ---
         async function fetchRealAnswers() {
-            console.log('fetchRealAnswers called');
             const question = QUESTIONS[currentQuestionIndex];
             if (!question) {
-                console.log('No question found for current index:', currentQuestionIndex);
                 return;
             }
-            console.log('Fetching answers for question ID:', question.id);
             const { success, data, error } = await getAnswers(question.id, 300);
             
             if (error) {
@@ -297,9 +292,7 @@
             }
 
             if (success) {
-                console.log('getAnswers data:', data);
                 const frequencyMap = extractWordInstances(data);
-                console.log('frequencyMap:', frequencyMap);
                 renderWords(frequencyMap);
                 conceptTotal.textContent = data.length;
             }
@@ -324,7 +317,6 @@
         }
 
         function startRealtimeSimulation() {
-            console.log('startRealtimeSimulation called');
             resetDisplay();
             let count = 0;
             const question = QUESTIONS[currentQuestionIndex];
@@ -351,13 +343,12 @@
                 conceptTotal.textContent = mockAnswers.length;
                 conceptUpdated.textContent = new Date().toLocaleTimeString();
                 count++;
-            }, 1000);
+            }, 500); // Changed from 1000 to 500
             
             // Simulation loop is started by renderWords if words exist
         }
 
         function startRealDataPolling() {
-            console.log('startRealDataPolling called');
             resetDisplay();
             fetchRealAnswers(); // Initial fetch
             pollingInterval = setInterval(fetchRealAnswers, 2000);
