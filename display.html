@@ -160,8 +160,8 @@
                 }
                 const centerDx = p1.x - centerW;
                 const centerDy = p1.y - centerH;
-                p1.vx -= centerDx * 0.0002;
-                p1.vy -= centerDy * 0.0002;
+                p1.vx -= centerDx * 0.0001; // Weaker centering force
+                p1.vy -= centerDy * 0.0001;
             }
 
             for (const p of wordParticles) {
@@ -175,11 +175,6 @@
                 if (Math.abs(sizeDiff) > 0.01) {
                     p.currentFontSize += sizeDiff * 0.1;
                     p.el.style.fontSize = `${p.currentFontSize.toFixed(2)}rem`;
-                    // Update width/height as font size changes
-                    // This needs to be done after DOM update, so it's a bit tricky in a single loop.
-                    // For now, we'll rely on initial measurement and hope for the best, or re-measure periodically.
-                    // A more robust solution would involve a separate layout phase.
-                    // For this simplified simulation, we'll re-measure on each frame for simplicity, though it's not optimal.
                     const rect = p.el.getBoundingClientRect();
                     p.width = rect.width;
                     p.height = rect.height;
@@ -198,7 +193,6 @@
 
             if (frequencyMap.size === 0 && wordParticles.length === 0) {
                 wordsLayer.innerHTML = '<div class="concept-empty">첫 번째 단어를 기다리고 있어요</div>';
-                // Stop simulation if no words
                 if (animationFrameId) {
                     cancelAnimationFrame(animationFrameId);
                     animationFrameId = null;
@@ -232,10 +226,8 @@
 
                 let particle = existingParticles.get(text);
                 if (particle) {
-                    // Update existing particle
                     particle.targetFontSize = targetFontSize;
                 } else {
-                    // Create new particle
                     const wordEl = document.createElement('span');
                     wordEl.className = 'concept-word';
                     wordEl.textContent = text;
@@ -245,17 +237,32 @@
                     const initialFontSize = 0.8;
                     wordEl.style.fontSize = `${initialFontSize}rem`;
                     
+                    // Click to delete
+                    wordEl.addEventListener('click', () => {
+                        wordEl.classList.add('concept-word-hidden');
+                        setTimeout(() => {
+                            wordEl.remove();
+                            wordParticles = wordParticles.filter(p => p.el !== wordEl);
+                            if (wordParticles.length > 0) {
+                                wordParticles.forEach(p => { p.vx += (Math.random() - 0.5) * 5; p.vy += (Math.random() - 0.5) * 5; });
+                                if (!animationFrameId) simulationLoop();
+                            } else {
+                                wordsLayer.innerHTML = '<div class="concept-empty">첫 번째 단어를 기다리고 있어요</div>';
+                                if (animationFrameId) { cancelAnimationFrame(animationFrameId); animationFrameId = null; }
+                            }
+                        }, 300);
+                    });
+
                     wordsLayer.appendChild(wordEl);
                     
-                    // Measure width/height AFTER appending to DOM
                     const rect = wordEl.getBoundingClientRect();
                     particle = {
                         el: wordEl,
-                        x: centerW + (Math.random() - 0.5) * 50,
-                        y: centerH + (Math.random() - 0.5) * 50,
+                        x: centerW + (Math.random() - 0.5) * 300, // Increased initial spread
+                        y: centerH + (Math.random() - 0.5) * 300, // Increased initial spread
                         vx: 0, vy: 0,
-                        width: rect.width, // Now should be correct
-                        height: rect.height, // Now should be correct
+                        width: rect.width,
+                        height: rect.height,
                         currentFontSize: initialFontSize,
                         targetFontSize: targetFontSize
                     };
@@ -267,7 +274,6 @@
                 else particle.el.classList.remove('concept-word-hero', 'concept-word-accent');
             });
 
-            // Start simulation loop if not already running and there are words
             if (!animationFrameId && wordParticles.length > 0) {
                 simulationLoop();
             }
@@ -283,12 +289,10 @@
                 return;
             }
             console.log('Fetching answers for question ID:', question.id);
-            // conceptStatus.textContent = '동기화 중…'; // Removed
             const { success, data, error } = await getAnswers(question.id, 300);
             
             if (error) {
                 console.error('Error from getAnswers:', error);
-                // conceptStatus.textContent = '오류 발생'; // Removed
                 return;
             }
 
@@ -300,7 +304,6 @@
                 conceptTotal.textContent = data.length;
             }
             conceptUpdated.textContent = new Date().toLocaleTimeString();
-            // conceptStatus.textContent = '실시간'; // Removed
         }
 
         function stopAllIntervals() {
@@ -326,7 +329,6 @@
             let count = 0;
             const question = QUESTIONS[currentQuestionIndex];
             
-            // Moved generateSingleMockAnswer inside to ensure scope
             function generateSingleMockAnswer(questionId, index) {
                 const word = KEYWORDS[index % KEYWORDS.length];
                 const prefix = PREFIXES[Math.floor(Math.random() * PREFIXES.length)];
