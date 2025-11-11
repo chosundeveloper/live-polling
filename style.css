@@ -1277,6 +1277,23 @@ footer a:hover {
     border-radius: 6px;
 }
 
+.concept-participation {
+    display: flex;
+    align-items: flex-end;
+    gap: 20px;
+}
+
+#conceptQrCode {
+    padding: 8px;
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.07);
+}
+
+#conceptQrCode img {
+    display: block;
+}
+
 .concept-meta-controls {
     display: flex;
     align-items: center;

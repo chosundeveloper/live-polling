@@ -6,6 +6,7 @@
     <title>Live Polling - Keyword Canvas</title>
     <link rel="stylesheet" href="style.css">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
 </head>
 <body class="concept-body">
     <div class="concept-wrapper">
@@ -16,10 +17,10 @@
                     <select id="questionSelect" aria-label="질문 선택"></select>
                     <span class="concept-status" id="conceptStatus">로딩 중…</span>
                 </div>
-                <div class="concept-question-inline">
-                    <h2 id="conceptQuestion">질문</h2>
-                    <p class="concept-question-desc">답변에서 추출된 단어만을 미니멀하게 배치합니다</p>
-                </div>
+            </div>
+            <div class="concept-question-inline">
+                <h2 id="conceptQuestion">질문</h2>
+                <p class="concept-question-desc">답변에서 추출된 단어만을 미니멀하게 배치합니다</p>
             </div>
             <div class="concept-brand-icon" aria-hidden="true">
                 <span></span>
@@ -32,9 +33,12 @@
         </main>
 
         <footer class="concept-bottom">
-            <div class="concept-link">
-                <span>참여 링크</span>
-                <p id="conceptLink"></p>
+            <div class="concept-participation">
+                <div class="concept-link">
+                    <span>참여 링크</span>
+                    <p id="conceptLink"></p>
+                </div>
+                <div id="conceptQrCode"></div>
             </div>
             <div class="concept-meta-controls">
                 <div class="concept-meta">
@@ -64,6 +68,7 @@
         const conceptTotal = document.getElementById('conceptTotal');
         const conceptUpdated = document.getElementById('conceptUpdated');
         const conceptLink = document.getElementById('conceptLink');
+        const qrCodeContainer = document.getElementById('conceptQrCode');
         const toggleMockBtn = document.getElementById('toggleMock');
         const shuffleBtn = document.getElementById('shuffleWords');
 
@@ -73,6 +78,7 @@
         let pollingInterval;
         let currentWordItems = [];
         const wordPositions = new Map();
+        let qrCodeInstance = null;
 
         function initSelect() {
             QUESTIONS.forEach((q) => {
@@ -91,14 +97,32 @@
 
         function updateQuestionMeta(question) {
             conceptQuestion.textContent = question.question;
-            document.documentElement.style.setProperty('--concept-accent', question.color || '#7c3aed');
+            const accentColor = question.color || '#7c3aed';
+            document.documentElement.style.setProperty('--concept-accent', accentColor);
 
             const answerUrl = new URL(window.location.href);
             answerUrl.pathname = answerUrl.pathname.replace(/[^/]+$/, 'answer.html');
             answerUrl.search = `?question=${question.id}`;
             answerUrl.hash = '';
-            conceptLink.textContent = answerUrl.toString();
-            wordPositions.clear(); // 질문 변경 시 위치 초기화
+            const urlString = answerUrl.toString();
+            
+            conceptLink.textContent = urlString;
+            wordPositions.clear();
+
+            // QR Code Generation
+            if (qrCodeInstance) {
+                qrCodeInstance.clear();
+                qrCodeInstance.makeCode(urlString);
+            } else {
+                qrCodeInstance = new QRCode(qrCodeContainer, {
+                    text: urlString,
+                    width: 96,
+                    height: 96,
+                    colorDark: "#0f172a",
+                    colorLight: "#ffffff",
+                    correctLevel: QRCode.CorrectLevel.H
+                });
+            }
         }
 
         function generateMockAnswers(questionId) {
@@ -173,7 +197,6 @@
             const limited = uniqueWords.slice(0, maxWords);
             const newWordTexts = new Set(limited.map(item => item.text));
 
-            // Remove words that are no longer in the list
             existingWordEls.forEach((el, text) => {
                 if (!newWordTexts.has(text)) {
                     el.classList.add('concept-word-hidden');
@@ -194,7 +217,6 @@
             const wordsPerLayer = Math.ceil(limited.length / layers);
 
             limited.forEach((item, index) => {
-                // If word already exists, skip creation
                 if (existingWordEls.has(item.text)) {
                     return;
                 }
@@ -273,7 +295,7 @@
             currentQuestionId = Number(questionSelect.value);
             const question = QUESTIONS.find(q => q.id === currentQuestionId);
             updateQuestionMeta(question);
-            wordsLayer.innerHTML = ''; // Clear layer on question change
+            wordsLayer.innerHTML = '';
             loadAnswers();
         });
 
@@ -309,7 +331,6 @@
         updateQuestionMeta(initialQuestion);
         if (isMockMode) toggleMockBtn.classList.add('active');
         
-        // Initial load after a short delay to ensure layout is stable
         setTimeout(() => {
             loadAnswers();
             startPolling();
