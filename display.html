@@ -227,7 +227,9 @@
         };
 
         const CLUSTER_COLORS = ['cluster-blue', 'cluster-teal', 'cluster-gold', 'cluster-coral'];
-        const MAX_VISIBLE_LINES = 40;
+        const LINE_VARIANTS = ['line-tight', 'line-relaxed', 'line-base'];
+        const MAX_VISIBLE_LINES = 100;
+        const IS_PREVIEW_MODE = new URLSearchParams(window.location.search).get('mock') === '1';
 
         const STOP_WORDS = new Set([
             'the','and','that','with','this','from','about','have','today','just','really','very','있어요','합니다','정말',
@@ -306,19 +308,11 @@
             if (!result.success || !result.data) return;
 
             const stream = document.getElementById(`answerStream${questionId}`);
-            const slide = document.querySelector(`.slide[data-question-id="${questionId}"]`);
-            if (!stream || !slide) return;
-
-            const countElement = slide.querySelector('.answer-count');
-            const totalElement = slide.querySelector('.answer-total');
-            const updatedElement = slide.querySelector('.last-updated');
+            if (!stream) return;
 
             const responseCount = result.data.length;
             const nowText = new Date().toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' });
-
-            if (countElement) countElement.textContent = responseCount;
-            if (totalElement) totalElement.textContent = responseCount;
-            if (updatedElement) updatedElement.textContent = nowText;
+            updateSlideMeta(questionId, responseCount, nowText);
 
             if (responseCount === 0) {
                 stream.innerHTML = `
@@ -338,6 +332,18 @@
             renderAnswerStream(questionId, result.data);
         }
 
+        function updateSlideMeta(questionId, count, updatedText) {
+            const slide = document.querySelector(`.slide[data-question-id="${questionId}"]`);
+            if (!slide) return;
+            const countElement = slide.querySelector('.answer-count');
+            const totalElement = slide.querySelector('.answer-total');
+            const updatedElement = slide.querySelector('.last-updated');
+
+            if (countElement) countElement.textContent = count;
+            if (totalElement) totalElement.textContent = count;
+            if (updatedElement) updatedElement.textContent = updatedText;
+        }
+
         function renderAnswerStream(questionId, answers) {
             const stream = document.getElementById(`answerStream${questionId}`);
             if (!stream) return;
@@ -345,7 +351,7 @@
             const limited = answers.slice(0, MAX_VISIBLE_LINES);
             stream.innerHTML = '';
 
-            limited.forEach((answer, index) => {
+            limited.forEach((answer) => {
                 const line = createAnswerLine(answer, questionId);
                 stream.appendChild(line);
 
@@ -364,42 +370,48 @@
 
             const row = document.createElement('div');
             row.className = `answer-line ${clusterInfo.colorClass}`;
+            const variant = LINE_VARIANTS[Math.floor(Math.random() * LINE_VARIANTS.length)];
+            if (variant && variant !== 'line-base') {
+                row.classList.add(variant);
+            }
             row.setAttribute('data-answer-id', answer.id);
             row.style.opacity = '0';
             row.style.transform = 'translateY(8px)';
-
-            const label = document.createElement('span');
-            label.className = 'answer-label';
-            label.textContent = clusterInfo.label;
 
             const text = document.createElement('p');
             text.className = 'answer-line-text';
             text.textContent = answer.answer_text;
 
-            const time = document.createElement('span');
-            time.className = 'answer-line-time';
-            time.textContent = formatRelativeTime(answer.created_at);
-
-            row.appendChild(label);
             row.appendChild(text);
-            row.appendChild(time);
 
             return row;
         }
 
-        function formatRelativeTime(timestamp) {
-            if (!timestamp) return '';
-            const created = new Date(timestamp);
-            const diff = Date.now() - created.getTime();
+        function renderPreviewMode() {
+            [1, 2, 3].forEach((questionId) => {
+                const previewAnswers = generateMockAnswers(questionId, 100);
+                updateSlideMeta(questionId, previewAnswers.length, '미리보기');
+                updateKeywordVisuals(questionId, previewAnswers);
+                renderAnswerStream(questionId, previewAnswers);
+            });
+        }
 
-            if (diff < 60000) return '방금';
-            if (diff < 3600000) {
-                return `${Math.max(1, Math.floor(diff / 60000))}분 전`;
-            }
-            if (diff < 86400000) {
-                return `${Math.floor(diff / 3600000)}시간 전`;
-            }
-            return created.toLocaleDateString('ko-KR', { month: 'short', day: 'numeric' });
+        function generateMockAnswers(questionId, count) {
+            const phrases = [
+                '팀워크', '새로운 가치', '뜨거운 열정', '배려', '네트워킹', '아이디어 폭발', '몰입감', '집중력',
+                '유쾌한 에너지', '협업', '기대 이상', '영감', '성장', '꿈틀거림', '핵심 인사이트'
+            ];
+
+            return Array.from({ length: count }, (_, index) => {
+                const phrase = phrases[(index + questionId) % phrases.length];
+                const suffix = (index % 5 === 0) ? '!' : '';
+                return {
+                    id: `preview-${questionId}-${index}`,
+                    question_id: questionId,
+                    answer_text: `${phrase} ${index + 1}번째 생각${suffix}`,
+                    created_at: new Date(Date.now() - index * 15000).toISOString()
+                };
+            });
         }
 
         function updateKeywordVisuals(questionId, answers) {
@@ -505,11 +517,13 @@
 
         // 모든 질문 polling 시작
         function startPolling() {
-            [1, 2, 3].forEach(questionId => {
-                // 즉시 로드
-                loadAnswers(questionId);
+            if (IS_PREVIEW_MODE) {
+                renderPreviewMode();
+                return;
+            }
 
-                // 2초마다 polling
+            [1, 2, 3].forEach(questionId => {
+                loadAnswers(questionId);
                 const interval = setInterval(() => loadAnswers(questionId), 2000);
                 pollingIntervals.push(interval);
             });
