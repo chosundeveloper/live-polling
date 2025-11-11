@@ -192,6 +192,7 @@
         }
 
         function renderWords(frequencyMap) {
+            console.log('renderWords called with frequencyMap:', frequencyMap);
             const existingParticles = new Map();
             wordParticles.forEach(p => existingParticles.set(p.el.textContent, p));
 
@@ -270,21 +271,36 @@
             if (!animationFrameId && wordParticles.length > 0) {
                 simulationLoop();
             }
+            console.log('renderWords finished. wordParticles.length:', wordParticles.length);
         }
 
         // --- Data Fetching & Control ---
         async function fetchRealAnswers() {
+            console.log('fetchRealAnswers called');
             const question = QUESTIONS[currentQuestionIndex];
-            if (!question) return;
-            conceptStatus.textContent = '동기화 중…';
-            const { success, data } = await getAnswers(question.id, 300);
+            if (!question) {
+                console.log('No question found for current index:', currentQuestionIndex);
+                return;
+            }
+            console.log('Fetching answers for question ID:', question.id);
+            // conceptStatus.textContent = '동기화 중…'; // Removed
+            const { success, data, error } = await getAnswers(question.id, 300);
+            
+            if (error) {
+                console.error('Error from getAnswers:', error);
+                // conceptStatus.textContent = '오류 발생'; // Removed
+                return;
+            }
+
             if (success) {
+                console.log('getAnswers data:', data);
                 const frequencyMap = extractWordInstances(data);
+                console.log('frequencyMap:', frequencyMap);
                 renderWords(frequencyMap);
                 conceptTotal.textContent = data.length;
             }
             conceptUpdated.textContent = new Date().toLocaleTimeString();
-            conceptStatus.textContent = '실시간';
+            // conceptStatus.textContent = '실시간'; // Removed
         }
 
         function stopAllIntervals() {
@@ -305,16 +321,17 @@
         }
 
         function startRealtimeSimulation() {
+            console.log('startRealtimeSimulation called');
             resetDisplay();
             let count = 0;
             const question = QUESTIONS[currentQuestionIndex];
-            conceptStatus.textContent = '모의 모드 (실시간)';
+            // conceptStatus.textContent = '모의 모드 (실시간)'; // Removed
             
             simulationInterval = setInterval(() => {
                 if (count >= 300) {
                     clearInterval(simulationInterval);
                     simulationInterval = null;
-                    conceptStatus.textContent = '모의 모드 (완료)';
+                    // conceptStatus.textContent = '모의 모드 (완료)'; // Removed
                     return;
                 }
                 const newAnswer = generateSingleMockAnswer(question.id, count);
@@ -330,6 +347,7 @@
         }
 
         function startRealDataPolling() {
+            console.log('startRealDataPolling called');
             resetDisplay();
             fetchRealAnswers(); // Initial fetch
             pollingInterval = setInterval(fetchRealAnswers, 2000);
