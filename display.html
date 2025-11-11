@@ -176,8 +176,13 @@
                     p.currentFontSize += sizeDiff * 0.1;
                     p.el.style.fontSize = `${p.currentFontSize.toFixed(2)}rem`;
                     // Update width/height as font size changes
-                    p.width = p.el.offsetWidth;
-                    p.height = p.el.offsetHeight;
+                    // This needs to be done after DOM update, so it's a bit tricky in a single loop.
+                    // For now, we'll rely on initial measurement and hope for the best, or re-measure periodically.
+                    // A more robust solution would involve a separate layout phase.
+                    // For this simplified simulation, we'll re-measure on each frame for simplicity, though it's not optimal.
+                    const rect = p.el.getBoundingClientRect();
+                    p.width = rect.width;
+                    p.height = rect.height;
                 }
                 
                 p.el.style.transform = `translate(${p.x - p.width/2}px, ${p.y - p.height/2}px)`;
@@ -192,6 +197,11 @@
 
             if (frequencyMap.size === 0 && wordParticles.length === 0) {
                 wordsLayer.innerHTML = '<div class="concept-empty">첫 번째 단어를 기다리고 있어요</div>';
+                // Stop simulation if no words
+                if (animationFrameId) {
+                    cancelAnimationFrame(animationFrameId);
+                    animationFrameId = null;
+                }
                 return;
             } else if (frequencyMap.size > 0 && wordsLayer.querySelector('.concept-empty')) {
                 wordsLayer.innerHTML = '';
@@ -236,13 +246,15 @@
                     
                     wordsLayer.appendChild(wordEl);
                     
+                    // Measure width/height AFTER appending to DOM
+                    const rect = wordEl.getBoundingClientRect();
                     particle = {
                         el: wordEl,
                         x: centerW + (Math.random() - 0.5) * 50,
                         y: centerH + (Math.random() - 0.5) * 50,
                         vx: 0, vy: 0,
-                        width: wordEl.offsetWidth,
-                        height: wordEl.offsetHeight,
+                        width: rect.width, // Now should be correct
+                        height: rect.height, // Now should be correct
                         currentFontSize: initialFontSize,
                         targetFontSize: targetFontSize
                     };
@@ -253,12 +265,18 @@
                 else if (weightRatio > 0.4) particle.el.classList.add('concept-word-accent');
                 else particle.el.classList.remove('concept-word-hero', 'concept-word-accent');
             });
+
+            // Start simulation loop if not already running and there are words
+            if (!animationFrameId && wordParticles.length > 0) {
+                simulationLoop();
+            }
         }
 
         // --- Data Fetching & Control ---
         async function fetchRealAnswers() {
             const question = QUESTIONS[currentQuestionIndex];
             if (!question) return;
+            conceptStatus.textContent = '동기화 중…';
             const { success, data } = await getAnswers(question.id, 300);
             if (success) {
                 const frequencyMap = extractWordInstances(data);
@@ -266,6 +284,7 @@
                 conceptTotal.textContent = data.length;
             }
             conceptUpdated.textContent = new Date().toLocaleTimeString();
+            conceptStatus.textContent = '실시간';
         }
 
         function stopAllIntervals() {
@@ -307,14 +326,14 @@
                 count++;
             }, 1000);
             
-            simulationLoop();
+            // Simulation loop is started by renderWords if words exist
         }
 
         function startRealDataPolling() {
             resetDisplay();
             fetchRealAnswers(); // Initial fetch
             pollingInterval = setInterval(fetchRealAnswers, 2000);
-            simulationLoop();
+            // Simulation loop is started by renderWords if words exist
         }
 
         // --- Event Listeners ---
