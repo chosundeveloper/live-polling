@@ -206,8 +206,8 @@
                 if (!pos) {
                     const layer = Math.floor(wordPositions.size / wordsPerLayer);
                     const angle = (wordPositions.size % wordsPerLayer / wordsPerLayer) * 2 * Math.PI + (layer * 0.5);
-                    const radiusX = (layer + 1.5) * (centerW / (layers * 2.2)); // Wider radius
-                    const radiusY = (layer + 1.5) * (centerH / (layers * 2.2)); // Wider radius
+                    const radiusX = (layer + 1.5) * (centerW / (layers * 3.0)); // Wider radius
+                    const radiusY = (layer + 1.5) * (centerH / (layers * 3.0)); // Wider radius
                     pos = { x: centerW + radiusX * Math.cos(angle), y: centerH + radiusY * Math.sin(angle) };
                     wordPositions.set(item.text, pos);
                 }
