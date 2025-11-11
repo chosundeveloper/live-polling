@@ -11,20 +11,13 @@
 <body class="concept-body">
     <div class="concept-wrapper">
         <header class="concept-top">
-            <div class="concept-select">
-                <label class="concept-label" for="questionSelect">질문 선택</label>
-                <div class="concept-select-pill">
-                    <select id="questionSelect" aria-label="질문 선택"></select>
-                    <span class="concept-status" id="conceptStatus">로딩 중…</span>
+            <div class="concept-title-nav">
+                <button class="concept-nav-btn" id="prevQuestionBtn" aria-label="이전 질문">‹</button>
+                <div class="concept-question-display">
+                    <h2 id="conceptQuestion">질문 로딩 중...</h2>
+                    <p class="concept-question-desc" id="questionCounter"></p>
                 </div>
-            </div>
-            <div class="concept-question-inline">
-                <h2 id="conceptQuestion">질문</h2>
-                <p class="concept-question-desc">답변에서 추출된 단어만을 미니멀하게 배치합니다</p>
-            </div>
-            <div class="concept-brand-icon" aria-hidden="true">
-                <span></span>
-                <span></span>
+                <button class="concept-nav-btn" id="nextQuestionBtn" aria-label="다음 질문">›</button>
             </div>
         </header>
 
@@ -61,9 +54,8 @@
 
     <script src="supabase-config.js"></script>
     <script>
-        const questionSelect = document.getElementById('questionSelect');
         const conceptQuestion = document.getElementById('conceptQuestion');
-        const conceptStatus = document.getElementById('conceptStatus');
+        const questionCounter = document.getElementById('questionCounter');
         const wordsLayer = document.getElementById('conceptWords');
         const conceptTotal = document.getElementById('conceptTotal');
         const conceptUpdated = document.getElementById('conceptUpdated');
@@ -71,9 +63,11 @@
         const qrCodeContainer = document.getElementById('conceptQrCode');
         const toggleMockBtn = document.getElementById('toggleMock');
         const shuffleBtn = document.getElementById('shuffleWords');
+        const prevQuestionBtn = document.getElementById('prevQuestionBtn');
+        const nextQuestionBtn = document.getElementById('nextQuestionBtn');
 
         const params = new URLSearchParams(window.location.search);
-        let currentQuestionId = QUESTIONS[0].id;
+        let currentQuestionIndex = 0;
         let isMockMode = params.get('mock') === '1';
         let pollingInterval = null;
         let simulationInterval = null;
@@ -85,18 +79,6 @@
         const KEYWORDS = ['연결', '성장', '도전', '몰입', '설렘', '공감', '협업', '집중', '영감', '감동', '시너지', '에너지', '환대', '몰두', '발견', '혁신', '팀워크', '지원', '아이디어', '탐험', '성찰', '축제', '유연함', '치열함', '여유', '흥미', '모험', '발표', '피드백', '브레인스토밍', 'collaboration', 'momentum', 'breakthrough', 'catalyst', 'insight', 'iteration', 'community', 'confidence', 'empathy', 'curiosity'];
         const PREFIXES = ['따뜻한', '깊은', '새로운', '반짝이는', '집중의', '장난기 있는', '강렬한', '잔잔한', '선명한'];
         const SUFFIXES = ['무드', '아이디어', '영감', '에너지', '발견', '시간', '순간', '대화', '시선'];
-
-        function initSelect() {
-            QUESTIONS.forEach(q => {
-                const option = document.createElement('option');
-                option.value = q.id;
-                option.textContent = q.question;
-                questionSelect.appendChild(option);
-            });
-            const initial = Number(params.get('question'));
-            if (initial && QUESTIONS.find(q => q.id === initial)) currentQuestionId = initial;
-            questionSelect.value = currentQuestionId;
-        }
 
         function updateQuestionMeta(question) {
             conceptQuestion.textContent = question.question;
@@ -113,6 +95,29 @@
                 qrCodeInstance.makeCode(urlString);
             } else {
                 qrCodeInstance = new QRCode(qrCodeContainer, { text: urlString, width: 96, height: 96, colorDark: "#0f172a", colorLight: "#ffffff", correctLevel: QRCode.CorrectLevel.H });
+            }
+        }
+        
+        function navigateToQuestion(index) {
+            if (isSimulationRunning) return;
+            
+            const newIndex = Math.max(0, Math.min(QUESTIONS.length - 1, index));
+            if (newIndex === currentQuestionIndex && wordParticles.length > 0) return; // Avoid reload if not needed
+
+            currentQuestionIndex = newIndex;
+            const question = QUESTIONS[currentQuestionIndex];
+            
+            updateQuestionMeta(question);
+            questionCounter.textContent = `${currentQuestionIndex + 1} / ${QUESTIONS.length}`;
+            
+            prevQuestionBtn.disabled = currentQuestionIndex === 0;
+            nextQuestionBtn.disabled = currentQuestionIndex === QUESTIONS.length - 1;
+
+            resetDisplay();
+            if (isMockMode) {
+                startRealtimeSimulation();
+            } else {
+                startRealDataPolling();
             }
         }
 
@@ -149,9 +154,8 @@
             const centerW = containerWidth / 2;
             const centerH = containerHeight / 2;
 
-            // Initialize particles that are not yet initialized
             wordParticles.forEach(p => {
-                if (p.width === 0) { // New particle
+                if (p.width === 0) {
                     const rect = p.el.getBoundingClientRect();
                     p.width = rect.width;
                     p.height = rect.height;
@@ -162,17 +166,14 @@
 
             const iterations = 120;
             for (let i = 0; i < iterations; i++) {
-                // Apply forces
                 for (let j = 0; j < wordParticles.length; j++) {
                     const p1 = wordParticles[j];
-
-                    // Repulsion from other particles
                     for (let k = j + 1; k < wordParticles.length; k++) {
                         const p2 = wordParticles[k];
                         const dx = p1.x - p2.x;
                         const dy = p1.y - p2.y;
                         const distance = Math.sqrt(dx * dx + dy * dy);
-                        const minDistance = (p1.width + p2.width) / 2 * 0.8; // Add some padding
+                        const minDistance = (p1.width + p2.width) / 2 * 0.8;
 
                         if (distance < minDistance && distance > 0) {
                             const force = (minDistance - distance) * 0.05;
@@ -185,24 +186,19 @@
                             p2.vy -= fy;
                         }
                     }
-
-                    // Centering force
                     const centerDx = p1.x - centerW;
                     const centerDy = p1.y - centerH;
                     p1.vx -= centerDx * 0.0001;
                     p1.vy -= centerDy * 0.0001;
                 }
-
-                // Update positions
                 for (const p of wordParticles) {
-                    p.vx *= 0.9; // Damping
+                    p.vx *= 0.9;
                     p.vy *= 0.9;
                     p.x += p.vx;
                     p.y += p.vy;
                 }
             }
 
-            // Final update to DOM
             wordParticles.forEach(p => {
                 p.el.style.left = `${p.x.toFixed(2)}px`;
                 p.el.style.top = `${p.y.toFixed(2)}px`;
@@ -226,11 +222,10 @@
             }
 
             const uniqueWords = [...new Map(items.instances.map(item => [item.text, item])).values()];
-            const maxWords = 150; // Limit words for better layout
+            const maxWords = 150;
             const limited = uniqueWords.slice(0, maxWords);
             const newWordTexts = new Set(limited.map(item => item.text));
 
-            // Remove old particles
             wordParticles = wordParticles.filter(p => {
                 if (!newWordTexts.has(p.el.textContent)) {
                     p.el.classList.add('concept-word-hidden');
@@ -261,18 +256,14 @@
                 
                 wordsLayer.appendChild(wordEl);
 
-                wordParticles.push({
-                    el: wordEl,
-                    x: 0, y: 0, vx: 0, vy: 0, width: 0, height: 0
-                });
+                wordParticles.push({ el: wordEl, x: 0, y: 0, vx: 0, vy: 0, width: 0, height: 0 });
             });
 
-            // Defer simulation to allow DOM to update
             setTimeout(runForceSimulation, 50);
         }
 
         async function fetchRealAnswers() {
-            const question = QUESTIONS.find(q => q.id === Number(currentQuestionId));
+            const question = QUESTIONS[currentQuestionIndex];
             if (!question) return;
             conceptStatus.textContent = '동기화 중…';
             const { success, data } = await getAnswers(question.id, 300);
@@ -304,6 +295,7 @@
             stopAllIntervals();
             resetDisplay();
             let count = 0;
+            const question = QUESTIONS[currentQuestionIndex];
             conceptStatus.textContent = '모의 모드 (실시간)';
             
             simulationInterval = setInterval(() => {
@@ -313,7 +305,7 @@
                     conceptStatus.textContent = '모의 모드 (완료)';
                     return;
                 }
-                const newAnswer = generateSingleMockAnswer(currentQuestionId, count);
+                const newAnswer = generateSingleMockAnswer(question.id, count);
                 mockAnswers.unshift(newAnswer);
                 const wordItems = extractWordInstances(mockAnswers);
                 renderWords(wordItems);
@@ -330,24 +322,19 @@
             pollingInterval = setInterval(fetchRealAnswers, 2000);
         }
 
-        questionSelect.addEventListener('change', () => {
-            currentQuestionId = Number(questionSelect.value);
-            const question = QUESTIONS.find(q => q.id === currentQuestionId);
-            updateQuestionMeta(question);
-            if (isMockMode) startRealtimeSimulation();
-            else startRealDataPolling();
-        });
+        prevQuestionBtn.addEventListener('click', () => navigateToQuestion(currentQuestionIndex - 1));
+        nextQuestionBtn.addEventListener('click', () => navigateToQuestion(currentQuestionIndex + 1));
 
         toggleMockBtn.addEventListener('click', () => {
             isMockMode = !isMockMode;
             toggleMockBtn.classList.toggle('active', isMockMode);
+            resetDisplay();
             if (isMockMode) startRealtimeSimulation();
             else startRealDataPolling();
         });
 
         shuffleBtn.addEventListener('click', () => {
             if (wordParticles.length === 0 || isSimulationRunning) return;
-            // Re-run simulation on existing particles
             runForceSimulation();
         });
         
@@ -362,14 +349,11 @@
         });
 
         // --- Initial Load ---
-        initSelect();
-        const initialQuestion = QUESTIONS.find(q => q.id === currentQuestionId);
-        updateQuestionMeta(initialQuestion);
+        const initialQuestionIndex = Number(params.get('question')) ? QUESTIONS.findIndex(q => q.id === Number(params.get('question'))) : 0;
+        navigateToQuestion(initialQuestionIndex !== -1 ? initialQuestionIndex : 0);
+        
         if (isMockMode) {
             toggleMockBtn.classList.add('active');
-            startRealtimeSimulation();
-        } else {
-            startRealDataPolling();
         }
     </script>
 </body>

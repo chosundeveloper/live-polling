@@ -1103,27 +1103,54 @@ footer a:hover {
 
 .concept-top {
     display: flex;
-    justify-content: space-between;
-    align-items: center; /* flex-start에서 center로 변경 */
+    justify-content: center; /* Center the nav container */
+    align-items: center;
     gap: 20px;
     padding: 0 4px;
 }
 
-.concept-label {
-    font-size: 0.8rem;
-    letter-spacing: 0.08em;
-    color: #94a3b8;
-    margin-bottom: 8px;
-    display: block;
+.concept-title-nav {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    max-width: 800px; /* Limit width for very large screens */
 }
 
-.concept-question-inline {
-    flex-grow: 1;
+.concept-nav-btn {
+    background: transparent;
+    border: 1px solid #e2e8f0;
+    color: #475569;
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    font-size: 1.8rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+    flex-shrink: 0;
+}
+
+.concept-nav-btn:hover {
+    background-color: #f8fafc;
+    color: var(--concept-accent);
+}
+
+.concept-nav-btn:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+    background-color: transparent;
+}
+
+.concept-question-display {
     text-align: center;
-    /* margin-top: 10px; */ /* 기존 margin-top 제거 */
+    flex-grow: 1;
+    padding: 0 20px;
 }
 
-.concept-question-inline h2 {
+.concept-question-display h2 {
     font-size: clamp(1.1rem, 2vw, 1.6rem);
     margin: 0;
     font-weight: 600;
@@ -1132,39 +1159,8 @@ footer a:hover {
 
 .concept-question-desc {
     color: #94a3b8;
-    font-size: 0.85rem;
-    margin: 4px 0 0;
-}
-
-.concept-select-pill {
-    display: inline-flex;
-    align-items: center;
-    gap: 12px;
-    padding: 8px 14px;
-    border-radius: 12px;
-    border: 1px solid #e2e8f0;
-    background: #f8fafc;
-}
-
-.concept-select-pill select {
-    background: transparent;
-    border: none;
     font-size: 0.9rem;
-    color: #0f172a;
-    outline: none;
-}
-
-.concept-status {
-    font-size: 0.75rem;
-    padding: 4px 10px;
-    border-radius: 999px;
-    background: #e2e8f0;
-    color: #475569;
-    font-weight: 500;
-}
-
-.concept-brand-icon {
-    display: none; /* Hidden for a cleaner look */
+    margin: 4px 0 0;
 }
 
 .concept-cloud {
