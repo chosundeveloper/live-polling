@@ -75,10 +75,22 @@
         const params = new URLSearchParams(window.location.search);
         let currentQuestionId = QUESTIONS[0].id;
         let isMockMode = params.get('mock') === '1';
-        let pollingInterval;
-        let currentWordItems = [];
+        let pollingInterval = null;
+        let simulationInterval = null;
+        let mockAnswers = [];
         const wordPositions = new Map();
         let qrCodeInstance = null;
+
+        // --- Keyword Data ---
+        const KEYWORDS = [
+            '연결', '성장', '도전', '몰입', '설렘', '공감', '협업', '집중', '영감', '감동',
+            '시너지', '에너지', '환대', '몰두', '발견', '혁신', '팀워크', '지원', '아이디어', '탐험',
+            '성찰', '축제', '유연함', '치열함', '여유', '흥미', '모험', '발표', '피드백', '브레인스토밍',
+            'collaboration', 'momentum', 'breakthrough', 'catalyst', 'insight', 'iteration',
+            'community', 'confidence', 'empathy', 'curiosity'
+        ];
+        const PREFIXES = ['따뜻한', '깊은', '새로운', '반짝이는', '집중의', '장난기 있는', '강렬한', '잔잔한', '선명한'];
+        const SUFFIXES = ['무드', '아이디어', '영감', '에너지', '발견', '시간', '순간', '대화', '시선'];
 
         function initSelect() {
             QUESTIONS.forEach((q) => {
@@ -87,70 +99,44 @@
                 option.textContent = q.question;
                 questionSelect.appendChild(option);
             });
-
             const initial = Number(params.get('question'));
-            if (initial && QUESTIONS.find(q => q.id === initial)) {
-                currentQuestionId = initial;
-            }
+            if (initial && QUESTIONS.find(q => q.id === initial)) currentQuestionId = initial;
             questionSelect.value = currentQuestionId;
         }
 
         function updateQuestionMeta(question) {
             conceptQuestion.textContent = question.question;
-            const accentColor = question.color || '#7c3aed';
-            document.documentElement.style.setProperty('--concept-accent', accentColor);
-
+            document.documentElement.style.setProperty('--concept-accent', question.color || '#7c3aed');
             const answerUrl = new URL(window.location.href);
             answerUrl.pathname = answerUrl.pathname.replace(/[^/]+$/, 'answer.html');
             answerUrl.search = `?question=${question.id}`;
             answerUrl.hash = '';
             const urlString = answerUrl.toString();
-            
             conceptLink.textContent = urlString;
             wordPositions.clear();
 
-            // QR Code Generation
             if (qrCodeInstance) {
                 qrCodeInstance.clear();
                 qrCodeInstance.makeCode(urlString);
             } else {
                 qrCodeInstance = new QRCode(qrCodeContainer, {
-                    text: urlString,
-                    width: 96,
-                    height: 96,
-                    colorDark: "#0f172a",
-                    colorLight: "#ffffff",
-                    correctLevel: QRCode.CorrectLevel.H
+                    text: urlString, width: 96, height: 96, colorDark: "#0f172a", colorLight: "#ffffff", correctLevel: QRCode.CorrectLevel.H
                 });
             }
         }
 
-        function generateMockAnswers(questionId) {
-            const keywords = [
-                '연결', '성장', '도전', '몰입', '설렘', '공감', '협업', '집중', '영감', '감동',
-                '시너지', '에너지', '환대', '몰두', '발견', '혁신', '팀워크', '지원', '아이디어', '탐험',
-                '성찰', '축제', '유연함', '치열함', '여유', '흥미', '모험', '발표', '피드백', '브레인스토밍',
-                'collaboration', 'momentum', 'breakthrough', 'catalyst', 'insight', 'iteration',
-                'community', 'confidence', 'empathy', 'curiosity'
-            ];
-            const prefixes = ['따뜻한', '깊은', '새로운', '반짝이는', '집중의', '장난기 있는', '강렬한', '잔잔한', '선명한'];
-            const suffixes = ['무드', '아이디어', '영감', '에너지', '발견', '시간', '순간', '대화', '시선'];
-            const mockAnswers = [];
-
-            for (let i = 0; i < 300; i++) {
-                const word = keywords[i % keywords.length];
-                const prefix = prefixes[Math.floor(Math.random() * prefixes.length)];
-                const suffix = suffixes[Math.floor(Math.random() * suffixes.length)];
-                const mode = Math.random();
-                const text = mode < 0.3 ? `${prefix} ${word}` : mode < 0.6 ? `${word} ${suffix}` : word;
-                mockAnswers.push({
-                    id: `${questionId}-${i}`,
-                    question_id: questionId,
-                    answer_text: text,
-                    created_at: new Date(Date.now() - i * 1000 * 2).toISOString()
-                });
-            }
-            return mockAnswers;
+        function generateSingleMockAnswer(questionId, index) {
+            const word = KEYWORDS[index % KEYWORDS.length];
+            const prefix = PREFIXES[Math.floor(Math.random() * PREFIXES.length)];
+            const suffix = SUFFIXES[Math.floor(Math.random() * SUFFIXES.length)];
+            const mode = Math.random();
+            const text = mode < 0.3 ? `${prefix} ${word}` : mode < 0.6 ? `${word} ${suffix}` : word;
+            return {
+                id: `${questionId}-${index}-${Date.now()}`,
+                question_id: questionId,
+                answer_text: text,
+                created_at: new Date().toISOString()
+            };
         }
 
         function extractWordInstances(answers) {
@@ -159,17 +145,10 @@
             answers.forEach((answer, answerIndex) => {
                 if (!answer.answer_text) return;
                 const answerId = answer.id || `ans-${answerIndex}`;
-                const tokens = answer.answer_text
-                    .split(/[\s,.;!?"'()\[\]{}]+/)
-                    .map(token => token.replace(/^[^0-9a-zA-Z가-힣]+|[^0-9a-zA-Z가-힣]+$/g, '').trim())
-                    .filter(token => token.length > 1);
-
+                const tokens = answer.answer_text.split(/[\s,.;!?"'()\[\]{}]+/).map(token => token.replace(/^[^0-9a-zA-Z가-힣]+|[^0-9a-zA-Z가-힣]+$/g, '').trim()).filter(token => token.length > 1);
                 tokens.forEach((token, tokenIndex) => {
                     frequency.set(token, (frequency.get(token) || 0) + 1);
-                    instances.push({
-                        text: token,
-                        instanceId: `${answerId}-${tokenIndex}`,
-                    });
+                    instances.push({ text: token, instanceId: `${answerId}-${tokenIndex}` });
                 });
             });
             return { instances, frequency };
@@ -177,16 +156,10 @@
 
         function renderWords(items) {
             const existingWordEls = new Map();
-            wordsLayer.querySelectorAll('.concept-word').forEach(el => {
-                existingWordEls.set(el.textContent, el);
-            });
+            wordsLayer.querySelectorAll('.concept-word').forEach(el => existingWordEls.set(el.textContent, el));
 
             if (!items.instances.length && !existingWordEls.size) {
-                wordsLayer.innerHTML = '';
-                const empty = document.createElement('div');
-                empty.className = 'concept-empty';
-                empty.textContent = '첫 번째 단어를 기다리고 있어요';
-                wordsLayer.appendChild(empty);
+                wordsLayer.innerHTML = '<div class="concept-empty">첫 번째 단어를 기다리고 있어요</div>';
                 return;
             } else if (items.instances.length > 0 && wordsLayer.querySelector('.concept-empty')) {
                 wordsLayer.innerHTML = '';
@@ -207,19 +180,12 @@
 
             const maxWeight = Math.max(...limited.map(item => items.frequency.get(item.text) || 1));
             const palette = ['#ef4444', '#f97316', '#facc15', '#22c55e', '#14b8a6', '#0ea5e9', '#3b82f6', '#6366f1', '#a855f7', '#ec4899'];
-
-            const containerWidth = wordsLayer.offsetWidth;
-            const containerHeight = wordsLayer.offsetHeight;
-            const centerW = containerWidth / 2;
-            const centerH = containerHeight / 2;
-
-            const layers = 5;
-            const wordsPerLayer = Math.ceil(limited.length / layers);
+            const containerWidth = wordsLayer.offsetWidth, containerHeight = wordsLayer.offsetHeight;
+            const centerW = containerWidth / 2, centerH = containerHeight / 2;
+            const layers = 5, wordsPerLayer = Math.ceil(limited.length / layers);
 
             limited.forEach((item, index) => {
-                if (existingWordEls.has(item.text)) {
-                    return;
-                }
+                if (existingWordEls.has(item.text)) return;
 
                 const word = document.createElement('span');
                 word.className = 'concept-word';
@@ -227,8 +193,7 @@
 
                 const weight = items.frequency.get(item.text) || 1;
                 const weightRatio = weight / maxWeight;
-                const fontSize = 0.8 + weightRatio * 1.0;
-                word.style.fontSize = `${fontSize.toFixed(2)}rem`;
+                word.style.fontSize = `${(0.8 + weightRatio * 1.0).toFixed(2)}rem`;
                 word.style.color = palette[index % palette.length];
                 word.style.opacity = (0.7 + weightRatio * 0.3).toFixed(2);
 
@@ -241,100 +206,124 @@
                     const angle = (wordPositions.size % wordsPerLayer / wordsPerLayer) * 2 * Math.PI + (layer * 0.5);
                     const radiusX = (layer + 1.5) * (centerW / (layers * 1.8));
                     const radiusY = (layer + 1.5) * (centerH / (layers * 1.8));
-                    
-                    const x = centerW + radiusX * Math.cos(angle);
-                    const y = centerH + radiusY * Math.sin(angle);
-                    pos = { x, y };
+                    pos = { x: centerW + radiusX * Math.cos(angle), y: centerH + radiusY * Math.sin(angle) };
                     wordPositions.set(item.text, pos);
                 }
 
                 word.style.left = `${pos.x.toFixed(2)}px`;
                 word.style.top = `${pos.y.toFixed(2)}px`;
                 word.style.transform = `translate(-50%, -50%) scale(${1 + weightRatio * 0.1})`;
-
                 word.addEventListener('click', () => {
                     word.classList.add('concept-word-hidden');
-                    setTimeout(() => {
-                        word.remove();
-                        wordPositions.delete(item.text);
-                    }, 300);
+                    setTimeout(() => { word.remove(); wordPositions.delete(item.text); }, 300);
                 });
-
                 wordsLayer.appendChild(word);
             });
         }
 
-
-        async function loadAnswers() {
+        async function fetchRealAnswers() {
             const question = QUESTIONS.find(q => q.id === Number(currentQuestionId));
             if (!question) return;
-
             conceptStatus.textContent = '동기화 중…';
-
-            let answers;
-            if (isMockMode) {
-                answers = generateMockAnswers(question.id);
-            } else {
-                const { success, data } = await getAnswers(question.id, 300);
-                answers = success ? data : [];
+            const { success, data } = await getAnswers(question.id, 300);
+            if (success) {
+                const wordItems = extractWordInstances(data);
+                renderWords(wordItems);
+                conceptTotal.textContent = data.length;
             }
-
-            currentWordItems = extractWordInstances(answers);
-            renderWords(currentWordItems);
-            conceptTotal.textContent = answers.length;
             conceptUpdated.textContent = new Date().toLocaleTimeString();
-            conceptStatus.textContent = isMockMode ? '모의 모드' : '실시간';
+            conceptStatus.textContent = '실시간';
         }
 
-        function startPolling() {
+        function stopAllIntervals() {
             if (pollingInterval) clearInterval(pollingInterval);
-            pollingInterval = setInterval(loadAnswers, 2000);
+            if (simulationInterval) clearInterval(simulationInterval);
+            pollingInterval = null;
+            simulationInterval = null;
+        }
+        
+        function resetDisplay() {
+            stopAllIntervals();
+            mockAnswers = [];
+            wordPositions.clear();
+            wordsLayer.innerHTML = '';
+            conceptTotal.textContent = '0';
+        }
+
+        function startRealtimeSimulation() {
+            stopAllIntervals();
+            resetDisplay();
+            let count = 0;
+            conceptStatus.textContent = '모의 모드 (실시간)';
+            
+            simulationInterval = setInterval(() => {
+                if (count >= 100) {
+                    clearInterval(simulationInterval);
+                    simulationInterval = null;
+                    conceptStatus.textContent = '모의 모드 (완료)';
+                    return;
+                }
+                const newAnswer = generateSingleMockAnswer(currentQuestionId, count);
+                mockAnswers.unshift(newAnswer);
+                const wordItems = extractWordInstances(mockAnswers);
+                renderWords(wordItems);
+                conceptTotal.textContent = mockAnswers.length;
+                conceptUpdated.textContent = new Date().toLocaleTimeString();
+                count++;
+            }, 1000);
+        }
+
+        function startRealDataPolling() {
+            stopAllIntervals();
+            resetDisplay();
+            fetchRealAnswers();
+            pollingInterval = setInterval(fetchRealAnswers, 2000);
         }
 
         questionSelect.addEventListener('change', () => {
             currentQuestionId = Number(questionSelect.value);
             const question = QUESTIONS.find(q => q.id === currentQuestionId);
             updateQuestionMeta(question);
-            wordsLayer.innerHTML = '';
-            loadAnswers();
+            if (isMockMode) startRealtimeSimulation();
+            else startRealDataPolling();
         });
 
         toggleMockBtn.addEventListener('click', () => {
             isMockMode = !isMockMode;
             toggleMockBtn.classList.toggle('active', isMockMode);
-            wordPositions.clear();
-            wordsLayer.innerHTML = '';
-            loadAnswers();
+            if (isMockMode) startRealtimeSimulation();
+            else startRealDataPolling();
         });
 
         shuffleBtn.addEventListener('click', () => {
-            if (!currentWordItems.instances?.length) return;
+            if (mockAnswers.length === 0) return;
             wordPositions.clear();
-            wordsLayer.innerHTML = '';
-            renderWords(currentWordItems);
+            const wordItems = extractWordInstances(mockAnswers);
+            renderWords(wordItems);
         });
         
         let resizeTimeout;
         window.addEventListener('resize', () => {
             clearTimeout(resizeTimeout);
             resizeTimeout = setTimeout(() => {
-                if (currentWordItems.instances?.length) {
+                if (mockAnswers.length > 0) {
                     wordPositions.clear();
-                    wordsLayer.innerHTML = '';
-                    renderWords(currentWordItems);
+                    const wordItems = extractWordInstances(mockAnswers);
+                    renderWords(wordItems);
                 }
             }, 200);
         });
 
+        // --- Initial Load ---
         initSelect();
         const initialQuestion = QUESTIONS.find(q => q.id === currentQuestionId);
         updateQuestionMeta(initialQuestion);
-        if (isMockMode) toggleMockBtn.classList.add('active');
-        
-        setTimeout(() => {
-            loadAnswers();
-            startPolling();
-        }, 100);
+        if (isMockMode) {
+            toggleMockBtn.classList.add('active');
+            startRealtimeSimulation();
+        } else {
+            startRealDataPolling();
+        }
     </script>
 </body>
 </html>
