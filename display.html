@@ -3,537 +3,317 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Live Polling - 디스플레이</title>
+    <title>Live Polling - Keyword Canvas</title>
     <link rel="stylesheet" href="style.css">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
 </head>
-<body class="display-body">
-    <!-- 슬라이드 컨테이너 -->
-    <div class="slides-container" id="slidesContainer">
-        <!-- 질문 1 -->
-        <div class="slide" data-question-id="1">
-            <div class="slide-content">
-                <header class="display-header">
-                    <h1 class="display-question" style="color: #2c3e50;">오늘 가장 기억에 남는 순간은?</h1>
-                    <div class="status-indicator">
-                        <span class="pulse"></span>
-                        <span class="answer-count">0</span> 답변
-                    </div>
-                </header>
-
-                <div class="main-content">
-                    <div class="answers-main">
-                        <div class="responses-meta">
-                            <span class="responses-chip">LIVE</span>
-                            <p class="responses-title">참가자 응답이 실시간으로 흘러갑니다</p>
-                        </div>
-
-                        <div class="word-cloud" id="wordCloud1">
-                            <p class="word-cloud-placeholder">답변이 모이면 핵심 키워드를 분석해 보여줄게요</p>
-                        </div>
-
-                        <div class="answer-stream" id="answerStream1">
-                            <div class="stream-empty">
-                                <span>아직 답변이 없습니다</span>
-                                <small>첫 번째 의견을 올려보세요!</small>
-                            </div>
-                        </div>
-                    </div>
-
-                    <aside class="info-panel">
-                        <span class="live-chip">LIVE</span>
-                        <p class="info-heading">모바일로 참여하세요</p>
-                        <div class="qr-panel">
-                            <div class="qr-frame">
-                                <div class="qrcode" id="qrcode1"></div>
-                            </div>
-                            <p class="qr-instruction">카메라로 QR을 스캔하거나<br>접속 링크를 입력하세요</p>
-                        </div>
-                        <div class="info-meta">
-                            <div class="meta-card">
-                                <span class="meta-label">누적 답변</span>
-                                <span class="meta-value answer-total">0</span>
-                            </div>
-                            <div class="meta-card">
-                                <span class="meta-label">업데이트</span>
-                                <span class="meta-value last-updated">-</span>
-                            </div>
-                        </div>
-                        <div class="keyword-legend" id="keywordLegend1">
-                            <p class="legend-placeholder">핵심 키워드가 여기에 표시됩니다</p>
-                        </div>
-                    </aside>
+<body class="concept-body">
+    <div class="concept-wrapper">
+        <header class="concept-top">
+            <div class="concept-select">
+                <label class="concept-label" for="questionSelect">질문 선택</label>
+                <div class="concept-select-pill">
+                    <select id="questionSelect" aria-label="질문 선택"></select>
+                    <span class="concept-status" id="conceptStatus">로딩 중…</span>
+                </div>
+                <div class="concept-question-inline">
+                    <h2 id="conceptQuestion">질문</h2>
+                    <p class="concept-question-desc">답변에서 추출된 단어만을 미니멀하게 배치합니다</p>
                 </div>
             </div>
-
-            <!-- 슬라이드 인디케이터 -->
-            <div class="slide-nav">
-                <button class="nav-btn prev-btn" onclick="prevSlide()">‹</button>
-                <div class="slide-dots">
-                    <span class="dot active" onclick="goToSlide(0)"></span>
-                    <span class="dot" onclick="goToSlide(1)"></span>
-                    <span class="dot" onclick="goToSlide(2)"></span>
-                </div>
-                <button class="nav-btn next-btn" onclick="nextSlide()">›</button>
+            <div class="concept-brand-icon" aria-hidden="true">
+                <span></span>
+                <span></span>
             </div>
-        </div>
+        </header>
 
-        <!-- 질문 2 -->
-        <div class="slide" data-question-id="2">
-            <div class="slide-content">
-                <header class="display-header">
-                    <h1 class="display-question" style="color: #2c3e50;">이 자리에서 배운 것 한 가지는?</h1>
-                    <div class="status-indicator">
-                        <span class="pulse"></span>
-                        <span class="answer-count">0</span> 답변
+        <main class="concept-cloud">
+            <div class="concept-words" id="conceptWords"></div>
+        </main>
+
+        <footer class="concept-bottom">
+            <div class="concept-link">
+                <span>참여 링크</span>
+                <p id="conceptLink"></p>
+            </div>
+            <div class="concept-meta-controls">
+                <div class="concept-meta">
+                    <div>
+                        <p class="concept-label">누적 답변</p>
+                        <p class="concept-value" id="conceptTotal">0</p>
                     </div>
-                </header>
-
-                <div class="main-content">
-                    <div class="answers-main">
-                        <div class="responses-meta">
-                            <span class="responses-chip">LIVE</span>
-                            <p class="responses-title">참가자 응답이 실시간으로 흘러갑니다</p>
-                        </div>
-
-                        <div class="word-cloud" id="wordCloud2">
-                            <p class="word-cloud-placeholder">답변이 모이면 핵심 키워드를 분석해 보여줄게요</p>
-                        </div>
-
-                        <div class="answer-stream" id="answerStream2">
-                            <div class="stream-empty">
-                                <span>아직 답변이 없습니다</span>
-                                <small>첫 번째 의견을 올려보세요!</small>
-                            </div>
-                        </div>
+                    <div>
+                        <p class="concept-label">업데이트</p>
+                        <p class="concept-value" id="conceptUpdated">-</p>
                     </div>
-
-                    <aside class="info-panel">
-                        <span class="live-chip">LIVE</span>
-                        <p class="info-heading">모바일로 참여하세요</p>
-                        <div class="qr-panel">
-                            <div class="qr-frame">
-                                <div class="qrcode" id="qrcode2"></div>
-                            </div>
-                            <p class="qr-instruction">카메라로 QR을 스캔하거나<br>접속 링크를 입력하세요</p>
-                        </div>
-                        <div class="info-meta">
-                            <div class="meta-card">
-                                <span class="meta-label">누적 답변</span>
-                                <span class="meta-value answer-total">0</span>
-                            </div>
-                            <div class="meta-card">
-                                <span class="meta-label">업데이트</span>
-                                <span class="meta-value last-updated">-</span>
-                            </div>
-                        </div>
-                        <div class="keyword-legend" id="keywordLegend2">
-                            <p class="legend-placeholder">핵심 키워드가 여기에 표시됩니다</p>
-                        </div>
-                    </aside>
+                </div>
+                <div class="concept-actions">
+                    <button class="concept-action" id="toggleMock">모의</button>
+                    <button class="concept-action" id="shuffleWords">재배치</button>
                 </div>
             </div>
-
-            <div class="slide-nav">
-                <button class="nav-btn prev-btn" onclick="prevSlide()">‹</button>
-                <div class="slide-dots">
-                    <span class="dot" onclick="goToSlide(0)"></span>
-                    <span class="dot active" onclick="goToSlide(1)"></span>
-                    <span class="dot" onclick="goToSlide(2)"></span>
-                </div>
-                <button class="nav-btn next-btn" onclick="nextSlide()">›</button>
-            </div>
-        </div>
-
-        <!-- 질문 3 -->
-        <div class="slide" data-question-id="3">
-            <div class="slide-content">
-                <header class="display-header">
-                    <h1 class="display-question" style="color: #2c3e50;">한 단어로 오늘을 표현한다면?</h1>
-                    <div class="status-indicator">
-                        <span class="pulse"></span>
-                        <span class="answer-count">0</span> 답변
-                    </div>
-                </header>
-
-                <div class="main-content">
-                    <div class="answers-main">
-                        <div class="responses-meta">
-                            <span class="responses-chip">LIVE</span>
-                            <p class="responses-title">참가자 응답이 실시간으로 흘러갑니다</p>
-                        </div>
-
-                        <div class="word-cloud" id="wordCloud3">
-                            <p class="word-cloud-placeholder">답변이 모이면 핵심 키워드를 분석해 보여줄게요</p>
-                        </div>
-
-                        <div class="answer-stream" id="answerStream3">
-                            <div class="stream-empty">
-                                <span>아직 답변이 없습니다</span>
-                                <small>첫 번째 의견을 올려보세요!</small>
-                            </div>
-                        </div>
-                    </div>
-
-                    <aside class="info-panel">
-                        <span class="live-chip">LIVE</span>
-                        <p class="info-heading">모바일로 참여하세요</p>
-                        <div class="qr-panel">
-                            <div class="qr-frame">
-                                <div class="qrcode" id="qrcode3"></div>
-                            </div>
-                            <p class="qr-instruction">카메라로 QR을 스캔하거나<br>접속 링크를 입력하세요</p>
-                        </div>
-                        <div class="info-meta">
-                            <div class="meta-card">
-                                <span class="meta-label">누적 답변</span>
-                                <span class="meta-value answer-total">0</span>
-                            </div>
-                            <div class="meta-card">
-                                <span class="meta-label">업데이트</span>
-                                <span class="meta-value last-updated">-</span>
-                            </div>
-                        </div>
-                        <div class="keyword-legend" id="keywordLegend3">
-                            <p class="legend-placeholder">핵심 키워드가 여기에 표시됩니다</p>
-                        </div>
-                    </aside>
-                </div>
-            </div>
-
-            <div class="slide-nav">
-                <button class="nav-btn prev-btn" onclick="prevSlide()">‹</button>
-                <div class="slide-dots">
-                    <span class="dot" onclick="goToSlide(0)"></span>
-                    <span class="dot" onclick="goToSlide(1)"></span>
-                    <span class="dot active" onclick="goToSlide(2)"></span>
-                </div>
-                <button class="nav-btn next-btn" onclick="nextSlide()">›</button>
-            </div>
-        </div>
+        </footer>
     </div>
 
     <script src="supabase-config.js"></script>
     <script>
-        let currentSlide = 0;
-        const totalSlides = 3;
-        let pollingIntervals = [];
-        let lastAnswerIds = { 1: new Set(), 2: new Set(), 3: new Set() };
-        const boardState = {
-            1: { keywords: [], keywordColors: {} },
-            2: { keywords: [], keywordColors: {} },
-            3: { keywords: [], keywordColors: {} }
-        };
+        const questionSelect = document.getElementById('questionSelect');
+        const conceptQuestion = document.getElementById('conceptQuestion');
+        const conceptStatus = document.getElementById('conceptStatus');
+        const wordsLayer = document.getElementById('conceptWords');
+        const conceptTotal = document.getElementById('conceptTotal');
+        const conceptUpdated = document.getElementById('conceptUpdated');
+        const conceptLink = document.getElementById('conceptLink');
+        const toggleMockBtn = document.getElementById('toggleMock');
+        const shuffleBtn = document.getElementById('shuffleWords');
 
-        const CLUSTER_COLORS = ['cluster-blue', 'cluster-teal', 'cluster-gold', 'cluster-coral'];
-        const LINE_VARIANTS = ['line-tight', 'line-relaxed', 'line-base'];
-        const MAX_VISIBLE_LINES = 100;
-        const IS_PREVIEW_MODE = new URLSearchParams(window.location.search).get('mock') === '1';
+        const params = new URLSearchParams(window.location.search);
+        let currentQuestionId = QUESTIONS[0].id;
+        let isMockMode = params.get('mock') === '1';
+        let pollingInterval;
+        let currentWordItems = [];
+        const wordPositions = new Map();
 
-        const STOP_WORDS = new Set([
-            'the','and','that','with','this','from','about','have','today','just','really','very','있어요','합니다','정말',
-            '오늘','우리','그리고','그냥','하는','했다','있다','합니다','너무','진짜','뭔가','뭐가','어때','같아요','어떤','것','거','있는','해서','하면'
-        ]);
-
-        // 슬라이드 네비게이션
-        function goToSlide(index) {
-            currentSlide = index;
-            const container = document.getElementById('slidesContainer');
-            container.style.transform = `translateX(-${index * 100}vw)`;
-
-            // 모든 dot 업데이트
-            document.querySelectorAll('.slide-dots').forEach(dotsContainer => {
-                dotsContainer.querySelectorAll('.dot').forEach((dot, i) => {
-                    dot.classList.toggle('active', i === index);
-                });
+        function initSelect() {
+            QUESTIONS.forEach((q) => {
+                const option = document.createElement('option');
+                option.value = q.id;
+                option.textContent = q.question;
+                questionSelect.appendChild(option);
             });
-        }
 
-        function nextSlide() {
-            goToSlide((currentSlide + 1) % totalSlides);
-        }
-
-        function prevSlide() {
-            goToSlide((currentSlide - 1 + totalSlides) % totalSlides);
-        }
-
-        // 키보드 네비게이션
-        document.addEventListener('keydown', (e) => {
-            if (e.key === 'ArrowLeft') prevSlide();
-            if (e.key === 'ArrowRight') nextSlide();
-        });
-
-        // 터치 스와이프
-        let touchStartX = 0;
-        let touchEndX = 0;
-
-        document.addEventListener('touchstart', e => {
-            touchStartX = e.changedTouches[0].screenX;
-        });
-
-        document.addEventListener('touchend', e => {
-            touchEndX = e.changedTouches[0].screenX;
-            handleSwipe();
-        });
-
-        function handleSwipe() {
-            if (touchEndX < touchStartX - 50) nextSlide();
-            if (touchEndX > touchStartX + 50) prevSlide();
-        }
-
-        // QR 코드 생성
-        function generateQRCodes() {
-            const colors = ['#667eea', '#f093fb', '#4facfe'];
-
-            QUESTIONS.forEach((question, index) => {
-                const qrId = `qrcode${question.id}`;
-                const answerUrl = `${window.location.origin}${window.location.pathname.replace('display.html', 'answer.html')}?q=${question.id}`;
-
-                new QRCode(document.getElementById(qrId), {
-                    text: answerUrl,
-                    width: 200,
-                    height: 200,
-                    colorDark: colors[index],
-                    colorLight: '#ffffff',
-                    correctLevel: QRCode.CorrectLevel.H
-                });
-            });
-        }
-
-        // 답변 로드
-        async function loadAnswers(questionId) {
-            const result = await getAnswers(questionId, 100);
-
-            if (!result.success || !result.data) return;
-
-            const stream = document.getElementById(`answerStream${questionId}`);
-            if (!stream) return;
-
-            const responseCount = result.data.length;
-            const nowText = new Date().toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' });
-            updateSlideMeta(questionId, responseCount, nowText);
-
-            if (responseCount === 0) {
-                stream.innerHTML = `
-                    <div class="stream-empty">
-                        <span>아직 답변이 없습니다</span>
-                        <small>첫 번째 의견을 올려보세요!</small>
-                    </div>
-                `;
-                boardState[questionId].keywords = [];
-                boardState[questionId].keywordColors = {};
-                lastAnswerIds[questionId] = new Set();
-                updateKeywordVisuals(questionId, []);
-                return;
+            const initial = Number(params.get('question'));
+            if (initial && QUESTIONS.find(q => q.id === initial)) {
+                currentQuestionId = initial;
             }
-
-            updateKeywordVisuals(questionId, result.data);
-            renderAnswerStream(questionId, result.data);
+            questionSelect.value = currentQuestionId;
         }
 
-        function updateSlideMeta(questionId, count, updatedText) {
-            const slide = document.querySelector(`.slide[data-question-id="${questionId}"]`);
-            if (!slide) return;
-            const countElement = slide.querySelector('.answer-count');
-            const totalElement = slide.querySelector('.answer-total');
-            const updatedElement = slide.querySelector('.last-updated');
+        function updateQuestionMeta(question) {
+            conceptQuestion.textContent = question.question;
+            document.documentElement.style.setProperty('--concept-accent', question.color || '#7c3aed');
 
-            if (countElement) countElement.textContent = count;
-            if (totalElement) totalElement.textContent = count;
-            if (updatedElement) updatedElement.textContent = updatedText;
+            const answerUrl = new URL(window.location.href);
+            answerUrl.pathname = answerUrl.pathname.replace(/[^/]+$/, 'answer.html');
+            answerUrl.search = `?question=${question.id}`;
+            answerUrl.hash = '';
+            conceptLink.textContent = answerUrl.toString();
+            wordPositions.clear(); // 질문 변경 시 위치 초기화
         }
 
-        function renderAnswerStream(questionId, answers) {
-            const stream = document.getElementById(`answerStream${questionId}`);
-            if (!stream) return;
-
-            const limited = answers.slice(0, MAX_VISIBLE_LINES);
-            stream.innerHTML = '';
-
-            limited.forEach((answer) => {
-                const line = createAnswerLine(answer, questionId);
-                stream.appendChild(line);
-
-                requestAnimationFrame(() => {
-                    line.style.opacity = '1';
-                    line.style.transform = 'translateY(0)';
-                });
-            });
-
-            lastAnswerIds[questionId] = new Set(limited.map(ans => ans.id));
-        }
-
-        function createAnswerLine(answer, questionId) {
-            const keywords = boardState[questionId]?.keywords || [];
-            const clusterInfo = resolveClusterInfo(answer.answer_text, questionId, keywords);
-
-            const row = document.createElement('div');
-            row.className = `answer-line ${clusterInfo.colorClass}`;
-            const variant = LINE_VARIANTS[Math.floor(Math.random() * LINE_VARIANTS.length)];
-            if (variant && variant !== 'line-base') {
-                row.classList.add(variant);
-            }
-            row.setAttribute('data-answer-id', answer.id);
-            row.style.opacity = '0';
-            row.style.transform = 'translateY(8px)';
-
-            const text = document.createElement('p');
-            text.className = 'answer-line-text';
-            text.textContent = answer.answer_text;
-
-            row.appendChild(text);
-
-            return row;
-        }
-
-        function renderPreviewMode() {
-            [1, 2, 3].forEach((questionId) => {
-                const previewAnswers = generateMockAnswers(questionId, 100);
-                updateSlideMeta(questionId, previewAnswers.length, '미리보기');
-                updateKeywordVisuals(questionId, previewAnswers);
-                renderAnswerStream(questionId, previewAnswers);
-            });
-        }
-
-        function generateMockAnswers(questionId, count) {
-            const phrases = [
-                '팀워크', '새로운 가치', '뜨거운 열정', '배려', '네트워킹', '아이디어 폭발', '몰입감', '집중력',
-                '유쾌한 에너지', '협업', '기대 이상', '영감', '성장', '꿈틀거림', '핵심 인사이트'
+        function generateMockAnswers(questionId) {
+            const keywords = [
+                '연결', '성장', '도전', '몰입', '설렘', '공감', '협업', '집중', '영감', '감동',
+                '시너지', '에너지', '환대', '몰두', '발견', '혁신', '팀워크', '지원', '아이디어', '탐험',
+                '성찰', '축제', '유연함', '치열함', '여유', '흥미', '모험', '발표', '피드백', '브레인스토밍',
+                'collaboration', 'momentum', 'breakthrough', 'catalyst', 'insight', 'iteration',
+                'community', 'confidence', 'empathy', 'curiosity'
             ];
+            const prefixes = ['따뜻한', '깊은', '새로운', '반짝이는', '집중의', '장난기 있는', '강렬한', '잔잔한', '선명한'];
+            const suffixes = ['무드', '아이디어', '영감', '에너지', '발견', '시간', '순간', '대화', '시선'];
+            const mockAnswers = [];
 
-            return Array.from({ length: count }, (_, index) => {
-                const phrase = phrases[(index + questionId) % phrases.length];
-                const suffix = (index % 5 === 0) ? '!' : '';
-                return {
-                    id: `preview-${questionId}-${index}`,
+            for (let i = 0; i < 300; i++) {
+                const word = keywords[i % keywords.length];
+                const prefix = prefixes[Math.floor(Math.random() * prefixes.length)];
+                const suffix = suffixes[Math.floor(Math.random() * suffixes.length)];
+                const mode = Math.random();
+                const text = mode < 0.3 ? `${prefix} ${word}` : mode < 0.6 ? `${word} ${suffix}` : word;
+                mockAnswers.push({
+                    id: `${questionId}-${i}`,
                     question_id: questionId,
-                    answer_text: `${phrase} ${index + 1}번째 생각${suffix}`,
-                    created_at: new Date(Date.now() - index * 15000).toISOString()
-                };
-            });
+                    answer_text: text,
+                    created_at: new Date(Date.now() - i * 1000 * 2).toISOString()
+                });
+            }
+            return mockAnswers;
         }
 
-        function updateKeywordVisuals(questionId, answers) {
-            boardState[questionId] = boardState[questionId] || { keywords: [], keywordColors: {} };
-            const keywords = extractTopKeywords(answers);
-            boardState[questionId].keywords = keywords;
-            renderKeywordLegend(questionId, keywords);
-            renderWordCloud(questionId, keywords);
-        }
-
-        function extractTopKeywords(answers) {
+        function extractWordInstances(answers) {
             const frequency = new Map();
+            const instances = [];
+            answers.forEach((answer, answerIndex) => {
+                if (!answer.answer_text) return;
+                const answerId = answer.id || `ans-${answerIndex}`;
+                const tokens = answer.answer_text
+                    .split(/[\s,.;!?"'()\[\]{}]+/)
+                    .map(token => token.replace(/^[^0-9a-zA-Z가-힣]+|[^0-9a-zA-Z가-힣]+$/g, '').trim())
+                    .filter(token => token.length > 1);
 
-            answers.forEach(answer => {
-                const cleaned = answer?.answer_text?.toLowerCase()?.replace(/[^0-9a-z\s가-힣]/g, ' ') || '';
-                cleaned.split(/\s+/)
-                    .filter(Boolean)
-                    .forEach(word => {
-                        const trimmed = word.trim();
-                        if (trimmed.length < 2 || STOP_WORDS.has(trimmed) || /^\d+$/.test(trimmed)) return;
-                        frequency.set(trimmed, (frequency.get(trimmed) || 0) + 1);
+                tokens.forEach((token, tokenIndex) => {
+                    frequency.set(token, (frequency.get(token) || 0) + 1);
+                    instances.push({
+                        text: token,
+                        instanceId: `${answerId}-${tokenIndex}`,
                     });
+                });
             });
-
-            return Array.from(frequency.entries())
-                .sort((a, b) => b[1] - a[1])
-                .slice(0, 6)
-                .map(([word, count]) => ({ word, count }));
+            return { instances, frequency };
         }
 
-        function renderKeywordLegend(questionId, keywords) {
-            const legend = document.getElementById(`keywordLegend${questionId}`);
-            if (!legend) return;
+        function renderWords(items) {
+            const existingWordEls = new Map();
+            wordsLayer.querySelectorAll('.concept-word').forEach(el => {
+                existingWordEls.set(el.textContent, el);
+            });
 
-            if (!keywords.length) {
-                legend.innerHTML = '<p class="legend-placeholder">핵심 키워드가 여기에 표시됩니다</p>';
-                boardState[questionId].keywordColors = {};
+            if (!items.instances.length && !existingWordEls.size) {
+                wordsLayer.innerHTML = '';
+                const empty = document.createElement('div');
+                empty.className = 'concept-empty';
+                empty.textContent = '첫 번째 단어를 기다리고 있어요';
+                wordsLayer.appendChild(empty);
                 return;
+            } else if (items.instances.length > 0 && wordsLayer.querySelector('.concept-empty')) {
+                wordsLayer.innerHTML = '';
             }
 
-            legend.innerHTML = '';
-            const colorMap = {};
+            const uniqueWords = [...new Map(items.instances.map(item => [item.text, item])).values()];
+            const maxWords = 300;
+            const limited = uniqueWords.slice(0, maxWords);
+            const newWordTexts = new Set(limited.map(item => item.text));
 
-            keywords.forEach((item, index) => {
-                const colorClass = CLUSTER_COLORS[index % CLUSTER_COLORS.length];
-                colorMap[item.word] = colorClass;
-
-                const chip = document.createElement('div');
-                chip.className = `keyword-chip ${colorClass}`;
-                chip.innerHTML = `
-                    <span>${item.word}</span>
-                    <strong>${item.count}</strong>
-                `;
-                legend.appendChild(chip);
-            });
-
-            boardState[questionId].keywordColors = colorMap;
-        }
-
-        function renderWordCloud(questionId, keywords) {
-            const container = document.getElementById(`wordCloud${questionId}`);
-            if (!container) return;
-
-            if (!keywords.length) {
-                container.innerHTML = '<p class="word-cloud-placeholder">답변이 모이면 핵심 키워드를 분석해 보여줄게요</p>';
-                return;
-            }
-
-            container.innerHTML = '';
-            const maxCount = keywords[0]?.count || 1;
-
-            keywords.forEach((item, index) => {
-                const wordEl = document.createElement('span');
-                const scale = 0.9 + (item.count / maxCount) * 1.2;
-                const colorClass = CLUSTER_COLORS[index % CLUSTER_COLORS.length];
-                wordEl.className = `cloud-word ${colorClass}`;
-                wordEl.style.setProperty('--scale', scale.toFixed(2));
-                wordEl.textContent = item.word;
-                container.appendChild(wordEl);
-            });
-        }
-
-        function resolveClusterInfo(text, questionId, keywords) {
-            const normalized = (text || '').toLowerCase();
-            const colorMap = boardState[questionId]?.keywordColors || {};
-            let matchedWord = '';
-
-            for (const keyword of keywords) {
-                if (normalized.includes(keyword.word)) {
-                    matchedWord = keyword.word;
-                    break;
+            // Remove words that are no longer in the list
+            existingWordEls.forEach((el, text) => {
+                if (!newWordTexts.has(text)) {
+                    el.classList.add('concept-word-hidden');
+                    setTimeout(() => el.remove(), 300);
+                    wordPositions.delete(text);
                 }
-            }
+            });
 
-            const colorClass = matchedWord && colorMap[matchedWord]
-                ? colorMap[matchedWord]
-                : CLUSTER_COLORS[Math.floor(Math.random() * CLUSTER_COLORS.length)];
+            const maxWeight = Math.max(...limited.map(item => items.frequency.get(item.text) || 1));
+            const palette = ['#ef4444', '#f97316', '#facc15', '#22c55e', '#14b8a6', '#0ea5e9', '#3b82f6', '#6366f1', '#a855f7', '#ec4899'];
 
-            const label = matchedWord ? `#${matchedWord}` : 'Fresh idea';
+            const containerWidth = wordsLayer.offsetWidth;
+            const containerHeight = wordsLayer.offsetHeight;
+            const centerW = containerWidth / 2;
+            const centerH = containerHeight / 2;
 
-            return { colorClass, label };
-        }
+            const layers = 5;
+            const wordsPerLayer = Math.ceil(limited.length / layers);
 
-        // 모든 질문 polling 시작
-        function startPolling() {
-            if (IS_PREVIEW_MODE) {
-                renderPreviewMode();
-                return;
-            }
+            limited.forEach((item, index) => {
+                // If word already exists, skip creation
+                if (existingWordEls.has(item.text)) {
+                    return;
+                }
 
-            [1, 2, 3].forEach(questionId => {
-                loadAnswers(questionId);
-                const interval = setInterval(() => loadAnswers(questionId), 2000);
-                pollingIntervals.push(interval);
+                const word = document.createElement('span');
+                word.className = 'concept-word';
+                word.textContent = item.text;
+
+                const weight = items.frequency.get(item.text) || 1;
+                const weightRatio = weight / maxWeight;
+                const fontSize = 0.8 + weightRatio * 1.0;
+                word.style.fontSize = `${fontSize.toFixed(2)}rem`;
+                word.style.color = palette[index % palette.length];
+                word.style.opacity = (0.7 + weightRatio * 0.3).toFixed(2);
+
+                if (weightRatio > 0.7) word.classList.add('concept-word-hero');
+                else if (weightRatio > 0.4) word.classList.add('concept-word-accent');
+
+                let pos = wordPositions.get(item.text);
+                if (!pos) {
+                    const layer = Math.floor(wordPositions.size / wordsPerLayer);
+                    const angle = (wordPositions.size % wordsPerLayer / wordsPerLayer) * 2 * Math.PI + (layer * 0.5);
+                    const radiusX = (layer + 1.5) * (centerW / (layers * 1.8));
+                    const radiusY = (layer + 1.5) * (centerH / (layers * 1.8));
+                    
+                    const x = centerW + radiusX * Math.cos(angle);
+                    const y = centerH + radiusY * Math.sin(angle);
+                    pos = { x, y };
+                    wordPositions.set(item.text, pos);
+                }
+
+                word.style.left = `${pos.x.toFixed(2)}px`;
+                word.style.top = `${pos.y.toFixed(2)}px`;
+                word.style.transform = `translate(-50%, -50%) scale(${1 + weightRatio * 0.1})`;
+
+                word.addEventListener('click', () => {
+                    word.classList.add('concept-word-hidden');
+                    setTimeout(() => {
+                        word.remove();
+                        wordPositions.delete(item.text);
+                    }, 300);
+                });
+
+                wordsLayer.appendChild(word);
             });
         }
 
-        // 초기화
-        document.addEventListener('DOMContentLoaded', () => {
-            generateQRCodes();
-            startPolling();
+
+        async function loadAnswers() {
+            const question = QUESTIONS.find(q => q.id === Number(currentQuestionId));
+            if (!question) return;
+
+            conceptStatus.textContent = '동기화 중…';
+
+            let answers;
+            if (isMockMode) {
+                answers = generateMockAnswers(question.id);
+            } else {
+                const { success, data } = await getAnswers(question.id, 300);
+                answers = success ? data : [];
+            }
+
+            currentWordItems = extractWordInstances(answers);
+            renderWords(currentWordItems);
+            conceptTotal.textContent = answers.length;
+            conceptUpdated.textContent = new Date().toLocaleTimeString();
+            conceptStatus.textContent = isMockMode ? '모의 모드' : '실시간';
+        }
+
+        function startPolling() {
+            if (pollingInterval) clearInterval(pollingInterval);
+            pollingInterval = setInterval(loadAnswers, 2000);
+        }
+
+        questionSelect.addEventListener('change', () => {
+            currentQuestionId = Number(questionSelect.value);
+            const question = QUESTIONS.find(q => q.id === currentQuestionId);
+            updateQuestionMeta(question);
+            wordsLayer.innerHTML = ''; // Clear layer on question change
+            loadAnswers();
         });
+
+        toggleMockBtn.addEventListener('click', () => {
+            isMockMode = !isMockMode;
+            toggleMockBtn.classList.toggle('active', isMockMode);
+            wordPositions.clear();
+            wordsLayer.innerHTML = '';
+            loadAnswers();
+        });
+
+        shuffleBtn.addEventListener('click', () => {
+            if (!currentWordItems.instances?.length) return;
+            wordPositions.clear();
+            wordsLayer.innerHTML = '';
+            renderWords(currentWordItems);
+        });
+        
+        let resizeTimeout;
+        window.addEventListener('resize', () => {
+            clearTimeout(resizeTimeout);
+            resizeTimeout = setTimeout(() => {
+                if (currentWordItems.instances?.length) {
+                    wordPositions.clear();
+                    wordsLayer.innerHTML = '';
+                    renderWords(currentWordItems);
+                }
+            }, 200);
+        });
+
+        initSelect();
+        const initialQuestion = QUESTIONS.find(q => q.id === currentQuestionId);
+        updateQuestionMeta(initialQuestion);
+        if (isMockMode) toggleMockBtn.classList.add('active');
+        
+        // Initial load after a short delay to ensure layout is stable
+        setTimeout(() => {
+            loadAnswers();
+            startPolling();
+        }, 100);
     </script>
 </body>
 </html>
