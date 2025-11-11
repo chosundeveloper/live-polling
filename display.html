@@ -231,7 +231,7 @@
                     wordEl.className = 'concept-word';
                     wordEl.textContent = text;
                     wordEl.style.color = palette[index % palette.length];
-                    wordEl.style.opacity = (0.7 + weightRatio * 0.3).toFixed(2);
+                    wordEl.style.opacity = 1; // Instant appearance
                     
                     const initialFontSize = 0.8;
                     wordEl.style.fontSize = `${initialFontSize}rem`;
@@ -257,8 +257,8 @@
                     const rect = wordEl.getBoundingClientRect();
                     particle = {
                         el: wordEl,
-                        x: centerW + (Math.random() - 0.5) * 300, // Increased initial spread
-                        y: centerH + (Math.random() - 0.5) * 300, // Increased initial spread
+                        x: centerW, // Appear from center
+                        y: centerH, // Appear from center
                         vx: 0, vy: 0,
                         width: rect.width,
                         height: rect.height,
