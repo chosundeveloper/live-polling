@@ -78,22 +78,16 @@
         let pollingInterval = null;
         let simulationInterval = null;
         let mockAnswers = [];
-        const wordPositions = new Map();
+        let wordParticles = [];
         let qrCodeInstance = null;
+        let isSimulationRunning = false;
 
-        // --- Keyword Data ---
-        const KEYWORDS = [
-            '연결', '성장', '도전', '몰입', '설렘', '공감', '협업', '집중', '영감', '감동',
-            '시너지', '에너지', '환대', '몰두', '발견', '혁신', '팀워크', '지원', '아이디어', '탐험',
-            '성찰', '축제', '유연함', '치열함', '여유', '흥미', '모험', '발표', '피드백', '브레인스토밍',
-            'collaboration', 'momentum', 'breakthrough', 'catalyst', 'insight', 'iteration',
-            'community', 'confidence', 'empathy', 'curiosity'
-        ];
+        const KEYWORDS = ['연결', '성장', '도전', '몰입', '설렘', '공감', '협업', '집중', '영감', '감동', '시너지', '에너지', '환대', '몰두', '발견', '혁신', '팀워크', '지원', '아이디어', '탐험', '성찰', '축제', '유연함', '치열함', '여유', '흥미', '모험', '발표', '피드백', '브레인스토밍', 'collaboration', 'momentum', 'breakthrough', 'catalyst', 'insight', 'iteration', 'community', 'confidence', 'empathy', 'curiosity'];
         const PREFIXES = ['따뜻한', '깊은', '새로운', '반짝이는', '집중의', '장난기 있는', '강렬한', '잔잔한', '선명한'];
         const SUFFIXES = ['무드', '아이디어', '영감', '에너지', '발견', '시간', '순간', '대화', '시선'];
 
         function initSelect() {
-            QUESTIONS.forEach((q) => {
+            QUESTIONS.forEach(q => {
                 const option = document.createElement('option');
                 option.value = q.id;
                 option.textContent = q.question;
@@ -113,15 +107,12 @@
             answerUrl.hash = '';
             const urlString = answerUrl.toString();
             conceptLink.textContent = urlString;
-            wordPositions.clear();
 
             if (qrCodeInstance) {
                 qrCodeInstance.clear();
                 qrCodeInstance.makeCode(urlString);
             } else {
-                qrCodeInstance = new QRCode(qrCodeContainer, {
-                    text: urlString, width: 96, height: 96, colorDark: "#0f172a", colorLight: "#ffffff", correctLevel: QRCode.CorrectLevel.H
-                });
+                qrCodeInstance = new QRCode(qrCodeContainer, { text: urlString, width: 96, height: 96, colorDark: "#0f172a", colorLight: "#ffffff", correctLevel: QRCode.CorrectLevel.H });
             }
         }
 
@@ -131,12 +122,7 @@
             const suffix = SUFFIXES[Math.floor(Math.random() * SUFFIXES.length)];
             const mode = Math.random();
             const text = mode < 0.3 ? `${prefix} ${word}` : mode < 0.6 ? `${word} ${suffix}` : word;
-            return {
-                id: `${questionId}-${index}-${Date.now()}`,
-                question_id: questionId,
-                answer_text: text,
-                created_at: new Date().toISOString()
-            };
+            return { id: `${questionId}-${index}-${Date.now()}`, question_id: questionId, answer_text: text, created_at: new Date().toISOString() };
         }
 
         function extractWordInstances(answers) {
@@ -154,11 +140,85 @@
             return { instances, frequency };
         }
 
-        function renderWords(items) {
-            const existingWordEls = new Map();
-            wordsLayer.querySelectorAll('.concept-word').forEach(el => existingWordEls.set(el.textContent, el));
+        function runForceSimulation() {
+            if (isSimulationRunning) return;
+            isSimulationRunning = true;
 
-            if (!items.instances.length && !existingWordEls.size) {
+            const containerWidth = wordsLayer.offsetWidth;
+            const containerHeight = wordsLayer.offsetHeight;
+            const centerW = containerWidth / 2;
+            const centerH = containerHeight / 2;
+
+            // Initialize particles that are not yet initialized
+            wordParticles.forEach(p => {
+                if (p.width === 0) { // New particle
+                    const rect = p.el.getBoundingClientRect();
+                    p.width = rect.width;
+                    p.height = rect.height;
+                    p.x = centerW + (Math.random() - 0.5) * containerWidth * 0.1;
+                    p.y = centerH + (Math.random() - 0.5) * containerHeight * 0.1;
+                }
+            });
+
+            const iterations = 120;
+            for (let i = 0; i < iterations; i++) {
+                // Apply forces
+                for (let j = 0; j < wordParticles.length; j++) {
+                    const p1 = wordParticles[j];
+
+                    // Repulsion from other particles
+                    for (let k = j + 1; k < wordParticles.length; k++) {
+                        const p2 = wordParticles[k];
+                        const dx = p1.x - p2.x;
+                        const dy = p1.y - p2.y;
+                        const distance = Math.sqrt(dx * dx + dy * dy);
+                        const minDistance = (p1.width + p2.width) / 2 * 0.8; // Add some padding
+
+                        if (distance < minDistance && distance > 0) {
+                            const force = (minDistance - distance) * 0.05;
+                            const angle = Math.atan2(dy, dx);
+                            const fx = Math.cos(angle) * force;
+                            const fy = Math.sin(angle) * force;
+                            p1.vx += fx;
+                            p1.vy += fy;
+                            p2.vx -= fx;
+                            p2.vy -= fy;
+                        }
+                    }
+
+                    // Centering force
+                    const centerDx = p1.x - centerW;
+                    const centerDy = p1.y - centerH;
+                    p1.vx -= centerDx * 0.0001;
+                    p1.vy -= centerDy * 0.0001;
+                }
+
+                // Update positions
+                for (const p of wordParticles) {
+                    p.vx *= 0.9; // Damping
+                    p.vy *= 0.9;
+                    p.x += p.vx;
+                    p.y += p.vy;
+                }
+            }
+
+            // Final update to DOM
+            wordParticles.forEach(p => {
+                p.el.style.left = `${p.x.toFixed(2)}px`;
+                p.el.style.top = `${p.y.toFixed(2)}px`;
+                p.el.style.transform = 'translate(-50%, -50%)';
+            });
+            
+            isSimulationRunning = false;
+        }
+
+        function renderWords(items) {
+            if (isSimulationRunning) return;
+
+            const existingEls = new Map();
+            wordParticles.forEach(p => existingEls.set(p.el.textContent, p));
+
+            if (!items.instances.length && !wordParticles.length) {
                 wordsLayer.innerHTML = '<div class="concept-empty">첫 번째 단어를 기다리고 있어요</div>';
                 return;
             } else if (items.instances.length > 0 && wordsLayer.querySelector('.concept-empty')) {
@@ -166,61 +226,49 @@
             }
 
             const uniqueWords = [...new Map(items.instances.map(item => [item.text, item])).values()];
-            const maxWords = 300;
+            const maxWords = 150; // Limit words for better layout
             const limited = uniqueWords.slice(0, maxWords);
             const newWordTexts = new Set(limited.map(item => item.text));
 
-            existingWordEls.forEach((el, text) => {
-                if (!newWordTexts.has(text)) {
-                    el.classList.add('concept-word-hidden');
-                    setTimeout(() => el.remove(), 300);
-                    wordPositions.delete(text);
+            // Remove old particles
+            wordParticles = wordParticles.filter(p => {
+                if (!newWordTexts.has(p.el.textContent)) {
+                    p.el.classList.add('concept-word-hidden');
+                    setTimeout(() => p.el.remove(), 300);
+                    return false;
                 }
+                return true;
             });
 
             const maxWeight = Math.max(...limited.map(item => items.frequency.get(item.text) || 1));
             const palette = ['#ef4444', '#f97316', '#facc15', '#22c55e', '#14b8a6', '#0ea5e9', '#3b82f6', '#6366f1', '#a855f7', '#ec4899'];
-            const containerWidth = wordsLayer.offsetWidth, containerHeight = wordsLayer.offsetHeight;
-            const centerW = containerWidth / 2, centerH = containerHeight / 2;
-            
-            const layers = 8; // More layers
-            const wordsPerLayer = Math.ceil(limited.length / layers);
 
             limited.forEach((item, index) => {
-                if (existingWordEls.has(item.text)) return;
+                if (existingEls.has(item.text)) return;
 
-                const word = document.createElement('span');
-                word.className = 'concept-word';
-                word.textContent = item.text;
+                const wordEl = document.createElement('span');
+                wordEl.className = 'concept-word';
+                wordEl.textContent = item.text;
 
                 const weight = items.frequency.get(item.text) || 1;
                 const weightRatio = weight / maxWeight;
-                word.style.fontSize = `${(0.8 + weightRatio * 0.4).toFixed(2)}rem`; // Less font size variation
-                word.style.color = palette[index % palette.length];
-                word.style.opacity = (0.7 + weightRatio * 0.3).toFixed(2);
+                wordEl.style.fontSize = `${(0.8 + weightRatio * 0.6).toFixed(2)}rem`;
+                wordEl.style.color = palette[index % palette.length];
+                wordEl.style.opacity = (0.7 + weightRatio * 0.3).toFixed(2);
 
-                if (weightRatio > 0.7) word.classList.add('concept-word-hero');
-                else if (weightRatio > 0.4) word.classList.add('concept-word-accent');
+                if (weightRatio > 0.7) wordEl.classList.add('concept-word-hero');
+                else if (weightRatio > 0.4) wordEl.classList.add('concept-word-accent');
+                
+                wordsLayer.appendChild(wordEl);
 
-                let pos = wordPositions.get(item.text);
-                if (!pos) {
-                    const layer = Math.floor(wordPositions.size / wordsPerLayer);
-                    const angle = (wordPositions.size % wordsPerLayer / wordsPerLayer) * 2 * Math.PI + (layer * 0.5);
-                    const radiusX = (layer + 1.5) * (centerW / (layers * 3.0)); // Wider radius
-                    const radiusY = (layer + 1.5) * (centerH / (layers * 3.0)); // Wider radius
-                    pos = { x: centerW + radiusX * Math.cos(angle), y: centerH + radiusY * Math.sin(angle) };
-                    wordPositions.set(item.text, pos);
-                }
-
-                word.style.left = `${pos.x.toFixed(2)}px`;
-                word.style.top = `${pos.y.toFixed(2)}px`;
-                word.style.transform = `translate(-50%, -50%) scale(${1 + weightRatio * 0.1})`;
-                word.addEventListener('click', () => {
-                    word.classList.add('concept-word-hidden');
-                    setTimeout(() => { word.remove(); wordPositions.delete(item.text); }, 300);
+                wordParticles.push({
+                    el: wordEl,
+                    x: 0, y: 0, vx: 0, vy: 0, width: 0, height: 0
                 });
-                wordsLayer.appendChild(word);
             });
+
+            // Defer simulation to allow DOM to update
+            setTimeout(runForceSimulation, 50);
         }
 
         async function fetchRealAnswers() {
@@ -247,7 +295,7 @@
         function resetDisplay() {
             stopAllIntervals();
             mockAnswers = [];
-            wordPositions.clear();
+            wordParticles = [];
             wordsLayer.innerHTML = '';
             conceptTotal.textContent = '0';
         }
@@ -298,20 +346,17 @@
         });
 
         shuffleBtn.addEventListener('click', () => {
-            if (mockAnswers.length === 0) return;
-            wordPositions.clear();
-            const wordItems = extractWordInstances(mockAnswers);
-            renderWords(wordItems);
+            if (wordParticles.length === 0 || isSimulationRunning) return;
+            // Re-run simulation on existing particles
+            runForceSimulation();
         });
         
         let resizeTimeout;
         window.addEventListener('resize', () => {
             clearTimeout(resizeTimeout);
             resizeTimeout = setTimeout(() => {
-                if (mockAnswers.length > 0) {
-                    wordPositions.clear();
-                    const wordItems = extractWordInstances(mockAnswers);
-                    renderWords(wordItems);
+                if (wordParticles.length > 0) {
+                    runForceSimulation();
                 }
             }, 200);
         });
