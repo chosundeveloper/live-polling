@@ -24,17 +24,17 @@
 
                 <div class="main-content">
                     <div class="answers-main">
-                        <div class="question-core" data-question-index="01">
-                            <span class="core-label">Question 01</span>
-                            <p class="question-core-text"></p>
+                        <div class="responses-meta">
+                            <span class="responses-chip">LIVE</span>
+                            <p class="responses-title">참가자 응답이 실시간으로 흘러갑니다</p>
                         </div>
 
                         <div class="word-cloud" id="wordCloud1">
                             <p class="word-cloud-placeholder">답변이 모이면 핵심 키워드를 분석해 보여줄게요</p>
                         </div>
 
-                        <div class="bubble-layer" id="bubbleLayer1">
-                            <div class="bubble-placeholder">
+                        <div class="answer-gallery" id="answerGallery1">
+                            <div class="answer-empty">
                                 <p>아직 답변이 없습니다</p>
                                 <small>첫 번째 의견을 올려보세요!</small>
                             </div>
@@ -92,17 +92,17 @@
 
                 <div class="main-content">
                     <div class="answers-main">
-                        <div class="question-core" data-question-index="02">
-                            <span class="core-label">Question 02</span>
-                            <p class="question-core-text"></p>
+                        <div class="responses-meta">
+                            <span class="responses-chip">LIVE</span>
+                            <p class="responses-title">참가자 응답이 실시간으로 흘러갑니다</p>
                         </div>
 
                         <div class="word-cloud" id="wordCloud2">
                             <p class="word-cloud-placeholder">답변이 모이면 핵심 키워드를 분석해 보여줄게요</p>
                         </div>
 
-                        <div class="bubble-layer" id="bubbleLayer2">
-                            <div class="bubble-placeholder">
+                        <div class="answer-gallery" id="answerGallery2">
+                            <div class="answer-empty">
                                 <p>아직 답변이 없습니다</p>
                                 <small>첫 번째 의견을 올려보세요!</small>
                             </div>
@@ -159,17 +159,17 @@
 
                 <div class="main-content">
                     <div class="answers-main">
-                        <div class="question-core" data-question-index="03">
-                            <span class="core-label">Question 03</span>
-                            <p class="question-core-text"></p>
+                        <div class="responses-meta">
+                            <span class="responses-chip">LIVE</span>
+                            <p class="responses-title">참가자 응답이 실시간으로 흘러갑니다</p>
                         </div>
 
                         <div class="word-cloud" id="wordCloud3">
                             <p class="word-cloud-placeholder">답변이 모이면 핵심 키워드를 분석해 보여줄게요</p>
                         </div>
 
-                        <div class="bubble-layer" id="bubbleLayer3">
-                            <div class="bubble-placeholder">
+                        <div class="answer-gallery" id="answerGallery3">
+                            <div class="answer-empty">
                                 <p>아직 답변이 없습니다</p>
                                 <small>첫 번째 의견을 올려보세요!</small>
                             </div>
@@ -227,8 +227,7 @@
         };
 
         const CLUSTER_COLORS = ['cluster-blue', 'cluster-teal', 'cluster-gold', 'cluster-coral'];
-        const TEXT_SIZES = ['text-size-xs', 'text-size-sm', 'text-size-md', 'text-size-lg'];
-        const driftIntervals = {};
+        const MAX_VISIBLE_CARDS = 24;
 
         const STOP_WORDS = new Set([
             'the','and','that','with','this','from','about','have','today','just','really','very','있어요','합니다','정말',
@@ -306,9 +305,9 @@
 
             if (!result.success || !result.data) return;
 
-            const container = document.getElementById(`bubbleLayer${questionId}`);
+            const gallery = document.getElementById(`answerGallery${questionId}`);
             const slide = document.querySelector(`.slide[data-question-id="${questionId}"]`);
-            if (!container || !slide) return;
+            if (!gallery || !slide) return;
 
             const countElement = slide.querySelector('.answer-count');
             const totalElement = slide.querySelector('.answer-total');
@@ -322,110 +321,93 @@
             if (updatedElement) updatedElement.textContent = nowText;
 
             if (responseCount === 0) {
-                container.innerHTML = `
-                    <div class="bubble-placeholder">
+                gallery.innerHTML = `
+                    <div class="answer-empty">
                         <p>아직 답변이 없습니다</p>
                         <small>첫 번째 의견을 올려보세요!</small>
                     </div>
                 `;
                 boardState[questionId].keywords = [];
                 boardState[questionId].keywordColors = {};
-                lastAnswerIds[questionId].clear();
-                if (driftIntervals[questionId]) {
-                    clearInterval(driftIntervals[questionId]);
-                    delete driftIntervals[questionId];
-                }
+                lastAnswerIds[questionId] = new Set();
                 updateKeywordVisuals(questionId, []);
                 return;
             }
 
             updateKeywordVisuals(questionId, result.data);
-
-            const newAnswers = result.data.filter(answer => !lastAnswerIds[questionId].has(answer.id));
-
-            if (newAnswers.length > 0) {
-                const placeholder = container.querySelector('.bubble-placeholder');
-                if (placeholder) placeholder.remove();
-
-                newAnswers.forEach((answer, index) => {
-                    lastAnswerIds[questionId].add(answer.id);
-                    setTimeout(() => {
-                        addAnswerText(container, answer, questionId);
-                    }, index * 120);
-                });
-
-                setTimeout(() => {
-                    driftExistingAnswers(questionId);
-                    ensureDriftLoop(questionId);
-                }, newAnswers.length * 140);
-            }
+            renderAnswerGallery(questionId, result.data);
         }
 
-        // 답변 텍스트 추가 및 드리프트
-        function addAnswerText(container, answer, questionId) {
-            const textEl = document.createElement('span');
-            textEl.className = 'answer-text';
-            textEl.setAttribute('data-answer-id', answer.id);
+        function renderAnswerGallery(questionId, answers) {
+            const gallery = document.getElementById(`answerGallery${questionId}`);
+            if (!gallery) return;
 
-            const sizeClass = TEXT_SIZES[Math.floor(Math.random() * TEXT_SIZES.length)];
-            textEl.classList.add(sizeClass);
+            const previousIds = new Set(lastAnswerIds[questionId] || []);
+            const nextState = new Set();
+            const limited = answers.slice(0, MAX_VISIBLE_CARDS);
 
-            if (Math.random() < 0.1) {
-                textEl.classList.add('vertical');
-            }
+            gallery.innerHTML = '';
 
-            const keywords = boardState[questionId]?.keywords || [];
-            const clusterInfo = resolveClusterInfo(answer.answer_text, questionId, keywords);
-            textEl.classList.add(clusterInfo.colorClass);
-            textEl.textContent = answer.answer_text;
+            limited.forEach(answer => {
+                nextState.add(answer.id);
+                const card = createAnswerCard(answer, questionId);
+                if (!previousIds.has(answer.id)) {
+                    card.classList.add('is-new');
+                }
+                gallery.appendChild(card);
 
-            textEl.style.setProperty('--offset-x', '0px');
-            textEl.style.setProperty('--offset-y', '0px');
-            textEl.style.setProperty('--rotation', '0deg');
-
-            container.appendChild(textEl);
-
-            requestAnimationFrame(() => {
-                textEl.classList.add('show');
-                assignRandomOffset(textEl, container);
+                requestAnimationFrame(() => {
+                    card.classList.add('show');
+                });
             });
 
-            enforceTextLimit(container);
+            lastAnswerIds[questionId] = nextState;
         }
 
-        function assignRandomOffset(element, container) {
-            const width = container.clientWidth || 0;
-            const height = container.clientHeight || 0;
-            if (!width || !height) return;
+        function createAnswerCard(answer, questionId) {
+            const card = document.createElement('article');
+            const keywords = boardState[questionId]?.keywords || [];
+            const clusterInfo = resolveClusterInfo(answer.answer_text, questionId, keywords);
 
-            const padding = 80;
-            const offsetX = (Math.random() * 2 - 1) * ((width / 2) - padding);
-            const offsetY = (Math.random() * 2 - 1) * ((height / 2) - padding);
-            const rotation = (Math.random() * 8 - 4).toFixed(2);
+            card.className = `answer-card ${clusterInfo.colorClass}`;
+            card.setAttribute('data-answer-id', answer.id);
 
-            element.style.setProperty('--offset-x', `${offsetX}px`);
-            element.style.setProperty('--offset-y', `${offsetY}px`);
-            element.style.setProperty('--rotation', `${rotation}deg`);
+            const head = document.createElement('div');
+            head.className = 'answer-card-head';
+
+            const badge = document.createElement('span');
+            badge.className = 'answer-badge';
+            badge.textContent = clusterInfo.label;
+
+            const time = document.createElement('span');
+            time.className = 'answer-time';
+            time.textContent = formatRelativeTime(answer.created_at);
+
+            const text = document.createElement('p');
+            text.className = 'answer-card-text';
+            text.textContent = answer.answer_text;
+
+            head.appendChild(badge);
+            head.appendChild(time);
+            card.appendChild(head);
+            card.appendChild(text);
+
+            return card;
         }
 
-        function driftExistingAnswers(questionId) {
-            const container = document.getElementById(`bubbleLayer${questionId}`);
-            if (!container) return;
-            const texts = container.querySelectorAll('.answer-text');
-            texts.forEach(text => assignRandomOffset(text, container));
-        }
+        function formatRelativeTime(timestamp) {
+            if (!timestamp) return '';
+            const created = new Date(timestamp);
+            const diff = Date.now() - created.getTime();
 
-        function ensureDriftLoop(questionId) {
-            if (driftIntervals[questionId]) return;
-            driftIntervals[questionId] = setInterval(() => {
-                driftExistingAnswers(questionId);
-            }, 7000);
-        }
-
-        function enforceTextLimit(container, limit = 80) {
-            const items = Array.from(container.querySelectorAll('.answer-text'));
-            if (items.length <= limit) return;
-            items.slice(limit).forEach(item => item.remove());
+            if (diff < 60000) return '방금';
+            if (diff < 3600000) {
+                return `${Math.max(1, Math.floor(diff / 60000))}분 전`;
+            }
+            if (diff < 86400000) {
+                return `${Math.floor(diff / 3600000)}시간 전`;
+            }
+            return created.toLocaleDateString('ko-KR', { month: 'short', day: 'numeric' });
         }
 
         function updateKeywordVisuals(questionId, answers) {
@@ -529,18 +511,6 @@
             return { colorClass, label };
         }
 
-        // 질문 텍스트를 중앙 코어에 동기화
-        function syncQuestionCores() {
-            document.querySelectorAll('.slide').forEach(slide => {
-                const questionText = slide.querySelector('.display-question')?.textContent?.trim();
-                const coreText = slide.querySelector('.question-core-text');
-
-                if (questionText && coreText) {
-                    coreText.textContent = questionText;
-                }
-            });
-        }
-
         // 모든 질문 polling 시작
         function startPolling() {
             [1, 2, 3].forEach(questionId => {
@@ -555,7 +525,6 @@
 
         // 초기화
         document.addEventListener('DOMContentLoaded', () => {
-            syncQuestionCores();
             generateQRCodes();
             startPolling();
         });
