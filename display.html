@@ -33,9 +33,9 @@
                             <p class="word-cloud-placeholder">답변이 모이면 핵심 키워드를 분석해 보여줄게요</p>
                         </div>
 
-                        <div class="answer-gallery" id="answerGallery1">
-                            <div class="answer-empty">
-                                <p>아직 답변이 없습니다</p>
+                        <div class="answer-stream" id="answerStream1">
+                            <div class="stream-empty">
+                                <span>아직 답변이 없습니다</span>
                                 <small>첫 번째 의견을 올려보세요!</small>
                             </div>
                         </div>
@@ -101,9 +101,9 @@
                             <p class="word-cloud-placeholder">답변이 모이면 핵심 키워드를 분석해 보여줄게요</p>
                         </div>
 
-                        <div class="answer-gallery" id="answerGallery2">
-                            <div class="answer-empty">
-                                <p>아직 답변이 없습니다</p>
+                        <div class="answer-stream" id="answerStream2">
+                            <div class="stream-empty">
+                                <span>아직 답변이 없습니다</span>
                                 <small>첫 번째 의견을 올려보세요!</small>
                             </div>
                         </div>
@@ -168,9 +168,9 @@
                             <p class="word-cloud-placeholder">답변이 모이면 핵심 키워드를 분석해 보여줄게요</p>
                         </div>
 
-                        <div class="answer-gallery" id="answerGallery3">
-                            <div class="answer-empty">
-                                <p>아직 답변이 없습니다</p>
+                        <div class="answer-stream" id="answerStream3">
+                            <div class="stream-empty">
+                                <span>아직 답변이 없습니다</span>
                                 <small>첫 번째 의견을 올려보세요!</small>
                             </div>
                         </div>
@@ -227,7 +227,7 @@
         };
 
         const CLUSTER_COLORS = ['cluster-blue', 'cluster-teal', 'cluster-gold', 'cluster-coral'];
-        const MAX_VISIBLE_CARDS = 24;
+        const MAX_VISIBLE_LINES = 40;
 
         const STOP_WORDS = new Set([
             'the','and','that','with','this','from','about','have','today','just','really','very','있어요','합니다','정말',
@@ -305,9 +305,9 @@
 
             if (!result.success || !result.data) return;
 
-            const gallery = document.getElementById(`answerGallery${questionId}`);
+            const stream = document.getElementById(`answerStream${questionId}`);
             const slide = document.querySelector(`.slide[data-question-id="${questionId}"]`);
-            if (!gallery || !slide) return;
+            if (!stream || !slide) return;
 
             const countElement = slide.querySelector('.answer-count');
             const totalElement = slide.querySelector('.answer-total');
@@ -321,9 +321,9 @@
             if (updatedElement) updatedElement.textContent = nowText;
 
             if (responseCount === 0) {
-                gallery.innerHTML = `
-                    <div class="answer-empty">
-                        <p>아직 답변이 없습니다</p>
+                stream.innerHTML = `
+                    <div class="stream-empty">
+                        <span>아직 답변이 없습니다</span>
                         <small>첫 번째 의견을 올려보세요!</small>
                     </div>
                 `;
@@ -335,64 +335,56 @@
             }
 
             updateKeywordVisuals(questionId, result.data);
-            renderAnswerGallery(questionId, result.data);
+            renderAnswerStream(questionId, result.data);
         }
 
-        function renderAnswerGallery(questionId, answers) {
-            const gallery = document.getElementById(`answerGallery${questionId}`);
-            if (!gallery) return;
+        function renderAnswerStream(questionId, answers) {
+            const stream = document.getElementById(`answerStream${questionId}`);
+            if (!stream) return;
 
-            const previousIds = new Set(lastAnswerIds[questionId] || []);
-            const nextState = new Set();
-            const limited = answers.slice(0, MAX_VISIBLE_CARDS);
+            const limited = answers.slice(0, MAX_VISIBLE_LINES);
+            stream.innerHTML = '';
 
-            gallery.innerHTML = '';
-
-            limited.forEach(answer => {
-                nextState.add(answer.id);
-                const card = createAnswerCard(answer, questionId);
-                if (!previousIds.has(answer.id)) {
-                    card.classList.add('is-new');
-                }
-                gallery.appendChild(card);
+            limited.forEach((answer, index) => {
+                const line = createAnswerLine(answer, questionId);
+                stream.appendChild(line);
 
                 requestAnimationFrame(() => {
-                    card.classList.add('show');
+                    line.style.opacity = '1';
+                    line.style.transform = 'translateY(0)';
                 });
             });
 
-            lastAnswerIds[questionId] = nextState;
+            lastAnswerIds[questionId] = new Set(limited.map(ans => ans.id));
         }
 
-        function createAnswerCard(answer, questionId) {
-            const card = document.createElement('article');
+        function createAnswerLine(answer, questionId) {
             const keywords = boardState[questionId]?.keywords || [];
             const clusterInfo = resolveClusterInfo(answer.answer_text, questionId, keywords);
 
-            card.className = `answer-card ${clusterInfo.colorClass}`;
-            card.setAttribute('data-answer-id', answer.id);
+            const row = document.createElement('div');
+            row.className = `answer-line ${clusterInfo.colorClass}`;
+            row.setAttribute('data-answer-id', answer.id);
+            row.style.opacity = '0';
+            row.style.transform = 'translateY(8px)';
 
-            const head = document.createElement('div');
-            head.className = 'answer-card-head';
-
-            const badge = document.createElement('span');
-            badge.className = 'answer-badge';
-            badge.textContent = clusterInfo.label;
-
-            const time = document.createElement('span');
-            time.className = 'answer-time';
-            time.textContent = formatRelativeTime(answer.created_at);
+            const label = document.createElement('span');
+            label.className = 'answer-label';
+            label.textContent = clusterInfo.label;
 
             const text = document.createElement('p');
-            text.className = 'answer-card-text';
+            text.className = 'answer-line-text';
             text.textContent = answer.answer_text;
 
-            head.appendChild(badge);
-            head.appendChild(time);
-            card.appendChild(head);
-            card.appendChild(text);
+            const time = document.createElement('span');
+            time.className = 'answer-line-time';
+            time.textContent = formatRelativeTime(answer.created_at);
 
-            return card;
+            row.appendChild(label);
+            row.appendChild(text);
+            row.appendChild(time);
+
+            return row;
         }
 
         function formatRelativeTime(timestamp) {
