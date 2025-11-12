@@ -1216,14 +1216,14 @@ footer a:hover {
     height: 100%;
     overflow: visible;
     z-index: 2;
-    padding-right: 320px;
+    padding-bottom: 240px;
 }
 
 .concept-info-panel {
     position: absolute;
-    top: 28px;
-    right: 28px;
-    width: 280px;
+    bottom: 28px;
+    left: 28px;
+    width: clamp(240px, 22vw, 320px);
     display: flex;
     flex-direction: column;
     gap: 18px;
@@ -1430,7 +1430,7 @@ footer a:hover {
     .concept-body { padding: 16px; }
     .concept-wrapper { padding: 20px; }
     .concept-cloud { padding: 20px; }
-    .concept-words { padding-right: 0; }
+    .concept-words { padding-bottom: 0; }
     .concept-info-panel { position: static; width: 100%; flex-direction: row; align-items: center; margin-top: 16px; }
     .concept-meta-stack { flex: 1; }
     .concept-meta { justify-content: flex-start; }
