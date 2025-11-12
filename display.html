@@ -174,8 +174,8 @@
                 }
                 const centerDx = p1.x - centerW;
                 const centerDy = p1.y - centerH;
-                p1.vx -= centerDx * 0.00005; // Weaker centering force
-                p1.vy -= centerDy * 0.00005;
+                p1.vx += centerDx * 0.00008; // Push particles away from center
+                p1.vy += centerDy * 0.00008;
             }
 
             for (const p of wordParticles) {
@@ -183,6 +183,23 @@
                 p.vy *= 0.92;
                 p.x += p.vx;
                 p.y += p.vy;
+
+                const edgePadding = Math.min(containerWidth, containerHeight) * 0.05;
+                if (p.x < edgePadding) {
+                    p.x = edgePadding;
+                    p.vx *= -0.6;
+                } else if (p.x > containerWidth - edgePadding) {
+                    p.x = containerWidth - edgePadding;
+                    p.vx *= -0.6;
+                }
+
+                if (p.y < edgePadding) {
+                    p.y = edgePadding;
+                    p.vy *= -0.6;
+                } else if (p.y > containerHeight - edgePadding) {
+                    p.y = containerHeight - edgePadding;
+                    p.vy *= -0.6;
+                }
 
                 // Animate font size
                 const sizeDiff = p.targetFontSize - p.currentFontSize;
@@ -234,8 +251,10 @@
 
             const maxWeight = Math.max(...limited.map(item => item[1]));
             const palette = ['#ef4444', '#f97316', '#facc15', '#22c55e', '#14b8a6', '#0ea5e9', '#3b82f6', '#6366f1', '#a855f7', '#ec4899'];
-            const centerW = wordsLayer.offsetWidth / 2;
-            const centerH = wordsLayer.offsetHeight / 2;
+            const containerWidth = wordsLayer.offsetWidth;
+            const containerHeight = wordsLayer.offsetHeight;
+            const centerW = containerWidth / 2;
+            const centerH = containerHeight / 2;
 
             limited.forEach(([text, weight], index) => {
                 const weightRatio = weight / maxWeight;
@@ -279,11 +298,15 @@
 
                     const rect = wordEl.getBoundingClientRect();
                     const angle = Math.random() * Math.PI * 2; // Random angle
-                    const speed = 10 + Math.random() * 10; // Increased initial speed
+                    const speed = 8 + Math.random() * 6; // Slightly softer speed
+                    const radiusBase = Math.min(containerWidth, containerHeight) / 2;
+                    const radius = radiusBase * (0.75 + Math.random() * 0.25); // Spawn near outer ring
+                    const startX = centerW + Math.cos(angle) * radius;
+                    const startY = centerH + Math.sin(angle) * radius;
                     particle = {
                         el: wordEl,
-                        x: centerW, // Appear from center
-                        y: centerH, // Appear from center
+                        x: Math.max(20, Math.min(containerWidth - 20, startX)),
+                        y: Math.max(20, Math.min(containerHeight - 20, startY)),
                         vx: Math.cos(angle) * speed, // Initial outward velocity
                         vy: Math.sin(angle) * speed, // Initial outward velocity
                         width: rect.width,
