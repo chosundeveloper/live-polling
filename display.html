@@ -91,7 +91,8 @@
         const PREFIXES = ['따뜻한', '깊은', '새로운', '반짝이는', '집중의', '장난기 있는', '강렬한', '잔잔한', '선명한'];
         const SUFFIXES = ['무드', '아이디어', '영감', '에너지', '발견', '시간', '순간', '대화', '시선'];
         const MAX_WORDS = 150;
-        const MAX_PARTICLE_SPEED = 2.4;
+        const MAX_PARTICLE_SPEED = 2.2;
+        const MIN_SEPARATION = 28;
 
         function getCloudBounds() {
             const rect = wordsLayer.getBoundingClientRect();
@@ -196,10 +197,10 @@
                     const dx = p1.x - p2.x;
                     const dy = p1.y - p2.y;
                     const distance = Math.sqrt(dx * dx + dy * dy);
-                    const minDistance = (p1.width + p2.width) / 2 * 1.1; // Padding
+                    const minDistance = Math.max(((p1.width + p2.width) / 2) * 1.05, MIN_SEPARATION);
 
                     if (distance < minDistance && distance > 0) {
-                        const force = (minDistance - distance) * 0.04; // Softer repulsion force
+                        const force = ((minDistance - distance) / minDistance) * 0.18;
                         const angle = Math.atan2(dy, dx);
                         const fx = Math.cos(angle) * force;
                         const fy = Math.sin(angle) * force;
