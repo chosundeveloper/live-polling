@@ -97,6 +97,7 @@
         const DEFAULT_PARTICLE_HEIGHT = 22;
         const INTRO_GROWTH_RATE = 0.015;
         const INTRO_HOLD_PROGRESS = 0.08;
+        const INTRO_HOLD_TRAVEL_RATIO = 0.2;
         const INTRO_BLOOM_JITTER = 10;
         const OUTWARD_DRIFT_FORCE = 0.00002;
         const TARGET_ATTRACTION_FORCE = 0.00012;
@@ -162,16 +163,25 @@
             return { width, height };
         }
 
+        function remapIntroProgress(progress) {
+            if (progress <= INTRO_HOLD_PROGRESS) {
+                const holdRatio = INTRO_HOLD_PROGRESS > 0 ? progress / INTRO_HOLD_PROGRESS : 1;
+                return holdRatio * INTRO_HOLD_TRAVEL_RATIO;
+            }
+            const releaseRatio = (progress - INTRO_HOLD_PROGRESS) / Math.max(0.0001, 1 - INTRO_HOLD_PROGRESS);
+            return INTRO_HOLD_TRAVEL_RATIO + releaseRatio * (1 - INTRO_HOLD_TRAVEL_RATIO);
+        }
+
         function updateIntroMotion(particle, centerW, centerH) {
             if (particle.phase !== 'intro') return false;
             const prevProgress = particle.spiralProgress || 0;
             const nextProgress = Math.min(1, prevProgress + INTRO_GROWTH_RATE);
-            const heldProgress = Math.max(0, Math.min(1, (prevProgress - INTRO_HOLD_PROGRESS) / Math.max(0.0001, 1 - INTRO_HOLD_PROGRESS)));
-            const eased = heldProgress === 0 ? 0 : 1 - Math.pow(1 - heldProgress, 3);
+            const travelProgress = remapIntroProgress(nextProgress);
+            const eased = travelProgress === 0 ? 0 : 1 - Math.pow(1 - travelProgress, 3);
             const radius = (particle.ringRadius || 80) * eased;
-            const wobble = Math.sin(heldProgress * Math.PI) * 0.08;
+            const wobble = Math.sin(travelProgress * Math.PI) * 0.08;
             const angle = (particle.ringAngle || 0) + wobble;
-            const bloom = (1 - heldProgress) * INTRO_BLOOM_JITTER;
+            const bloom = (1 - travelProgress) * INTRO_BLOOM_JITTER;
             const normalAngle = angle + Math.PI / 2;
             particle.x = centerW + Math.cos(angle) * radius + Math.cos(normalAngle) * bloom;
             particle.y = centerH + Math.sin(angle) * radius + Math.sin(normalAngle) * bloom;
