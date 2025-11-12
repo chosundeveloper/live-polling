@@ -455,6 +455,9 @@
                     const spawnJitter = 4;
                     const startX = centerW + (Math.random() - 0.5) * spawnJitter;
                     const startY = centerH + (Math.random() - 0.5) * spawnJitter;
+                    wordEl.style.left = `${startX}px`;
+                    wordEl.style.top = `${startY}px`;
+                    wordEl.style.transform = 'translate(-50%, -50%)';
                     particle = {
                         el: wordEl,
                         x: startX,
