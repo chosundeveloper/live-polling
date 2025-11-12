@@ -93,14 +93,12 @@
         const MIN_SEPARATION = 28;
         const DEFAULT_PARTICLE_WIDTH = 48;
         const DEFAULT_PARTICLE_HEIGHT = 22;
-        const INTRO_GROWTH_RATE = 0.015;
-        const INTRO_HOLD_PROGRESS = 0.08;
-        const INTRO_HOLD_TRAVEL_RATIO = 0.2;
-        const INTRO_BLOOM_JITTER = 10;
-        const INTRO_SPIRAL_TWIST = Math.PI * 1.25;
-        const INTRO_CHASE_BASE = 0.05;
-        const INTRO_CHASE_SCALE = 0.25;
-        const INTRO_CHASE_MAX = 0.35;
+        const INTRO_DURATION_BASE = 1350;
+        const INTRO_DURATION_VARIANCE = 650;
+        const INTRO_BLOOM_JITTER = 18;
+        const INTRO_SPIRAL_TWIST = Math.PI * 1.35;
+        const INTRO_SWAY_AMPLITUDE = 26;
+        const INTRO_SWAY_FREQUENCY = 1.6;
         const OUTWARD_DRIFT_FORCE = 0.00002;
         const TARGET_ATTRACTION_FORCE = 0.00012;
         const RADIAL_FORCE = 0.0004;
@@ -168,40 +166,38 @@
             return { width, height };
         }
 
-        function remapIntroProgress(progress) {
-            if (progress <= INTRO_HOLD_PROGRESS) {
-                const holdRatio = INTRO_HOLD_PROGRESS > 0 ? progress / INTRO_HOLD_PROGRESS : 1;
-                return holdRatio * INTRO_HOLD_TRAVEL_RATIO;
-            }
-            const releaseRatio = (progress - INTRO_HOLD_PROGRESS) / Math.max(0.0001, 1 - INTRO_HOLD_PROGRESS);
-            return INTRO_HOLD_TRAVEL_RATIO + releaseRatio * (1 - INTRO_HOLD_TRAVEL_RATIO);
+        function easeOutCubic(t) {
+            const clamped = Math.min(1, Math.max(0, t));
+            return 1 - Math.pow(1 - clamped, 3);
         }
 
-        function updateIntroMotion(particle, centerW, centerH) {
+        function updateIntroMotion(particle, centerW, centerH, timestamp) {
             if (particle.phase !== 'intro') return false;
-            const prevProgress = particle.spiralProgress || 0;
-            const nextProgress = Math.min(1, prevProgress + INTRO_GROWTH_RATE);
-            const travelProgress = remapIntroProgress(nextProgress);
-            const eased = travelProgress === 0 ? 0 : 1 - Math.pow(1 - travelProgress, 3);
-            const radius = (particle.ringRadius || 80) * eased;
-            const wobble = Math.sin(travelProgress * Math.PI) * 0.08;
-            const finalAngle = particle.ringAngle || 0;
-            const spiralAngle = finalAngle - (1 - travelProgress) * INTRO_SPIRAL_TWIST;
-            const angle = spiralAngle + wobble;
-            const bloom = (1 - travelProgress) * INTRO_BLOOM_JITTER;
-            const normalAngle = angle + Math.PI / 2;
-            const desiredX = centerW + Math.cos(angle) * radius + Math.cos(normalAngle) * bloom;
-            const desiredY = centerH + Math.sin(angle) * radius + Math.sin(normalAngle) * bloom;
-            const chaseFactor = Math.min(INTRO_CHASE_MAX, INTRO_CHASE_BASE + travelProgress * INTRO_CHASE_SCALE);
-            const dx = desiredX - particle.x;
-            const dy = desiredY - particle.y;
-            particle.x += dx * chaseFactor;
-            particle.y += dy * chaseFactor;
-            particle.vx = dx * chaseFactor;
-            particle.vy = dy * chaseFactor;
-            particle.spiralProgress = nextProgress;
-            if (nextProgress >= 1) {
+            if (!particle.introStart) {
+                particle.introStart = timestamp;
+            }
+            const duration = particle.introDuration || INTRO_DURATION_BASE;
+            const rawProgress = duration <= 0 ? 1 : Math.min(1, (timestamp - particle.introStart) / duration);
+            const eased = easeOutCubic(rawProgress);
+            const swirl = (1 - eased) * INTRO_SPIRAL_TWIST;
+            const orbitAngle = (particle.ringAngle || 0) - swirl;
+            const orbitRadius = (particle.ringRadius || 80) * eased;
+            const bloom = (1 - eased) * INTRO_BLOOM_JITTER;
+            const sway = Math.sin(rawProgress * Math.PI * INTRO_SWAY_FREQUENCY) * INTRO_SWAY_AMPLITUDE * (1 - eased);
+            const baseX = centerW + Math.cos(orbitAngle) * orbitRadius;
+            const baseY = centerH + Math.sin(orbitAngle) * orbitRadius;
+            const normalAngle = orbitAngle + Math.PI / 2;
+            particle.prevX = particle.x;
+            particle.prevY = particle.y;
+            particle.x = baseX + Math.cos(normalAngle) * bloom + Math.cos(orbitAngle) * sway * 0.05;
+            particle.y = baseY + Math.sin(normalAngle) * bloom + Math.sin(orbitAngle) * sway * 0.05;
+            particle.vx = (particle.x - (particle.prevX ?? particle.x)) * 0.5;
+            particle.vy = (particle.y - (particle.prevY ?? particle.y)) * 0.5;
+            particle.spiralProgress = eased;
+            if (rawProgress >= 1) {
                 particle.phase = 'idle';
+                particle.introStart = null;
+                particle.introDuration = null;
                 particle.vx = (Math.random() - 0.5) * 0.1;
                 particle.vy = (Math.random() - 0.5) * 0.1;
             }
@@ -270,14 +266,14 @@
         }
 
         // --- Simulation Loop ---
-        function simulationLoop() {
+        function simulationLoop(timestamp = performance.now()) {
             const { width: containerWidth, height: containerHeight } = getCloudBounds();
             const centerW = containerWidth / 2;
             const centerH = containerHeight / 2;
 
             const idleParticles = [];
             for (const p of wordParticles) {
-                const isIntro = updateIntroMotion(p, centerW, centerH);
+                const isIntro = updateIntroMotion(p, centerW, centerH, timestamp);
                 if (!isIntro) idleParticles.push(p);
             }
 
@@ -462,7 +458,7 @@
                             wordParticles = wordParticles.filter(p => p.el !== wordEl);
                             if (wordParticles.length > 0) {
                                 wordParticles.forEach(p => { p.vx += (Math.random() - 0.5) * 5; p.vy += (Math.random() - 0.5) * 5; });
-                                if (!animationFrameId) simulationLoop();
+                                if (!animationFrameId) simulationLoop(performance.now());
                             } else {
                                 wordsLayer.innerHTML = '<div class="concept-empty">첫 번째 단어를 기다리고 있어요</div>';
                                 if (animationFrameId) { cancelAnimationFrame(animationFrameId); animationFrameId = null; }
@@ -487,6 +483,8 @@
                         el: wordEl,
                         x: startX,
                         y: startY,
+                        prevX: startX,
+                        prevY: startY,
                         vx: 0,
                         vy: 0,
                         width: rect.width,
@@ -496,7 +494,9 @@
                         isVertical,
                         spiralIndex,
                         phase: 'intro',
-                        spiralProgress: 0
+                        spiralProgress: 0,
+                        introDuration: INTRO_DURATION_BASE + Math.random() * INTRO_DURATION_VARIANCE,
+                        introStart: null
                     };
                     assignParticleTarget(particle, centerW, centerH, geometry, spiralIndex);
                     wordParticles.push(particle);
@@ -513,7 +513,7 @@
             });
 
             if (!animationFrameId && wordParticles.length > 0) {
-                simulationLoop();
+                simulationLoop(performance.now());
             }
         }
 
