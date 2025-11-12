@@ -2,7 +2,7 @@
 
 ## Particle Canvas (`display.html`)
 - 새 단어는 항상 화면 중앙 근처에서 생성되며 `phase: intro` 동안 황금각 스파이럴 타깃까지 서서히 이동합니다.
-- `INTRO_GROWTH_RATE`, `OUTWARD_DRIFT_FORCE`, `TARGET_ATTRACTION_FORCE`, `RADIAL_FORCE` 값을 조정해 퍼지는 속도와 흔들림을 미세하게 제어할 수 있습니다.
+- `INTRO_GROWTH_RATE`, `INTRO_BLOOM_JITTER`, `OUTWARD_DRIFT_FORCE`, `TARGET_ATTRACTION_FORCE`, `RADIAL_FORCE` 값을 조정해 퍼지는 속도와 흔들림을 미세하게 제어할 수 있습니다.
 - 인트로 종료 후(`phase: idle`)에는 저속 드리프트와 충돌 보정이 적용되어 단어 간 간격이 유지됩니다.
 - 애니메이션 확인 시 `display.html?mock=1`을 사용하고, 필요하면 `QUESTIONS` 상수에서 기본 문항을 교체합니다.
 

@@ -96,6 +96,7 @@
         const DEFAULT_PARTICLE_WIDTH = 48;
         const DEFAULT_PARTICLE_HEIGHT = 22;
         const INTRO_GROWTH_RATE = 0.015;
+        const INTRO_BLOOM_JITTER = 10;
         const OUTWARD_DRIFT_FORCE = 0.00002;
         const TARGET_ATTRACTION_FORCE = 0.00012;
         const RADIAL_FORCE = 0.0004;
@@ -164,11 +165,13 @@
             if (particle.phase !== 'intro') return false;
             particle.spiralProgress = Math.min(1, (particle.spiralProgress || 0) + INTRO_GROWTH_RATE);
             const eased = 1 - Math.pow(1 - particle.spiralProgress, 3);
-            const radius = Math.max(12, (particle.ringRadius || 80) * eased);
-            const wobble = Math.sin(particle.spiralProgress * Math.PI) * 0.05;
+            const radius = (particle.ringRadius || 80) * eased;
+            const wobble = Math.sin(particle.spiralProgress * Math.PI) * 0.08;
             const angle = (particle.ringAngle || 0) + wobble;
-            particle.x = centerW + Math.cos(angle) * radius;
-            particle.y = centerH + Math.sin(angle) * radius;
+            const bloom = (1 - particle.spiralProgress) * INTRO_BLOOM_JITTER;
+            const normalAngle = angle + Math.PI / 2;
+            particle.x = centerW + Math.cos(angle) * radius + Math.cos(normalAngle) * bloom;
+            particle.y = centerH + Math.sin(angle) * radius + Math.sin(normalAngle) * bloom;
             particle.vx = 0;
             particle.vy = 0;
             if (particle.spiralProgress >= 1) {
