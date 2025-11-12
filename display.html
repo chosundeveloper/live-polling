@@ -91,8 +91,14 @@
         const PREFIXES = ['따뜻한', '깊은', '새로운', '반짝이는', '집중의', '장난기 있는', '강렬한', '잔잔한', '선명한'];
         const SUFFIXES = ['무드', '아이디어', '영감', '에너지', '발견', '시간', '순간', '대화', '시선'];
         const MAX_WORDS = 150;
-        const MAX_PARTICLE_SPEED = 2.2;
+        const MAX_PARTICLE_SPEED = 1.4;
         const MIN_SEPARATION = 28;
+        const DEFAULT_PARTICLE_WIDTH = 48;
+        const DEFAULT_PARTICLE_HEIGHT = 22;
+        const INTRO_GROWTH_RATE = 0.015;
+        const OUTWARD_DRIFT_FORCE = 0.00002;
+        const TARGET_ATTRACTION_FORCE = 0.00012;
+        const RADIAL_FORCE = 0.0004;
 
         function getCloudBounds() {
             const rect = wordsLayer.getBoundingClientRect();
@@ -143,6 +149,34 @@
             particle.targetY = centerH + Math.sin(jitterAngle) * jitterRadius;
             particle.spiralIndex = clampedIndex;
             particle.ringRadius = radius;
+            particle.ringAngle = jitterAngle;
+        }
+
+        function getParticleDimensions(particle) {
+            const width = particle.width || particle.el.offsetWidth || DEFAULT_PARTICLE_WIDTH;
+            const height = particle.height || particle.el.offsetHeight || DEFAULT_PARTICLE_HEIGHT;
+            particle.width = width;
+            particle.height = height;
+            return { width, height };
+        }
+
+        function updateIntroMotion(particle, centerW, centerH) {
+            if (particle.phase !== 'intro') return false;
+            particle.spiralProgress = Math.min(1, (particle.spiralProgress || 0) + INTRO_GROWTH_RATE);
+            const eased = 1 - Math.pow(1 - particle.spiralProgress, 3);
+            const radius = Math.max(12, (particle.ringRadius || 80) * eased);
+            const wobble = Math.sin(particle.spiralProgress * Math.PI) * 0.05;
+            const angle = (particle.ringAngle || 0) + wobble;
+            particle.x = centerW + Math.cos(angle) * radius;
+            particle.y = centerH + Math.sin(angle) * radius;
+            particle.vx = 0;
+            particle.vy = 0;
+            if (particle.spiralProgress >= 1) {
+                particle.phase = 'idle';
+                particle.vx = (Math.random() - 0.5) * 0.1;
+                particle.vy = (Math.random() - 0.5) * 0.1;
+            }
+            return true;
         }
 
         function updateParticleTargets() {
@@ -211,17 +245,49 @@
             const centerW = containerWidth / 2;
             const centerH = containerHeight / 2;
 
-            for (let j = 0; j < wordParticles.length; j++) {
-                const p1 = wordParticles[j];
-                for (let k = j + 1; k < wordParticles.length; k++) {
-                    const p2 = wordParticles[k];
+            const idleParticles = [];
+            for (const p of wordParticles) {
+                const isIntro = updateIntroMotion(p, centerW, centerH);
+                if (!isIntro) idleParticles.push(p);
+            }
+
+            for (let j = 0; j < idleParticles.length; j++) {
+                const p1 = idleParticles[j];
+                for (let k = j + 1; k < idleParticles.length; k++) {
+                    const p2 = idleParticles[k];
                     const dx = p1.x - p2.x;
                     const dy = p1.y - p2.y;
+                    const { width: w1, height: h1 } = getParticleDimensions(p1);
+                    const { width: w2, height: h2 } = getParticleDimensions(p2);
+                    const paddedHalfWidth = (w1 + w2) / 2 + MIN_SEPARATION;
+                    const paddedHalfHeight = (h1 + h2) / 2 + MIN_SEPARATION;
+                    const overlapX = paddedHalfWidth - Math.abs(dx);
+                    const overlapY = paddedHalfHeight - Math.abs(dy);
+
+                    if (overlapX > 0 && overlapY > 0) {
+                        if (overlapX < overlapY) {
+                            const push = overlapX / 2;
+                            const direction = dx >= 0 ? 1 : -1;
+                            p1.x += direction * push;
+                            p2.x -= direction * push;
+                            p1.vx += direction * push * 0.05;
+                            p2.vx -= direction * push * 0.05;
+                        } else {
+                            const push = overlapY / 2;
+                            const direction = dy >= 0 ? 1 : -1;
+                            p1.y += direction * push;
+                            p2.y -= direction * push;
+                            p1.vy += direction * push * 0.05;
+                            p2.vy -= direction * push * 0.05;
+                        }
+                        continue;
+                    }
+
                     const distance = Math.sqrt(dx * dx + dy * dy);
-                    const minDistance = Math.max(((p1.width + p2.width) / 2) * 1.05, MIN_SEPARATION);
+                    const minDistance = Math.max(Math.min(paddedHalfWidth, paddedHalfHeight), MIN_SEPARATION);
 
                     if (distance < minDistance && distance > 0) {
-                        const force = ((minDistance - distance) / minDistance) * 0.18;
+                        const force = ((minDistance - distance) / minDistance) * 0.12;
                         const angle = Math.atan2(dy, dx);
                         const fx = Math.cos(angle) * force;
                         const fy = Math.sin(angle) * force;
@@ -233,19 +299,19 @@
                 }
                 const centerDx = p1.x - centerW;
                 const centerDy = p1.y - centerH;
-                p1.vx += centerDx * 0.00005; // Slow outward drift from center
-                p1.vy += centerDy * 0.00005;
+                p1.vx += centerDx * OUTWARD_DRIFT_FORCE;
+                p1.vy += centerDy * OUTWARD_DRIFT_FORCE;
             }
 
-            for (const p of wordParticles) {
-                p.vx *= 0.9; // Gentle damping so motion eases out
-                p.vy *= 0.9;
+            for (const p of idleParticles) {
+                p.vx *= 0.88; // Higher damping for calmer motion
+                p.vy *= 0.88;
 
                 if (p.targetX !== undefined && p.targetY !== undefined) {
                     const targetDx = p.targetX - p.x;
                     const targetDy = p.targetY - p.y;
-                    p.vx += targetDx * 0.00025;
-                    p.vy += targetDy * 0.00025;
+                    p.vx += targetDx * TARGET_ATTRACTION_FORCE;
+                    p.vy += targetDy * TARGET_ATTRACTION_FORCE;
                 }
 
                 const radialDx = p.x - centerW;
@@ -253,7 +319,7 @@
                 const radialDist = Math.hypot(radialDx, radialDy) || 1;
                 if (p.ringRadius) {
                     const radialError = p.ringRadius - radialDist;
-                    const radialForce = radialError * 0.0006;
+                    const radialForce = radialError * RADIAL_FORCE;
                     p.vx += (radialDx / radialDist) * radialForce;
                     p.vy += (radialDy / radialDist) * radialForce;
                 }
@@ -400,7 +466,9 @@
                         targetFontSize: targetFontSize,
                         isVertical,
                         spiralIndex,
-                        pendingLaunchSpeed: launchSpeed
+                        pendingLaunchSpeed: launchSpeed,
+                        phase: 'intro',
+                        spiralProgress: 0
                     };
                     assignParticleTarget(particle, centerW, centerH, geometry, spiralIndex);
                     const dirX = particle.targetX - startX;

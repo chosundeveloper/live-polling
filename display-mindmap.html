@@ -73,6 +73,70 @@
         let pollingInterval;
         let currentWordItems = [];
         const wordPositions = new Map();
+        const GOLDEN_ANGLE = Math.PI * (3 - Math.sqrt(5));
+        const WORD_PADDING = 16;
+
+        function updateExistingWordMetrics(wordEls) {
+            const layerRect = wordsLayer.getBoundingClientRect();
+            wordEls.forEach((el, text) => {
+                const rect = el.getBoundingClientRect();
+                const rawLeft = parseFloat(el.style.left);
+                const rawTop = parseFloat(el.style.top);
+                const x = Number.isFinite(rawLeft) ? rawLeft : rect.left - layerRect.left;
+                const y = Number.isFinite(rawTop) ? rawTop : rect.top - layerRect.top;
+                const metrics = wordPositions.get(text) || {};
+                metrics.x = x;
+                metrics.y = y;
+                metrics.width = rect.width || metrics.width || 40;
+                metrics.height = rect.height || metrics.height || 20;
+                wordPositions.set(text, metrics);
+            });
+        }
+
+        function isWithinBounds(x, y, width, height, containerWidth, containerHeight) {
+            const halfW = width / 2 + WORD_PADDING;
+            const halfH = height / 2 + WORD_PADDING;
+            return (
+                x - halfW >= 0 &&
+                x + halfW <= containerWidth &&
+                y - halfH >= 0 &&
+                y + halfH <= containerHeight
+            );
+        }
+
+        function overlapsExisting(x, y, width, height) {
+            for (const pos of wordPositions.values()) {
+                if (!pos) continue;
+                const halfWidth = (pos.width + width) / 2 + WORD_PADDING;
+                const halfHeight = (pos.height + height) / 2 + WORD_PADDING;
+                if (Math.abs(x - pos.x) < halfWidth && Math.abs(y - pos.y) < halfHeight) {
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        function findWordPosition(dimensions, index, total, containerWidth, containerHeight) {
+            const { width, height } = dimensions;
+            const centerX = containerWidth / 2;
+            const centerY = containerHeight / 2;
+            const maxRadius = Math.max(60, Math.min(centerX, centerY) - WORD_PADDING);
+            let radius = Math.min(maxRadius, 60 + (index / Math.max(1, total)) * maxRadius * 0.85);
+            let angle = index * GOLDEN_ANGLE;
+            const attempts = Math.max(500, total * 12);
+            for (let attempt = 0; attempt < attempts; attempt++) {
+                const progress = attempt / attempts;
+                const scaledRadius = Math.min(maxRadius, radius + attempt * 4 + progress * 12);
+                const stretch = containerWidth / Math.max(containerHeight, 1);
+                const x = centerX + Math.cos(angle) * scaledRadius * stretch * 0.85;
+                const y = centerY + Math.sin(angle) * scaledRadius;
+                if (isWithinBounds(x, y, width, height, containerWidth, containerHeight) && !overlapsExisting(x, y, width, height)) {
+                    return { x, y, width, height };
+                }
+                angle += GOLDEN_ANGLE * 0.75;
+            }
+            return { x: centerX, y: centerY, width, height };
+        }
 
         function initSelect() {
             QUESTIONS.forEach((q) => {
@@ -156,6 +220,7 @@
             wordsLayer.querySelectorAll('.concept-word').forEach(el => {
                 existingWordEls.set(el.textContent, el);
             });
+            updateExistingWordMetrics(existingWordEls);
 
             if (!items.instances.length && !existingWordEls.size) {
                 wordsLayer.innerHTML = '';
@@ -182,29 +247,38 @@
                 }
             });
 
+            if (!limited.length) {
+                return;
+            }
+
             const maxWeight = Math.max(...limited.map(item => items.frequency.get(item.text) || 1));
             const palette = ['#ef4444', '#f97316', '#facc15', '#22c55e', '#14b8a6', '#0ea5e9', '#3b82f6', '#6366f1', '#a855f7', '#ec4899'];
 
             const containerWidth = wordsLayer.offsetWidth;
             const containerHeight = wordsLayer.offsetHeight;
-            const centerW = containerWidth / 2;
-            const centerH = containerHeight / 2;
-
-            const layers = 5;
-            const wordsPerLayer = Math.ceil(limited.length / layers);
 
             limited.forEach((item, index) => {
-                // If word already exists, skip creation
+                const weight = items.frequency.get(item.text) || 1;
+                const weightRatio = weight / maxWeight;
+
                 if (existingWordEls.has(item.text)) {
+                    const existing = existingWordEls.get(item.text);
+                    existing.style.fontSize = `${(0.8 + weightRatio * 1.0).toFixed(2)}rem`;
+                    existing.style.opacity = (0.7 + weightRatio * 0.3).toFixed(2);
+                    existing.classList.toggle('concept-word-hero', weightRatio > 0.7);
+                    existing.classList.toggle('concept-word-accent', weightRatio > 0.4 && weightRatio <= 0.7);
+                    const metrics = wordPositions.get(item.text);
+                    if (metrics) {
+                        const rect = existing.getBoundingClientRect();
+                        metrics.width = rect.width || metrics.width;
+                        metrics.height = rect.height || metrics.height;
+                    }
                     return;
                 }
 
                 const word = document.createElement('span');
                 word.className = 'concept-word';
                 word.textContent = item.text;
-
-                const weight = items.frequency.get(item.text) || 1;
-                const weightRatio = weight / maxWeight;
                 const fontSize = 0.8 + weightRatio * 1.0;
                 word.style.fontSize = `${fontSize.toFixed(2)}rem`;
                 word.style.color = palette[index % palette.length];
@@ -213,22 +287,20 @@
                 if (weightRatio > 0.7) word.classList.add('concept-word-hero');
                 else if (weightRatio > 0.4) word.classList.add('concept-word-accent');
 
-                let pos = wordPositions.get(item.text);
-                if (!pos) {
-                    const layer = Math.floor(wordPositions.size / wordsPerLayer);
-                    const angle = (wordPositions.size % wordsPerLayer / wordsPerLayer) * 2 * Math.PI + (layer * 0.5);
-                    const radiusX = (layer + 1.5) * (centerW / (layers * 1.8));
-                    const radiusY = (layer + 1.5) * (centerH / (layers * 1.8));
-                    
-                    const x = centerW + radiusX * Math.cos(angle);
-                    const y = centerH + radiusY * Math.sin(angle);
-                    pos = { x, y };
-                    wordPositions.set(item.text, pos);
-                }
+                word.style.visibility = 'hidden';
+                wordsLayer.appendChild(word);
+                const rect = word.getBoundingClientRect();
+                const dimensions = {
+                    width: rect.width || word.offsetWidth || 48,
+                    height: rect.height || word.offsetHeight || 24
+                };
+                const pos = findWordPosition(dimensions, index, limited.length, containerWidth, containerHeight);
+                wordPositions.set(item.text, pos);
 
                 word.style.left = `${pos.x.toFixed(2)}px`;
                 word.style.top = `${pos.y.toFixed(2)}px`;
                 word.style.transform = `translate(-50%, -50%) scale(${1 + weightRatio * 0.1})`;
+                word.style.visibility = 'visible';
 
                 word.addEventListener('click', () => {
                     word.classList.add('concept-word-hidden');
@@ -237,8 +309,6 @@
                         wordPositions.delete(item.text);
                     }, 300);
                 });
-
-                wordsLayer.appendChild(word);
             });
         }
 
