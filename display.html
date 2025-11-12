@@ -25,12 +25,9 @@
 
         <main class="concept-cloud">
             <div class="concept-words" id="conceptWords"></div>
-            <aside class="concept-info-panel">
-                <div class="concept-qr-card">
-                    <p class="concept-label">참여 QR</p>
-                    <div id="conceptQrCode"></div>
-                    <p class="concept-link-inline" id="conceptLink"></p>
-                </div>
+
+            <div class="concept-overlay concept-overlay-top-right">
+                <p class="concept-link-inline" id="conceptLink"></p>
                 <div class="concept-meta-stack">
                     <div class="concept-meta">
                         <div>
@@ -46,7 +43,14 @@
                         <button class="concept-action" id="toggleMock">모의</button>
                     </div>
                 </div>
-            </aside>
+            </div>
+
+            <div class="concept-overlay concept-overlay-bottom-left">
+                <div class="concept-qr-card">
+                    <p class="concept-label">참여 QR</p>
+                    <div id="conceptQrCode"></div>
+                </div>
+            </div>
         </main>
     </div>
 

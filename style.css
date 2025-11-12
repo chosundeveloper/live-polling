@@ -1220,23 +1220,31 @@ footer a:hover {
     height: 100%;
     overflow: visible;
     z-index: 2;
-    padding-bottom: 240px;
 }
 
-.concept-info-panel {
+.concept-overlay {
     position: absolute;
-    bottom: 28px;
-    left: 28px;
-    width: clamp(240px, 22vw, 320px);
     display: flex;
     flex-direction: column;
-    gap: 18px;
-    background: rgba(255, 255, 255, 0.92);
-    border: 1px solid rgba(148, 163, 184, 0.25);
-    border-radius: 20px;
-    box-shadow: 0 15px 35px rgba(15, 23, 42, 0.08);
-    padding: 18px;
+    gap: 12px;
     z-index: 3;
+    pointer-events: none;
+}
+
+.concept-overlay * {
+    pointer-events: auto;
+}
+
+.concept-overlay-top-right {
+    top: 26px;
+    right: 26px;
+    align-items: flex-end;
+    text-align: right;
+}
+
+.concept-overlay-bottom-left {
+    bottom: 26px;
+    left: 26px;
 }
 
 .concept-qr-card {
@@ -1244,11 +1252,20 @@ footer a:hover {
     flex-direction: column;
     gap: 12px;
     text-align: center;
+    background: rgba(11, 21, 38, 0.75);
+    border: 1px solid rgba(148, 163, 184, 0.35);
+    border-radius: 18px;
+    padding: 14px 18px;
+    box-shadow: 0 12px 30px rgba(2, 6, 23, 0.35);
+}
+
+.concept-overlay-bottom-left .concept-qr-card {
+    color: #f8fafc;
 }
 
 #conceptQrCode {
     padding: 10px;
-    background: rgba(15, 23, 42, 0.04);
+    background: rgba(255, 255, 255, 0.12);
     border-radius: 16px;
     display: inline-flex;
     justify-content: center;
@@ -1273,6 +1290,12 @@ footer a:hover {
     display: flex;
     flex-direction: column;
     gap: 14px;
+    background: rgba(255, 255, 255, 0.92);
+    border: 1px solid rgba(148, 163, 184, 0.35);
+    border-radius: 18px;
+    padding: 16px;
+    min-width: 220px;
+    box-shadow: 0 12px 30px rgba(15, 23, 42, 0.08);
 }
 
 .concept-meta {
@@ -1290,6 +1313,14 @@ footer a:hover {
 .concept-actions-vertical {
     flex-direction: column;
     width: 100%;
+}
+
+.concept-overlay-top-right .concept-link-inline {
+    text-align: right;
+}
+
+.concept-overlay-top-right .concept-actions-vertical {
+    align-items: flex-end;
 }
 
 
@@ -1407,6 +1438,10 @@ footer a:hover {
     text-transform: uppercase;
 }
 
+.concept-overlay-bottom-left .concept-label {
+    color: rgba(255, 255, 255, 0.8);
+}
+
 .concept-actions {
     display: flex;
     gap: 10px;
@@ -1440,8 +1475,16 @@ footer a:hover {
     .concept-wrapper { padding: 20px; }
     .concept-cloud { padding: 20px; }
     .concept-words { padding-bottom: 0; }
-    .concept-info-panel { position: static; width: 100%; flex-direction: row; align-items: center; margin-top: 16px; }
-    .concept-meta-stack { flex: 1; }
+    .concept-overlay {
+        position: static;
+        width: 100%;
+        align-items: flex-start;
+        text-align: left;
+        margin-top: 12px;
+    }
+    .concept-overlay-top-right .concept-link-inline {
+        text-align: left;
+    }
     .concept-meta { justify-content: flex-start; }
 }
 
@@ -1449,7 +1492,6 @@ footer a:hover {
     .concept-body { padding: 0; }
     .concept-wrapper { border-radius: 0; border: none; }
     .concept-cloud { padding: 16px; }
-    .concept-info-panel { flex-direction: column; align-items: flex-start; }
     .concept-word {
         font-size: 0.9rem !important;
         padding: 6px 10px;
