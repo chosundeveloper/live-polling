@@ -110,8 +110,8 @@
         const GOLDEN_ANGLE = Math.PI * (3 - Math.sqrt(5));
 
         function getSpiralGeometry(width, height, wordCount = MAX_WORDS) {
-            const maxRadius = Math.max(180, Math.min(width, height) / 2 - 30);
-            const minRadius = Math.max(70, maxRadius * 0.35);
+            const maxRadius = Math.max(220, Math.min(width, height) / 2 - 20);
+            const minRadius = Math.max(30, maxRadius * 0.15);
             const count = Math.max(1, wordCount);
             const ringCount = Math.min(10, Math.max(3, Math.ceil(count / 25)));
             const ringSpan = (maxRadius - minRadius) / Math.max(1, ringCount - 1);
@@ -246,6 +246,16 @@
                     const targetDy = p.targetY - p.y;
                     p.vx += targetDx * 0.00025;
                     p.vy += targetDy * 0.00025;
+                }
+
+                const radialDx = p.x - centerW;
+                const radialDy = p.y - centerH;
+                const radialDist = Math.hypot(radialDx, radialDy) || 1;
+                if (p.ringRadius) {
+                    const radialError = p.ringRadius - radialDist;
+                    const radialForce = radialError * 0.0006;
+                    p.vx += (radialDx / radialDist) * radialForce;
+                    p.vy += (radialDy / radialDist) * radialForce;
                 }
 
                 // Clamp velocity to prevent runaway movement
