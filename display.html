@@ -180,7 +180,10 @@
                     p.height = rect.height;
                 }
                 
-                p.el.style.transform = `translate(${p.x - p.width/2}px, ${p.y - p.height/2}px)`;
+                // Update position using left/top and translate(-50%, -50%)
+                p.el.style.left = `${p.x}px`;
+                p.el.style.top = `${p.y}px`;
+                p.el.style.transform = `translate(-50%, -50%)`;
             }
 
             animationFrameId = requestAnimationFrame(simulationLoop);
@@ -232,8 +235,6 @@
                     wordEl.textContent = text;
                     wordEl.style.color = palette[index % palette.length];
                     wordEl.style.opacity = 1; // Instant appearance
-                    wordEl.style.left = '0px'; // Explicitly set left
-                    wordEl.style.top = '0px'; // Explicitly set top
                     
                     const initialFontSize = 0.8;
                     wordEl.style.fontSize = `${initialFontSize}rem`;
