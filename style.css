@@ -1077,7 +1077,7 @@ footer a:hover {
 .concept-body {
     min-height: 100vh;
     height: 100vh;
-    background: #f7faff;
+    background: #e0f2f7; /* Sky blue background */
     color: #0f172a;
     display: flex;
     align-items: center;
