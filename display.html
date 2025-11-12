@@ -110,23 +110,39 @@
         const GOLDEN_ANGLE = Math.PI * (3 - Math.sqrt(5));
 
         function getSpiralGeometry(width, height, wordCount = MAX_WORDS) {
-            const maxRadius = Math.max(160, Math.min(width, height) / 2 - 40);
-            const minRadius = Math.max(60, maxRadius * 0.35);
+            const maxRadius = Math.max(180, Math.min(width, height) / 2 - 30);
+            const minRadius = Math.max(70, maxRadius * 0.35);
             const count = Math.max(1, wordCount);
-            return { maxRadius, minRadius, count };
+            const ringCount = Math.min(10, Math.max(3, Math.ceil(count / 25)));
+            const ringSpan = (maxRadius - minRadius) / Math.max(1, ringCount - 1);
+            const rings = [];
+            let startIndex = 0;
+            for (let i = 0; i < ringCount; i++) {
+                const radius = maxRadius - ringSpan * i;
+                const circumference = 2 * Math.PI * Math.max(40, radius);
+                const capacity = Math.max(8, Math.round(circumference / 70));
+                rings.push({ radius, start: startIndex, end: startIndex + capacity });
+                startIndex += capacity;
+            }
+            // Ensure total coverage
+            if (startIndex < count) {
+                const extra = count - startIndex;
+                rings[rings.length - 1].end += extra;
+            }
+            return { rings, count };
         }
 
         function assignParticleTarget(particle, centerW, centerH, geometry, spiralIndex = 0) {
-            const { maxRadius, minRadius, count } = geometry;
-            const clampedIndex = Math.max(0, Math.min(spiralIndex, count - 1));
-            const progress = count === 1 ? 0 : clampedIndex / (count - 1); // 0 outer -> 1 inner
-            const radius = maxRadius - (maxRadius - minRadius) * progress;
+            const clampedIndex = Math.max(0, Math.min(spiralIndex, geometry.count - 1));
+            const ring = geometry.rings.find(r => clampedIndex < r.end) || geometry.rings[geometry.rings.length - 1];
+            const radius = ring.radius;
             const angle = clampedIndex * GOLDEN_ANGLE;
-            const jitterAngle = angle + (Math.random() - 0.5) * 0.05;
-            const jitterRadius = radius + (Math.random() - 0.5) * (radius * 0.04);
+            const jitterAngle = angle + (Math.random() - 0.5) * 0.04;
+            const jitterRadius = radius + (Math.random() - 0.5) * Math.max(6, radius * 0.02);
             particle.targetX = centerW + Math.cos(jitterAngle) * jitterRadius;
             particle.targetY = centerH + Math.sin(jitterAngle) * jitterRadius;
             particle.spiralIndex = clampedIndex;
+            particle.ringRadius = radius;
         }
 
         function updateParticleTargets() {
