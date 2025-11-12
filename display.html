@@ -104,6 +104,9 @@
         const OUTWARD_DRIFT_FORCE = 0.00002;
         const TARGET_ATTRACTION_FORCE = 0.00012;
         const RADIAL_FORCE = 0.0004;
+        const NAVY_BASE_PALETTE = ['#050914', '#0a1628', '#0f2138', '#142c48', '#193859'];
+        const NAVY_ACCENT_PALETTE = ['#1e446b', '#25507d', '#2c5c90', '#3368a3', '#3a74b6'];
+        const NAVY_GLOW_PALETTE = ['#4180c9', '#4a8cdc', '#5398ef', '#66a8ff', '#7ab7ff'];
 
         function getCloudBounds() {
             const rect = wordsLayer.getBoundingClientRect();
@@ -426,7 +429,6 @@
             });
 
             const maxWeight = Math.max(...limited.map(item => item[1]));
-            const palette = ['#050914', '#0b1526', '#111e32', '#162744', '#1b3054', '#1f3a63', '#244372', '#2b4d82', '#325791', '#3a63a5'];
             const { width: containerWidth, height: containerHeight } = getCloudBounds();
             const centerW = containerWidth / 2;
             const centerH = containerHeight / 2;
@@ -441,11 +443,12 @@
                 if (particle) {
                     particle.targetFontSize = targetFontSize;
                     assignParticleTarget(particle, centerW, centerH, geometry, spiralIndex);
+                    particle.el.style.color = selectWordColor(weightRatio, index);
                 } else {
                     const wordEl = document.createElement('span');
                     wordEl.className = 'concept-word';
                     wordEl.textContent = text;
-                    wordEl.style.color = palette[index % palette.length];
+                    wordEl.style.color = selectWordColor(weightRatio, index);
 
                     const initialFontSize = 0.8;
                     wordEl.style.fontSize = `${initialFontSize}rem`;
@@ -602,3 +605,12 @@
     </script>
 </body>
 </html>
+        function selectWordColor(weightRatio, index) {
+            if (weightRatio > 0.65) {
+                return NAVY_GLOW_PALETTE[index % NAVY_GLOW_PALETTE.length];
+            }
+            if (weightRatio > 0.35) {
+                return NAVY_ACCENT_PALETTE[index % NAVY_ACCENT_PALETTE.length];
+            }
+            return NAVY_BASE_PALETTE[index % NAVY_BASE_PALETTE.length];
+        }
