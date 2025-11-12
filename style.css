@@ -1122,6 +1122,17 @@ footer a:hover {
     width: 100%;
 }
 
+.concept-header-meta {
+    margin-left: auto;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 10px;
+    text-align: right;
+    min-width: 220px;
+    flex-shrink: 0;
+}
+
 .concept-nav-btn {
     background: transparent;
     border: 1px solid #e2e8f0;
@@ -1235,13 +1246,6 @@ footer a:hover {
     pointer-events: auto;
 }
 
-.concept-overlay-top-right {
-    top: 26px;
-    right: 26px;
-    align-items: flex-end;
-    text-align: right;
-}
-
 .concept-overlay-bottom-left {
     bottom: 26px;
     left: 26px;
@@ -1310,11 +1314,11 @@ footer a:hover {
     width: 100%;
 }
 
-.concept-overlay-top-right .concept-link-inline {
+.concept-header-meta .concept-link-inline {
     text-align: right;
 }
 
-.concept-overlay-top-right .concept-actions-vertical {
+.concept-header-meta .concept-actions-vertical {
     align-items: flex-end;
 }
 
@@ -1465,6 +1469,19 @@ footer a:hover {
     .concept-body { padding: 16px; }
     .concept-wrapper { padding: 20px; }
     .concept-cloud { padding: 20px; }
+    .concept-top { flex-direction: column; align-items: flex-start; gap: 12px; }
+    .concept-header-meta {
+        width: 100%;
+        align-items: flex-start;
+        text-align: left;
+        margin-top: 8px;
+    }
+    .concept-header-meta .concept-link-inline {
+        text-align: left;
+    }
+    .concept-header-meta .concept-actions-vertical {
+        align-items: flex-start;
+    }
     .concept-words { padding-bottom: 0; }
     .concept-overlay {
         position: static;
@@ -1472,9 +1489,6 @@ footer a:hover {
         align-items: flex-start;
         text-align: left;
         margin-top: 12px;
-    }
-    .concept-overlay-top-right .concept-link-inline {
-        text-align: left;
     }
     .concept-meta { justify-content: flex-start; }
 }
