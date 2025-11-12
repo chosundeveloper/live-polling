@@ -1127,7 +1127,7 @@ footer a:hover {
     display: flex;
     flex-direction: column;
     align-items: flex-end;
-    gap: 10px;
+    gap: 8px;
     text-align: right;
     min-width: 220px;
     flex-shrink: 0;
@@ -1190,7 +1190,8 @@ footer a:hover {
                 linear-gradient(145deg, #dbeafe, #e0f2ff 45%, #f8fbff);
     border: 1px solid #f1f5f9;
     z-index: 0;
-    padding: 28px;
+    padding: 32px 32px 36px;
+    min-height: 700px;
 }
 
 .concept-cloud::before {
@@ -1231,6 +1232,7 @@ footer a:hover {
     height: 100%;
     overflow: visible;
     z-index: 2;
+    min-height: 640px;
 }
 
 .concept-overlay {
@@ -1278,22 +1280,16 @@ footer a:hover {
     height: 120px;
 }
 
-.concept-link-inline {
-    font-size: 0.8rem;
-    color: var(--ink-secondary);
-    word-break: break-all;
-    opacity: 0.85;
-}
-
 .concept-meta-stack {
     display: flex;
-    flex-direction: column;
-    gap: 14px;
+    align-items: center;
+    justify-content: space-between;
+    gap: 18px;
     background: rgba(255, 255, 255, 0.92);
     border: 1px solid rgba(148, 163, 184, 0.35);
     border-radius: 18px;
-    padding: 16px;
-    min-width: 220px;
+    padding: 14px 16px;
+    min-width: 260px;
     box-shadow: 0 12px 30px rgba(15, 23, 42, 0.08);
 }
 
@@ -1309,17 +1305,11 @@ footer a:hover {
     gap: 4px;
 }
 
-.concept-actions-vertical {
-    flex-direction: column;
-    width: 100%;
-}
-
-.concept-header-meta .concept-link-inline {
-    text-align: right;
-}
-
-.concept-header-meta .concept-actions-vertical {
-    align-items: flex-end;
+.concept-action-ghost {
+    border: 1px solid rgba(15, 23, 42, 0.15);
+    background: transparent;
+    color: var(--ink-secondary);
+    padding: 8px 18px;
 }
 
 
@@ -1476,11 +1466,12 @@ footer a:hover {
         text-align: left;
         margin-top: 8px;
     }
-    .concept-header-meta .concept-link-inline {
-        text-align: left;
-    }
-    .concept-header-meta .concept-actions-vertical {
+    .concept-meta-stack {
+        flex-direction: column;
         align-items: flex-start;
+    }
+    .concept-action-ghost {
+        align-self: flex-start;
     }
     .concept-words { padding-bottom: 0; }
     .concept-overlay {
