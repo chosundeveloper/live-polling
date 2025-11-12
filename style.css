@@ -1339,7 +1339,7 @@ footer a:hover {
     top: 50%;
     transform: translate(-50%, -50%);
     text-align: center;
-    color: #94a3b8;
+    color: #22304b;
     font-size: 1.1rem;
 }
 
@@ -1389,6 +1389,13 @@ footer a:hover {
     font-size: 1.3rem;
     font-weight: 600;
     color: #0b1526;
+}
+
+.concept-label {
+    font-size: 0.8rem;
+    color: #324768;
+    letter-spacing: 0.02em;
+    text-transform: uppercase;
 }
 
 .concept-actions {
