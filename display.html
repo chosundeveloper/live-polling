@@ -106,28 +106,21 @@
             return { width, height };
         }
 
-        function getRingGeometry(width, height, wordCount = MAX_WORDS) {
-            const radiusLimit = Math.max(140, Math.min(width, height) / 2 - 80);
-            const ringCount = Math.min(6, Math.max(3, Math.round(wordCount / 35) || 3));
-            const ringSpan = radiusLimit / ringCount;
-            return { radiusLimit, ringCount, ringSpan };
-        }
-
-        let goldenAngleCursor = 0;
         const GOLDEN_ANGLE = Math.PI * (3 - Math.sqrt(5));
 
-        function assignParticleTarget(particle, centerW, centerH, geometry) {
-            const { radiusLimit, ringSpan, ringCount } = geometry;
-            if (particle.ringIndex === undefined) particle.ringIndex = ringCount - 1;
-            const ringIdx = Math.min(ringCount - 1, Math.max(0, particle.ringIndex));
-            if (particle.targetAngle === undefined) {
-                particle.targetAngle = (goldenAngleCursor += GOLDEN_ANGLE) % (Math.PI * 2);
-            }
-            const outerRadius = Math.max(60, radiusLimit - ringIdx * ringSpan);
-            const innerRadius = Math.max(40, outerRadius - ringSpan * 0.85);
-            const targetRadius = innerRadius + Math.random() * (outerRadius - innerRadius);
-            particle.targetX = centerW + Math.cos(particle.targetAngle) * targetRadius;
-            particle.targetY = centerH + Math.sin(particle.targetAngle) * targetRadius;
+        function getSpiralGeometry(width, height, wordCount = MAX_WORDS) {
+            const maxRadius = Math.max(120, Math.min(width, height) / 2 - 60);
+            const spacing = maxRadius / Math.sqrt(Math.max(1, wordCount));
+            return { maxRadius, spacing };
+        }
+
+        function assignParticleTarget(particle, centerW, centerH, geometry, spiralIndex = 0) {
+            const { maxRadius, spacing } = geometry;
+            const angle = spiralIndex * GOLDEN_ANGLE;
+            const radius = Math.min(maxRadius, spacing * Math.sqrt(spiralIndex + 1));
+            particle.targetX = centerW + Math.cos(angle) * radius;
+            particle.targetY = centerH + Math.sin(angle) * radius;
+            particle.spiralIndex = spiralIndex;
         }
 
         function updateParticleTargets() {
@@ -135,8 +128,8 @@
             const { width, height } = getCloudBounds();
             const centerW = width / 2;
             const centerH = height / 2;
-            const geometry = getRingGeometry(width, height, wordParticles.length);
-            wordParticles.forEach(p => assignParticleTarget(p, centerW, centerH, geometry));
+            const geometry = getSpiralGeometry(width, height, wordParticles.length);
+            wordParticles.forEach(p => assignParticleTarget(p, centerW, centerH, geometry, p.spiralIndex || 0));
         }
 
         // --- Core Functions ---
@@ -312,20 +305,17 @@
             const { width: containerWidth, height: containerHeight } = getCloudBounds();
             const centerW = containerWidth / 2;
             const centerH = containerHeight / 2;
-            const geometry = getRingGeometry(containerWidth, containerHeight, limited.length);
-            const approxPerRing = Math.max(1, Math.ceil(limited.length / geometry.ringCount));
+            const geometry = getSpiralGeometry(containerWidth, containerHeight, limited.length);
 
             limited.forEach(([text, weight], index) => {
                 const weightRatio = weight / maxWeight;
                 const targetFontSize = 0.8 + weightRatio * 1.2;
+                const spiralIndex = index;
 
                 let particle = existingParticles.get(text);
-                const ringIndex = Math.max(0, geometry.ringCount - 1 - Math.floor(index / approxPerRing));
                 if (particle) {
                     particle.targetFontSize = targetFontSize;
-                    particle.weightRatio = weightRatio;
-                    particle.ringIndex = ringIndex;
-                    assignParticleTarget(particle, centerW, centerH, geometry);
+                    assignParticleTarget(particle, centerW, centerH, geometry, spiralIndex);
                 } else {
                     const wordEl = document.createElement('span');
                     wordEl.className = 'concept-word';
@@ -378,10 +368,9 @@
                         currentFontSize: initialFontSize,
                         targetFontSize: targetFontSize,
                         isVertical,
-                        weightRatio,
-                        ringIndex
+                        spiralIndex
                     };
-                    assignParticleTarget(particle, centerW, centerH, geometry);
+                    assignParticleTarget(particle, centerW, centerH, geometry, spiralIndex);
                     wordParticles.push(particle);
                 }
                 
