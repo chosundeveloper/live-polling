@@ -1168,7 +1168,9 @@ footer a:hover {
     margin-top: 16px;
     border-radius: 18px;
     overflow: hidden;
-    background: #fcfdff;
+    background: radial-gradient(circle at 20% 20%, rgba(191, 219, 254, 0.6), transparent 45%),
+                radial-gradient(circle at 80% 30%, rgba(147, 197, 253, 0.55), transparent 40%),
+                linear-gradient(145deg, #dbeafe, #e0f2ff 45%, #f8fbff);
     border: 1px solid #f1f5f9;
     z-index: 0;
 }
@@ -1195,7 +1197,7 @@ footer a:hover {
     background-size: cover, cover;
     background-position: center, center;
     background-repeat: no-repeat, no-repeat;
-    opacity: 0.32;
+    opacity: 0.4;
     pointer-events: none;
     z-index: 1;
 }
