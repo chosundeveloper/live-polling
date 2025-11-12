@@ -386,10 +386,9 @@
                     p.height = rect.height;
                 }
                 
-                // Update position using left/top and translate(-50%, -50%)
+                // Update position via left/top (CSS handles translate centering)
                 p.el.style.left = `${p.x}px`;
                 p.el.style.top = `${p.y}px`;
-                p.el.style.transform = 'translate(-50%, -50%)';
             }
 
             animationFrameId = requestAnimationFrame(simulationLoop);
@@ -417,15 +416,16 @@
             
             wordParticles = wordParticles.filter(p => {
                 if (!newWordTexts.has(p.el.textContent)) {
+                    p.el.classList.remove('concept-word-visible');
                     p.el.classList.add('concept-word-hidden');
-                    setTimeout(() => p.el.remove(), 300);
+                    setTimeout(() => p.el.remove(), 700);
                     return false;
                 }
                 return true;
             });
 
             const maxWeight = Math.max(...limited.map(item => item[1]));
-            const palette = ['#ef4444', '#f97316', '#facc15', '#22c55e', '#14b8a6', '#0ea5e9', '#3b82f6', '#6366f1', '#a855f7', '#ec4899'];
+            const palette = ['#050914', '#0b1526', '#111e32', '#162744', '#1b3054', '#1f3a63', '#244372', '#2b4d82', '#325791', '#3a63a5'];
             const { width: containerWidth, height: containerHeight } = getCloudBounds();
             const centerW = containerWidth / 2;
             const centerH = containerHeight / 2;
@@ -445,13 +445,13 @@
                     wordEl.className = 'concept-word';
                     wordEl.textContent = text;
                     wordEl.style.color = palette[index % palette.length];
-                    wordEl.style.opacity = 1; // Instant appearance
-                    
+
                     const initialFontSize = 0.8;
                     wordEl.style.fontSize = `${initialFontSize}rem`;
                     
                     // Click to delete
                     wordEl.addEventListener('click', () => {
+                        wordEl.classList.remove('concept-word-visible');
                         wordEl.classList.add('concept-word-hidden');
                         setTimeout(() => {
                             wordEl.remove();
@@ -463,7 +463,7 @@
                                 wordsLayer.innerHTML = '<div class="concept-empty">첫 번째 단어를 기다리고 있어요</div>';
                                 if (animationFrameId) { cancelAnimationFrame(animationFrameId); animationFrameId = null; }
                             }
-                        }, 300);
+                        }, 700);
                     });
 
                     wordsLayer.appendChild(wordEl);
@@ -479,7 +479,6 @@
                     const startY = centerH + (Math.random() - 0.5) * spawnJitter;
                     wordEl.style.left = `${startX}px`;
                     wordEl.style.top = `${startY}px`;
-                    wordEl.style.transform = 'translate(-50%, -50%)';
                     particle = {
                         el: wordEl,
                         x: startX,
@@ -497,6 +496,10 @@
                     };
                     assignParticleTarget(particle, centerW, centerH, geometry, spiralIndex);
                     wordParticles.push(particle);
+
+                    requestAnimationFrame(() => {
+                        wordEl.classList.add('concept-word-visible');
+                    });
                 }
                 
                 const isHero = weightRatio > 0.7;
