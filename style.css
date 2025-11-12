@@ -1252,21 +1252,16 @@ footer a:hover {
     flex-direction: column;
     gap: 12px;
     text-align: center;
-    background: rgba(11, 21, 38, 0.75);
-    border: 1px solid rgba(148, 163, 184, 0.35);
-    border-radius: 18px;
-    padding: 14px 18px;
-    box-shadow: 0 12px 30px rgba(2, 6, 23, 0.35);
-}
-
-.concept-overlay-bottom-left .concept-qr-card {
-    color: #f8fafc;
+    background: transparent;
+    border: none;
+    padding: 0;
+    box-shadow: none;
 }
 
 #conceptQrCode {
-    padding: 10px;
-    background: rgba(255, 255, 255, 0.12);
-    border-radius: 16px;
+    padding: 0;
+    background: transparent;
+    border-radius: 0;
     display: inline-flex;
     justify-content: center;
     align-items: center;
@@ -1436,10 +1431,6 @@ footer a:hover {
     color: var(--ink-muted);
     letter-spacing: 0.02em;
     text-transform: uppercase;
-}
-
-.concept-overlay-bottom-left .concept-label {
-    color: rgba(255, 255, 255, 0.8);
 }
 
 .concept-actions {
