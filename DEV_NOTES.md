@@ -16,10 +16,11 @@
 
 ### 1.3 애니메이션/시뮬레이션 파라미터
 - 생성 직후 단어는 화면 중앙에서 스폰되고 `phase: 'intro'` 상태로 유지됩니다.
-- 주요 상수: `INTRO_GROWTH_RATE`, `INTRO_HOLD_PROGRESS`, `INTRO_HOLD_TRAVEL_RATIO`, `INTRO_BLOOM_JITTER`, `INTRO_CHASE_BASE`, `INTRO_CHASE_SCALE`, `OUTWARD_DRIFT_FORCE`, `TARGET_ATTRACTION_FORCE`, `RADIAL_FORCE`, `MAX_PARTICLE_SPEED`, `MIN_SEPARATION`.
+- 주요 상수: `INTRO_GROWTH_RATE`, `INTRO_HOLD_PROGRESS`, `INTRO_HOLD_TRAVEL_RATIO`, `INTRO_BLOOM_JITTER`, `INTRO_SPIRAL_TWIST`, `INTRO_CHASE_BASE`, `INTRO_CHASE_SCALE`, `INTRO_CHASE_MAX`, `OUTWARD_DRIFT_FORCE`, `TARGET_ATTRACTION_FORCE`, `RADIAL_FORCE`, `MAX_PARTICLE_SPEED`, `MIN_SEPARATION`.
 - `INTRO_HOLD_PROGRESS` 만큼은 반경을 0으로 고정하여 “중앙에서 머문 뒤” 퍼지는 연출을 만듭니다.
 - `INTRO_HOLD_TRAVEL_RATIO`는 홀드 구간 동안 이동할 최대 반경 비율(기본 20%)을 정해, 갑작스럽지 않게 천천히 외곽으로 확장됩니다.
-- `INTRO_CHASE_BASE`와 `INTRO_CHASE_SCALE`은 인트로 동안 목표 스파이럴 좌표를 추적하는 속도를 조절해 “움직이며 확대되는” 느낌을 만듭니다.
+- `INTRO_SPIRAL_TWIST`로 시작 각도를 최종 각도보다 앞쪽(시계 반대 방향)에서 시작시켜, 나선형을 그리며 빠져나가는 궤적을 만듭니다.
+- `INTRO_CHASE_BASE/INTRO_CHASE_SCALE/INTRO_CHASE_MAX`는 목표 좌표를 따라가는 보간 속도를 제어해 “중앙 → 외곽” 이동이 눈에 띄게 연속적으로 보이도록 합니다.
 - 인트로 종료 후(`phase: 'idle'`)에는 충돌 보정과 감쇠가 적용되어 단어 간 간격과 링 반경(`ringRadius`)이 유지됩니다.
 
 ### 1.4 튜닝 체크리스트
