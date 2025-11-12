@@ -274,7 +274,12 @@
             const idleParticles = [];
             for (const p of wordParticles) {
                 const isIntro = updateIntroMotion(p, centerW, centerH, timestamp);
-                if (!isIntro) idleParticles.push(p);
+                if (isIntro) {
+                    p.el.style.left = `${p.x}px`;
+                    p.el.style.top = `${p.y}px`;
+                } else {
+                    idleParticles.push(p);
+                }
             }
 
             for (let j = 0; j < idleParticles.length; j++) {
