@@ -1175,6 +1175,9 @@ footer a:hover {
                 linear-gradient(145deg, #dbeafe, #e0f2ff 45%, #f8fbff);
     border: 1px solid #f1f5f9;
     z-index: 0;
+    display: flex;
+    gap: 24px;
+    padding: 28px;
 }
 
 .concept-cloud::before {
@@ -1211,10 +1214,78 @@ footer a:hover {
 
 .concept-words {
     position: relative;
-    width: 100%;
+    flex: 1;
     height: 100%;
     overflow: visible;
     z-index: 2;
+}
+
+.concept-info-panel {
+    width: 280px;
+    flex-shrink: 0;
+    align-self: flex-start;
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+    background: rgba(255, 255, 255, 0.92);
+    border: 1px solid rgba(148, 163, 184, 0.25);
+    border-radius: 20px;
+    box-shadow: 0 15px 35px rgba(15, 23, 42, 0.08);
+    padding: 18px;
+    z-index: 3;
+}
+
+.concept-qr-card {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    text-align: center;
+}
+
+#conceptQrCode {
+    padding: 10px;
+    background: rgba(15, 23, 42, 0.04);
+    border-radius: 16px;
+    display: inline-flex;
+    justify-content: center;
+    align-items: center;
+}
+
+#conceptQrCode img,
+#conceptQrCode canvas {
+    display: block;
+    width: 120px;
+    height: 120px;
+}
+
+.concept-link-inline {
+    font-size: 0.8rem;
+    color: #1d2a44;
+    word-break: break-all;
+    opacity: 0.85;
+}
+
+.concept-meta-stack {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+}
+
+.concept-meta {
+    display: flex;
+    justify-content: space-between;
+    gap: 14px;
+}
+
+.concept-meta > div {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.concept-actions-vertical {
+    flex-direction: column;
+    width: 100%;
 }
 
 
@@ -1351,22 +1422,17 @@ footer a:hover {
 @media (max-width: 900px) {
     .concept-body { padding: 16px; }
     .concept-wrapper { padding: 20px; }
-    .concept-top,
-    .concept-bottom {
-        flex-direction: column;
-        align-items: stretch;
-    }
-    .concept-meta-controls {
-        margin-top: 16px;
-        flex-direction: column;
-        align-items: flex-start;
-    }
+    .concept-cloud { flex-direction: column; padding: 20px; }
+    .concept-info-panel { width: 100%; flex-direction: row; align-items: center; }
+    .concept-meta-stack { flex: 1; }
+    .concept-meta { justify-content: flex-start; }
 }
 
 @media (max-width: 600px) {
     .concept-body { padding: 0; }
     .concept-wrapper { border-radius: 0; border: none; }
-    .concept-cloud { padding: 10px; }
+    .concept-cloud { padding: 16px; }
+    .concept-info-panel { flex-direction: column; align-items: flex-start; }
     .concept-word {
         font-size: 0.9rem !important;
         padding: 6px 10px;

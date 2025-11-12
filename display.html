@@ -25,32 +25,29 @@
 
         <main class="concept-cloud">
             <div class="concept-words" id="conceptWords"></div>
+            <aside class="concept-info-panel">
+                <div class="concept-qr-card">
+                    <p class="concept-label">참여 QR</p>
+                    <div id="conceptQrCode"></div>
+                    <p class="concept-link-inline" id="conceptLink"></p>
+                </div>
+                <div class="concept-meta-stack">
+                    <div class="concept-meta">
+                        <div>
+                            <p class="concept-label">누적 답변</p>
+                            <p class="concept-value" id="conceptTotal">0</p>
+                        </div>
+                        <div>
+                            <p class="concept-label">업데이트</p>
+                            <p class="concept-value" id="conceptUpdated">-</p>
+                        </div>
+                    </div>
+                    <div class="concept-actions concept-actions-vertical">
+                        <button class="concept-action" id="toggleMock">모의</button>
+                    </div>
+                </div>
+            </aside>
         </main>
-
-        <footer class="concept-bottom">
-            <div class="concept-participation">
-                <div class="concept-link">
-                    <span>참여 링크</span>
-                    <p id="conceptLink"></p>
-                </div>
-                <div id="conceptQrCode"></div>
-            </div>
-            <div class="concept-meta-controls">
-                <div class="concept-meta">
-                    <div>
-                        <p class="concept-label">누적 답변</p>
-                        <p class="concept-value" id="conceptTotal">0</p>
-                    </div>
-                    <div>
-                        <p class="concept-label">업데이트</p>
-                        <p class="concept-value" id="conceptUpdated">-</p>
-                    </div>
-                </div>
-                <div class="concept-actions">
-                    <button class="concept-action" id="toggleMock">모의</button>
-                </div>
-            </div>
-        </footer>
     </div>
 
     <script>
