@@ -258,11 +258,14 @@
                     wordsLayer.appendChild(wordEl);
                     
                     const rect = wordEl.getBoundingClientRect();
+                    const angle = Math.random() * Math.PI * 2; // Random angle
+                    const speed = 5 + Math.random() * 5; // Random speed
                     particle = {
                         el: wordEl,
                         x: centerW, // Appear from center
                         y: centerH, // Appear from center
-                        vx: 0, vy: 0,
+                        vx: Math.cos(angle) * speed, // Initial outward velocity
+                        vy: Math.sin(angle) * speed, // Initial outward velocity
                         width: rect.width,
                         height: rect.height,
                         currentFontSize: initialFontSize,
