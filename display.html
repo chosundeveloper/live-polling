@@ -210,10 +210,11 @@
             }
         }
         
-        function navigateToQuestion(index) {
+        function navigateToQuestion(index, options = {}) {
+            const { force = false } = options;
             console.log('navigateToQuestion called with index:', index);
             const newIndex = Math.max(0, Math.min(QUESTIONS.length - 1, index));
-            if (newIndex === currentQuestionIndex && wordParticles.length > 0) {
+            if (!force && newIndex === currentQuestionIndex && wordParticles.length > 0) {
                 console.log('navigateToQuestion: Same question, particles exist, returning.');
                 return;
             }
@@ -555,7 +556,7 @@
             isMockMode = !isMockMode;
             toggleMockBtn.classList.toggle('active', isMockMode);
             console.log('toggleMockBtn clicked. isMockMode after:', isMockMode);
-            navigateToQuestion(currentQuestionIndex);
+            navigateToQuestion(currentQuestionIndex, { force: true });
         });
 
         window.addEventListener('resize', () => {
@@ -564,7 +565,7 @@
 
         // --- Initial Load ---
         const initialQuestionIndex = Number(params.get('question')) ? QUESTIONS.findIndex(q => q.id === Number(params.get('question'))) : 0;
-        navigateToQuestion(initialQuestionIndex !== -1 ? initialQuestionIndex : 0);
+        navigateToQuestion(initialQuestionIndex !== -1 ? initialQuestionIndex : 0, { force: true });
         
         if (isMockMode) {
             toggleMockBtn.classList.add('active');
