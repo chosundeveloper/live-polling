@@ -1103,7 +1103,7 @@ footer a:hover {
 
 .concept-top {
     display: flex;
-    justify-content: center; /* Center the nav container */
+    justify-content: flex-start; /* Align to start (left) */
     align-items: center;
     gap: 20px;
     padding: 0 4px;
@@ -1112,9 +1112,8 @@ footer a:hover {
 .concept-title-nav {
     display: flex;
     align-items: center;
-    justify-content: space-between;
+    justify-content: flex-start; /* Align to start (left) */
     width: 100%;
-    max-width: 800px; /* Limit width for very large screens */
 }
 
 .concept-nav-btn {
@@ -1145,7 +1144,7 @@ footer a:hover {
 }
 
 .concept-question-display {
-    text-align: center;
+    text-align: left; /* Align text to left */
     flex-grow: 1;
     padding: 0 20px;
 }
