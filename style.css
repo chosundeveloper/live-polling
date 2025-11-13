@@ -37,6 +37,10 @@ body {
     font-weight: 500;
 }
 
+body, body * {
+    font-size: 25px !important;
+}
+
 body.display-body {
     background: linear-gradient(135deg, rgba(100, 141, 163, 0.15) 0%, rgba(109, 151, 216, 0.15) 100%);
 }
