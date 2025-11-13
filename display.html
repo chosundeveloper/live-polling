@@ -465,7 +465,9 @@
                 let particle = existingParticles.get(text);
                 if (particle) {
                     particle.targetFontSize = targetFontSize;
-                    assignParticleTarget(particle, centerW, centerH, geometry, spiralIndex);
+                    if (particle.phase !== 'intro') {
+                        assignParticleTarget(particle, centerW, centerH, geometry, spiralIndex);
+                    }
                     particle.el.style.color = selectWordColor(weightRatio, index);
                 } else {
                     const wordEl = document.createElement('span');
