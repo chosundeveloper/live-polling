@@ -85,24 +85,24 @@
         const PREFIXES = ['따뜻한', '깊은', '새로운', '반짝이는', '집중의', '장난기 있는', '강렬한', '잔잔한', '선명한'];
         const SUFFIXES = ['무드', '아이디어', '영감', '에너지', '발견', '시간', '순간', '대화', '시선'];
         const MAX_WORDS = 150;
-        const MAX_PARTICLE_SPEED = 0.25;
+        const MAX_PARTICLE_SPEED = 0.18;
         const MIN_SEPARATION = 28;
         const DEFAULT_PARTICLE_WIDTH = 48;
         const DEFAULT_PARTICLE_HEIGHT = 22;
-        const INTRO_DURATION_BASE = 6200;
-        const INTRO_DURATION_VARIANCE = 2600;
+        const INTRO_DURATION_BASE = 8200;
+        const INTRO_DURATION_VARIANCE = 3200;
         const INTRO_BLOOM_JITTER = 22;
         const INTRO_SPIRAL_TWIST = Math.PI * 1.45;
         const INTRO_SWAY_AMPLITUDE = 18;
         const INTRO_SWAY_FREQUENCY = 1.1;
         const INTRO_STAGE_MIN_RADIUS = 30;
         const INTRO_STAGE_MAX_RADIUS = 70;
-        const INTRO_CLUSTER_RATIO = 0.85;
+        const INTRO_CLUSTER_RATIO = 0.92;
         const INTRO_CLUSTER_SWAY = 10;
         const INTRO_CLUSTER_PADDING = 28;
-        const OUTWARD_DRIFT_FORCE = 0.000003;
-        const TARGET_ATTRACTION_FORCE = 0.00002;
-        const RADIAL_FORCE = 0.0001;
+        const OUTWARD_DRIFT_FORCE = 0.000002;
+        const TARGET_ATTRACTION_FORCE = 0.000012;
+        const RADIAL_FORCE = 0.00006;
         const MIN_WORD_LIFETIME = 7000;
         const TIMER_DURATION_MS = 10 * 60 * 1000;
         const NAVY_BASE_PALETTE = ['#050914', '#0a1628', '#0f2138', '#142c48', '#193859'];
@@ -253,8 +253,8 @@
             const duration = particle.introDuration || INTRO_DURATION_BASE;
             const rawProgress = duration <= 0 ? 1 : Math.min(1, (timestamp - particle.introStart) / duration);
             const clusterNormalized = Math.max(0, (rawProgress - INTRO_CLUSTER_RATIO) / Math.max(0.0001, 1 - INTRO_CLUSTER_RATIO));
-            const separationProgress = Math.pow(clusterNormalized, 0.3);
-            const eased = Math.pow(easeOutCubic(clusterNormalized), 0.5);
+            const separationProgress = Math.pow(clusterNormalized, 0.22);
+            const eased = Math.pow(easeOutCubic(clusterNormalized), 0.45);
             particle.originX = particle.originX ?? centerW;
             particle.originY = particle.originY ?? centerH;
             const finalX = particle.targetX ?? centerW;
@@ -424,8 +424,8 @@
             }
 
             for (const p of idleParticles) {
-                p.vx *= 0.55; // heavier damping for slow drift
-                p.vy *= 0.55;
+                p.vx *= 0.45; // heavier damping for slow drift
+                p.vy *= 0.45;
 
                 if (p.targetX !== undefined && p.targetY !== undefined) {
                     const targetDx = p.targetX - p.x;
