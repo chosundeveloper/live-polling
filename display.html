@@ -112,7 +112,9 @@
         const MIN_WORD_LIFETIME = 7000;
         const TIMER_DURATION_MS = 10 * 60 * 1000;
         const COLOR_PALETTE = ['#5e4fa2', '#3288bd', '#66c2a5', '#abdda4', '#e6f598', '#fee08b', '#fdae61', '#f46d43', '#d53e4f', '#9e0142'];
-        const MAX_CELL_SPREAD_RATIO = 0.25; // Tighter containment within cell image
+        const MAX_CELL_SPREAD_RATIO = 0.28; // Tighter containment within cell image
+        const INNER_CORE_RATIO = 0.15; // Inner core that stays stable
+        const PUSH_THRESHOLD_RATIO = 0.22; // Only push if beyond this threshold
 
         function selectWordColor(weightRatio, index) {
             return COLOR_PALETTE[index % COLOR_PALETTE.length];
@@ -228,8 +230,8 @@
 
         function getSpiralGeometry(width, height, wordCount = MAX_WORDS) {
             const usableRadius = Math.min(width, height) * MAX_CELL_SPREAD_RATIO;
-            const maxRadius = usableRadius;
-            const minRadius = Math.max(20, maxRadius * 0.1);
+            const maxRadius = usableRadius * 0.95; // Slightly smaller to stay within bounds
+            const minRadius = Math.max(25, maxRadius * 0.12);
             const count = Math.max(1, wordCount);
             const ringCount = Math.min(10, Math.max(3, Math.ceil(count / 25)));
             const ringSpan = (maxRadius - minRadius) / Math.max(1, ringCount - 1);
@@ -435,7 +437,22 @@
                 .force('collide', d3.forceCollide(d => {
                     const { width, height } = getParticleDimensions(d);
                     return Math.max(width, height) / 2 + MIN_SEPARATION / 2;
-                }).strength(0.3).iterations(2))
+                }).strength(d => {
+                    // Only outer words can be pushed
+                    const dx = d.x - centerW;
+                    const dy = d.y - centerH;
+                    const distFromCenter = Math.hypot(dx, dy);
+                    const maxRadius = Math.min(containerWidth, containerHeight) * MAX_CELL_SPREAD_RATIO;
+                    const innerCore = maxRadius * (INNER_CORE_RATIO / MAX_CELL_SPREAD_RATIO);
+                    const pushThreshold = maxRadius * (PUSH_THRESHOLD_RATIO / MAX_CELL_SPREAD_RATIO);
+
+                    // Inner core: almost immovable
+                    if (distFromCenter < innerCore) return 0.05;
+                    // Middle zone: slightly movable
+                    if (distFromCenter < pushThreshold) return 0.15;
+                    // Outer zone: can be pushed
+                    return 0.4;
+                }).iterations(2))
                 .force('radial', d3.forceRadial(d => d.ringRadius || 100, centerW, centerH).strength(0.01))
                 .force('x', d3.forceX(d => d.targetX || centerW).strength(0.008))
                 .force('y', d3.forceY(d => d.targetY || centerH).strength(0.008))
@@ -471,12 +488,20 @@
                         const dy = p.y - centerH;
                         const distFromCenter = Math.hypot(dx, dy);
 
+                        // Soft boundary: slow down as approaching edge
+                        if (distFromCenter > maxRadius * 0.9) {
+                            const overRatio = (distFromCenter - maxRadius * 0.9) / (maxRadius * 0.1);
+                            p.vx *= (1 - overRatio * 0.5);
+                            p.vy *= (1 - overRatio * 0.5);
+                        }
+
+                        // Hard boundary: cannot exceed
                         if (distFromCenter > maxRadius) {
                             const angle = Math.atan2(dy, dx);
                             p.x = centerW + Math.cos(angle) * maxRadius;
                             p.y = centerH + Math.sin(angle) * maxRadius;
-                            p.vx *= 0.5;
-                            p.vy *= 0.5;
+                            p.vx = 0;
+                            p.vy = 0;
                         }
 
                         // Animate font size with D3 easing
