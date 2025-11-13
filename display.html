@@ -21,21 +21,6 @@
                 </div>
                 <button class="concept-nav-btn concept-nav-btn-next" id="nextQuestionBtn" aria-label="다음 질문">›</button>
             </div>
-            <div class="concept-header-meta">
-                <div class="concept-meta-stack">
-                    <div class="concept-meta">
-                        <div>
-                            <p class="concept-label">누적 답변</p>
-                            <p class="concept-value" id="conceptTotal">0</p>
-                        </div>
-                        <div>
-                            <p class="concept-label">업데이트</p>
-                            <p class="concept-value" id="conceptUpdated">-</p>
-                        </div>
-                    </div>
-                    <button class="concept-action concept-action-ghost" id="toggleMock">모의</button>
-                </div>
-            </div>
         </header>
 
         <main class="concept-cloud">
@@ -43,6 +28,21 @@
             <div class="concept-overlay concept-overlay-bottom-left">
                 <div class="concept-qr-card">
                     <div id="conceptQrCode"></div>
+                </div>
+            </div>
+            <div class="concept-overlay concept-overlay-bottom-right">
+                <div class="concept-meta-stack">
+                    <div class="concept-meta">
+                        <div>
+                            <p class="concept-label">누적 답변</p>
+                            <p class="concept-value" id="conceptTotal">0</p>
+                        </div>
+                        <div>
+                            <p class="concept-label">타이머</p>
+                            <p class="concept-value" id="conceptUpdated">10:00</p>
+                        </div>
+                    </div>
+                    <button class="concept-action concept-action-ghost" id="toggleMock">모의</button>
                 </div>
             </div>
         </main>
@@ -79,6 +79,8 @@
         let wordParticles = [];
         let qrCodeInstance = null;
         let animationFrameId = null;
+        let timerInterval = null;
+        let timerDeadline = null;
 
         // --- Constants ---
         const KEYWORDS = ['연결', '성장', '도전', '몰입', '설렘', '공감', '협업', '집중', '영감', '감동', '시너지', '에너지', '환대', '몰두', '발견', '혁신', '팀워크', '지원', '아이디어', '탐험', '성찰', '축제', '유연함', '치열함', '여유', '흥미', '모험', '발표', '피드백', '브레인스토밍', 'collaboration', 'momentum', 'breakthrough', 'catalyst', 'insight', 'iteration', 'community', 'confidence', 'empathy', 'curiosity'];
@@ -101,6 +103,7 @@
         const TARGET_ATTRACTION_FORCE = 0.00012;
         const RADIAL_FORCE = 0.0004;
         const MIN_WORD_LIFETIME = 7000;
+        const TIMER_DURATION_MS = 10 * 60 * 1000;
         const NAVY_BASE_PALETTE = ['#050914', '#0a1628', '#0f2138', '#142c48', '#193859'];
         const NAVY_ACCENT_PALETTE = ['#1e446b', '#25507d', '#2c5c90', '#3368a3', '#3a74b6'];
         const NAVY_GLOW_PALETTE = ['#4180c9', '#4a8cdc', '#5398ef', '#66a8ff', '#7ab7ff'];
@@ -179,6 +182,34 @@
         function easeOutCubic(t) {
             const clamped = Math.min(1, Math.max(0, t));
             return 1 - Math.pow(1 - clamped, 3);
+        }
+
+        function stopTimer() {
+            if (timerInterval) {
+                clearInterval(timerInterval);
+                timerInterval = null;
+            }
+        }
+
+        function updateTimerDisplay() {
+            if (!timerDeadline) {
+                conceptUpdated.textContent = '10:00';
+                return;
+            }
+            const remaining = Math.max(0, timerDeadline - Date.now());
+            const minutes = Math.floor(remaining / 60000);
+            const seconds = String(Math.floor((remaining % 60000) / 1000)).padStart(2, '0');
+            conceptUpdated.textContent = `${minutes}:${seconds}`;
+            if (remaining <= 0) {
+                stopTimer();
+            }
+        }
+
+        function startTimer() {
+            stopTimer();
+            timerDeadline = Date.now() + TIMER_DURATION_MS;
+            updateTimerDisplay();
+            timerInterval = setInterval(updateTimerDisplay, 1000);
         }
 
         function updateIntroMotion(particle, centerW, centerH, timestamp) {
@@ -578,6 +609,8 @@
             wordParticles = [];
             wordsLayer.innerHTML = '';
             conceptTotal.textContent = '0';
+            stopTimer();
+            conceptUpdated.textContent = '10:00';
         }
 
         function startRealtimeSimulation() {
@@ -585,7 +618,8 @@
             resetDisplay();
             let count = 0;
             const question = QUESTIONS[currentQuestionIndex];
-            
+            startTimer();
+
             function generateSingleMockAnswer(questionId, index) {
                 const word = KEYWORDS[Math.floor(Math.random() * KEYWORDS.length)] || KEYWORDS[index % KEYWORDS.length];
                 return {
@@ -607,7 +641,6 @@
                 const frequencyMap = extractWordInstances(mockAnswers);
                 renderWords(frequencyMap);
                 conceptTotal.textContent = mockAnswers.length;
-                conceptUpdated.textContent = new Date().toLocaleTimeString();
                 count++;
             }, 500);
             
@@ -617,6 +650,7 @@
         function startRealDataPolling() {
             console.log('startRealDataPolling called - currently disabled');
             resetDisplay();
+            startTimer();
             // fetchRealAnswers(); // Initial fetch - disabled
             // pollingInterval = setInterval(fetchRealAnswers, 2000); // disabled
         }

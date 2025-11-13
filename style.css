@@ -1124,16 +1124,6 @@ footer a:hover {
     width: 100%;
 }
 
-.concept-header-meta {
-    margin-left: auto;
-    display: flex;
-    flex-direction: column;
-    align-items: flex-end;
-    gap: 8px;
-    text-align: right;
-    min-width: 220px;
-    flex-shrink: 0;
-}
 
 .concept-nav-btn {
     background: transparent;
@@ -1260,6 +1250,12 @@ footer a:hover {
     left: 26px;
 }
 
+.concept-overlay-bottom-right {
+    bottom: 26px;
+    right: 26px;
+    align-items: flex-end;
+}
+
 .concept-qr-card {
     display: flex;
     flex-direction: column;
@@ -1300,6 +1296,11 @@ footer a:hover {
     box-shadow: 0 12px 30px rgba(15, 23, 42, 0.08);
 }
 
+.concept-overlay-bottom-right .concept-meta-stack {
+    flex-direction: column;
+    align-items: flex-end;
+}
+
 .concept-meta {
     display: flex;
     justify-content: space-between;
@@ -1317,6 +1318,10 @@ footer a:hover {
     background: transparent;
     color: var(--ink-secondary);
     padding: 8px 18px;
+}
+
+.concept-overlay-bottom-right .concept-action-ghost {
+    align-self: flex-end;
 }
 
 
@@ -1468,15 +1473,13 @@ footer a:hover {
     .concept-wrapper { padding: 20px; }
     .concept-cloud { padding: 20px; }
     .concept-top { flex-direction: column; align-items: flex-start; gap: 12px; }
-    .concept-header-meta {
-        width: 100%;
-        align-items: flex-start;
-        text-align: left;
-        margin-top: 8px;
-    }
     .concept-meta-stack {
         flex-direction: column;
         align-items: flex-start;
+    }
+    .concept-overlay-bottom-right {
+        align-items: flex-start;
+        width: 100%;
     }
     .concept-action-ghost {
         align-self: flex-start;
