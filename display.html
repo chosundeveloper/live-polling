@@ -625,7 +625,7 @@
                     wordEl.style.top = `${stageY}px`;
                     wordParticles.push(particle);
                     const introParticles = wordParticles.filter(p => p.phase === 'intro');
-                    separateParticles(introParticles, INTRO_CLUSTER_PADDING, 6);
+
 
                     requestAnimationFrame(() => {
                         wordEl.classList.add('concept-word-visible');
