@@ -102,7 +102,7 @@
         const INTRO_STAGE_MAX_RADIUS = 70;
         const INTRO_CLUSTER_RATIO = 0.4; // 40% for gathering, 60% for spreading
         const INTRO_CLUSTER_SWAY = 0;
-        const INTRO_CLUSTER_PADDING = 55;
+        const INTRO_CLUSTER_PADDING = 80;
         const OUTWARD_DRIFT_FORCE = 0.000002;
         const TARGET_ATTRACTION_FORCE = 0.000001;
         const RADIAL_FORCE = 0.000004;
@@ -457,8 +457,20 @@
                 if (forceMagnitude > 0.000001) { // Epsilon to prevent division by zero and small jitters
                     const dirX = p.forceX / forceMagnitude;
                     const dirY = p.forceY / forceMagnitude;
-                    p.vx = dirX * MAX_PARTICLE_SPEED;
-                    p.vy = dirY * MAX_PARTICLE_SPEED;
+                    
+                    // Apply smoothing to direction changes
+                    const smoothFactor = 0.15; // Adjust for desired smoothness
+                    p.smoothVx = (p.smoothVx ?? dirX) * (1 - smoothFactor) + dirX * smoothFactor;
+                    p.smoothVy = (p.smoothVy ?? dirY) * (1 - smoothFactor) + dirY * smoothFactor;
+
+                    const smoothDirMagnitude = Math.hypot(p.smoothVx, p.smoothVy);
+                    if (smoothDirMagnitude > 0.000001) {
+                        p.vx = (p.smoothVx / smoothDirMagnitude) * MAX_PARTICLE_SPEED;
+                        p.vy = (p.smoothVy / smoothDirMagnitude) * MAX_PARTICLE_SPEED;
+                    } else {
+                        p.vx = 0;
+                        p.vy = 0;
+                    }
                 } else {
                     p.vx = 0;
                     p.vy = 0;
