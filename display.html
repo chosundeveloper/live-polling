@@ -99,7 +99,7 @@
         const INTRO_STAGE_MAX_RADIUS = 70;
         const INTRO_CLUSTER_RATIO = 0.92;
         const INTRO_CLUSTER_SWAY = 10;
-        const INTRO_CLUSTER_PADDING = 28;
+        const INTRO_CLUSTER_PADDING = 36;
         const OUTWARD_DRIFT_FORCE = 0.000002;
         const TARGET_ATTRACTION_FORCE = 0.000012;
         const RADIAL_FORCE = 0.00006;
@@ -136,30 +136,32 @@
 
         const GOLDEN_ANGLE = Math.PI * (3 - Math.sqrt(5));
 
-        function separateParticles(particles, padding = INTRO_CLUSTER_PADDING) {
-            for (let i = 0; i < particles.length; i++) {
-                const p1 = particles[i];
-                for (let j = i + 1; j < particles.length; j++) {
-                    const p2 = particles[j];
-                    const dx = p1.x - p2.x;
-                    const dy = p1.y - p2.y;
-                    const dist = Math.hypot(dx, dy) || 1;
-                    const minDist = ((p1.width || DEFAULT_PARTICLE_WIDTH) + (p2.width || DEFAULT_PARTICLE_WIDTH)) / 2 + padding;
-                    if (dist < minDist) {
-                        const push = (minDist - dist) * 0.5;
-                        const ux = dx / dist;
-                        const uy = dy / dist;
-                        p1.x += ux * push;
-                        p1.y += uy * push;
-                        p2.x -= ux * push;
-                        p2.y -= uy * push;
-                        if (p1.el) {
-                            p1.el.style.left = `${p1.x}px`;
-                            p1.el.style.top = `${p1.y}px`;
-                        }
-                        if (p2.el) {
-                            p2.el.style.left = `${p2.x}px`;
-                            p2.el.style.top = `${p2.y}px`;
+        function separateParticles(particles, padding = INTRO_CLUSTER_PADDING, passes = 3) {
+            for (let pass = 0; pass < passes; pass++) {
+                for (let i = 0; i < particles.length; i++) {
+                    const p1 = particles[i];
+                    for (let j = i + 1; j < particles.length; j++) {
+                        const p2 = particles[j];
+                        const dx = p1.x - p2.x;
+                        const dy = p1.y - p2.y;
+                        const dist = Math.hypot(dx, dy) || 1;
+                        const minDist = ((p1.width || DEFAULT_PARTICLE_WIDTH) + (p2.width || DEFAULT_PARTICLE_WIDTH)) / 2 + padding;
+                        if (dist < minDist) {
+                            const push = (minDist - dist) * 0.5;
+                            const ux = dx / dist;
+                            const uy = dy / dist;
+                            p1.x += ux * push;
+                            p1.y += uy * push;
+                            p2.x -= ux * push;
+                            p2.y -= uy * push;
+                            if (p1.el) {
+                                p1.el.style.left = `${p1.x}px`;
+                                p1.el.style.top = `${p1.y}px`;
+                            }
+                            if (p2.el) {
+                                p2.el.style.left = `${p2.x}px`;
+                                p2.el.style.top = `${p2.y}px`;
+                            }
                         }
                     }
                 }
@@ -369,7 +371,7 @@
                     idleParticles.push(p);
                 }
             }
-            separateParticles(clusterParticles, INTRO_CLUSTER_PADDING);
+            separateParticles(clusterParticles, INTRO_CLUSTER_PADDING, 4);
 
             for (let j = 0; j < idleParticles.length; j++) {
                 const p1 = idleParticles[j];
@@ -615,7 +617,7 @@
                     wordEl.style.top = `${stageY}px`;
                     wordParticles.push(particle);
                     const introParticles = wordParticles.filter(p => p.phase === 'intro');
-                    separateParticles(introParticles, INTRO_CLUSTER_PADDING);
+                    separateParticles(introParticles, INTRO_CLUSTER_PADDING, 5);
 
                     requestAnimationFrame(() => {
                         wordEl.classList.add('concept-word-visible');
