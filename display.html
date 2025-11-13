@@ -91,12 +91,12 @@
         const MAX_WORDS = 150;
         const MIN_FONT_SIZE = 18;
         const MAX_FONT_SIZE = 32;
-        const MAX_PARTICLE_SPEED = 0.004;
+        const MAX_PARTICLE_SPEED = 0.001;
         const MIN_SEPARATION = 120;
         const DEFAULT_PARTICLE_WIDTH = 48;
         const DEFAULT_PARTICLE_HEIGHT = 22;
-        const INTRO_DURATION_BASE = 120000; // ultra slow duration for smooth spread (2 minutes)
-        const INTRO_DURATION_VARIANCE = 15000;
+        const INTRO_DURATION_BASE = 180000; // extremely slow duration (3 minutes)
+        const INTRO_DURATION_VARIANCE = 20000;
         const INTRO_BLOOM_JITTER = 0; // No bloom
         const INTRO_SPIRAL_TWIST = 0; // No spiral
         const INTRO_SWAY_AMPLITUDE = 0; // No sway
@@ -117,7 +117,9 @@
         const PUSH_THRESHOLD_RATIO = 0.10; // Start pushing outward very early
 
         function selectWordColor(weightRatio, index) {
-            return COLOR_PALETTE[index % COLOR_PALETTE.length];
+            // Randomize color selection for variety
+            const seed = index * 7 + Math.floor(weightRatio * 13);
+            return COLOR_PALETTE[seed % COLOR_PALETTE.length];
         }
         window.selectWordColor = selectWordColor;
 
@@ -424,13 +426,13 @@
             }
 
             d3Simulation = d3.forceSimulation(wordParticles)
-                .alphaDecay(0.003)
-                .velocityDecay(0.85)
+                .alphaDecay(0.001)
+                .velocityDecay(0.95)
                 .alphaMin(0.001)
                 .force('collide', d3.forceCollide(d => {
                     const { width, height } = getParticleDimensions(d);
                     return Math.max(width, height) / 2 + MIN_SEPARATION / 2;
-                }).strength(0.9).iterations(4))
+                }).strength(0.5).iterations(2))
                 .force('gentle-separate', () => {
                     // Custom force: when words overlap, move the outer one toward cell boundary
                     const maxRadius = Math.min(containerWidth, containerHeight) * MAX_CELL_SPREAD_RATIO;
