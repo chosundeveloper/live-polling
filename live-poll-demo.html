@@ -123,6 +123,11 @@
             font-weight: 500;
         }
 
+        .poll-result .answer-text .char {
+            display: inline-block;
+            transform-origin: 50% 100%;
+        }
+
         .poll-result .votes {
             color: #667eea;
             font-size: 0.9em;
@@ -165,6 +170,7 @@
         </ul>
     </div>
 
+    <script src="https://cdn.jsdelivr.net/npm/animejs@3.2.1/lib/anime.min.js"></script>
     <script>
         // Mock data - 300개 샘플 답변
         const mockAnswers = [
@@ -222,6 +228,8 @@
             // 맨 앞에 추가 (최신 답변이 위로)
             pollResultsList.insertBefore(pollResult, pollResultsList.firstChild);
 
+            animatePollResult(pollResult);
+
             updateStats();
 
             // 최대 300개만 유지
@@ -229,6 +237,44 @@
             if (results.length > 300) {
                 results[results.length - 1].remove();
             }
+        }
+
+        function animatePollResult(pollResult) {
+            if (typeof anime === 'undefined') return;
+
+            const textEl = pollResult.querySelector('.answer-text');
+            if (!textEl) return;
+
+            const text = textEl.textContent;
+            textEl.textContent = '';
+            const fragment = document.createDocumentFragment();
+            for (const char of text) {
+                const span = document.createElement('span');
+                span.className = 'char';
+                span.textContent = char === ' ' ? '\u00A0' : char;
+                fragment.appendChild(span);
+            }
+            textEl.appendChild(fragment);
+
+            const charSpans = textEl.querySelectorAll('.char');
+
+            anime({
+                targets: pollResult,
+                translateY: [-20, 0],
+                opacity: [0, 1],
+                duration: 500,
+                easing: 'easeOutQuad'
+            });
+
+            anime({
+                targets: charSpans,
+                opacity: [0, 1],
+                translateY: ['1em', '0em'],
+                rotateX: [-45, 0],
+                delay: anime.stagger(20),
+                duration: 450,
+                easing: 'easeOutQuad'
+            });
         }
 
         function simulatePollingData() {

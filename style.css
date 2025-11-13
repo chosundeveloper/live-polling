@@ -1348,6 +1348,16 @@ footer a:hover {
     white-space: nowrap;
 }
 
+.concept-char {
+    display: inline-block;
+    will-change: transform, opacity;
+    pointer-events: none;
+}
+
+.concept-word-vertical .concept-char {
+    display: block;
+}
+
 .concept-word-visible {
     opacity: 0.96;
     transform: translate(-50%, -50%) scale(1);

@@ -9,6 +9,7 @@
     <!-- Temporarily removed supabase-config.js to isolate issues -->
     <!-- <script src="supabase-config.js"></script> -->
     <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/animejs@3.2.1/lib/anime.min.js"></script>
 </head>
 <body class="concept-body">
     <div class="concept-wrapper">
@@ -115,6 +116,41 @@
             return COLOR_PALETTE[index % COLOR_PALETTE.length];
         }
         window.selectWordColor = selectWordColor;
+
+        function splitWordIntoCharacters(wordEl) {
+            if (!wordEl || wordEl.dataset.charsSplit === '1') {
+                return wordEl?.querySelectorAll('.concept-char');
+            }
+            const text = wordEl.textContent;
+            wordEl.textContent = '';
+            const fragment = document.createDocumentFragment();
+            for (const char of text) {
+                const span = document.createElement('span');
+                span.className = 'concept-char';
+                span.textContent = char === ' ' ? '\u00A0' : char;
+                fragment.appendChild(span);
+            }
+            wordEl.appendChild(fragment);
+            wordEl.dataset.charsSplit = '1';
+            return wordEl.querySelectorAll('.concept-char');
+        }
+
+        function animateWordEntry(wordEl) {
+            if (typeof anime === 'undefined' || !wordEl) return;
+            const chars = splitWordIntoCharacters(wordEl);
+            if (!chars || chars.length === 0) return;
+            const isVertical = wordEl.classList.contains('concept-word-vertical');
+            anime({
+                targets: chars,
+                opacity: [0, 1],
+                translateY: isVertical ? ['0.5em', '0em'] : ['1em', '0em'],
+                translateX: isVertical ? ['-0.25em', '0em'] : ['0em', '0em'],
+                rotateX: isVertical ? [0, 0] : [-30, 0],
+                easing: 'easeOutQuad',
+                duration: 520,
+                delay: anime.stagger(20)
+            });
+        }
 
         function getCloudBounds() {
             const rect = wordsLayer.getBoundingClientRect();
@@ -641,6 +677,7 @@
 
                     requestAnimationFrame(() => {
                         wordEl.classList.add('concept-word-visible');
+                        animateWordEntry(wordEl);
                     });
                 }
                 
