@@ -170,7 +170,7 @@
         </ul>
     </div>
 
-    <script src="https://cdn.jsdelivr.net/npm/animejs@3.2.1/lib/anime.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/gsap.min.js"></script>
     <script>
         // Mock data - 300개 샘플 답변
         const mockAnswers = [
@@ -240,7 +240,7 @@
         }
 
         function animatePollResult(pollResult) {
-            if (typeof anime === 'undefined') return;
+            if (typeof gsap === 'undefined') return;
 
             const textEl = pollResult.querySelector('.answer-text');
             if (!textEl) return;
@@ -258,23 +258,9 @@
 
             const charSpans = textEl.querySelectorAll('.char');
 
-            anime({
-                targets: pollResult,
-                translateY: [-20, 0],
-                opacity: [0, 1],
-                duration: 500,
-                easing: 'easeOutQuad'
-            });
-
-            anime({
-                targets: charSpans,
-                opacity: [0, 1],
-                translateY: ['1em', '0em'],
-                rotateX: [-45, 0],
-                delay: anime.stagger(20),
-                duration: 450,
-                easing: 'easeOutQuad'
-            });
+            const tl = gsap.timeline();
+            tl.fromTo(pollResult, { y: -24, opacity: 0, scale: 0.96 }, { y: 0, opacity: 1, scale: 1, duration: 0.55, ease: 'power3.out' })
+              .fromTo(charSpans, { opacity: 0, y: 24, rotateX: -35 }, { opacity: 1, y: 0, rotateX: 0, duration: 0.5, ease: 'power4.out', stagger: { each: 0.015 } }, 0.05);
         }
 
         function simulatePollingData() {

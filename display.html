@@ -9,7 +9,7 @@
     <!-- Temporarily removed supabase-config.js to isolate issues -->
     <!-- <script src="supabase-config.js"></script> -->
     <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/animejs@3.2.1/lib/anime.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/gsap.min.js"></script>
 </head>
 <body class="concept-body">
     <div class="concept-wrapper">
@@ -136,36 +136,30 @@
         }
 
         function animateWordEntry(wordEl) {
-            if (typeof anime === 'undefined' || !wordEl) return;
+            if (typeof gsap === 'undefined' || !wordEl) return;
             const chars = splitWordIntoCharacters(wordEl);
             if (!chars || chars.length === 0) return;
             const isVertical = wordEl.classList.contains('concept-word-vertical');
 
-            anime({
-                targets: wordEl,
-                opacity: [0, 0.96],
-                duration: 320,
-                easing: 'easeOutSine'
-            });
-
-            anime({
-                targets: wordEl,
-                '--concept-scale': [0.82, 1],
-                duration: 620,
-                easing: 'easeOutBack'
-            });
-
-            anime({
-                targets: chars,
-                opacity: [0, 1],
-                translateY: isVertical ? ['0.7em', '0em'] : ['1.2em', '0em'],
-                translateX: isVertical ? ['-0.35em', '0em'] : ['0em', '0em'],
-                rotateX: isVertical ? [0, 0] : [-35, 0],
-                skewY: isVertical ? ['-4deg', '0deg'] : ['0deg', '0deg'],
-                easing: 'easeOutExpo',
-                duration: 680,
-                delay: anime.stagger(18)
-            });
+            const tl = gsap.timeline();
+            tl.fromTo(wordEl, { opacity: 0 }, { opacity: 0.96, duration: 0.28, ease: 'sine.out' })
+              .fromTo(wordEl, { '--concept-scale': 0.8 }, { '--concept-scale': 1, duration: 0.7, ease: 'elastic.out(1, 0.6)' }, 0)
+              .fromTo(chars, {
+                    opacity: 0,
+                    y: isVertical ? 18 : 32,
+                    x: isVertical ? -10 : 0,
+                    rotateX: isVertical ? 0 : -25,
+                    skewY: isVertical ? -6 : 0
+                }, {
+                    opacity: 1,
+                    y: 0,
+                    x: 0,
+                    rotateX: 0,
+                    skewY: 0,
+                    duration: 0.9,
+                    ease: 'power4.out',
+                    stagger: { amount: 0.35, from: 'random' }
+                }, 0.05);
         }
 
         function getCloudBounds() {
