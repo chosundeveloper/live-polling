@@ -237,6 +237,7 @@
             const ringSpan = (maxRadius - minRadius) / Math.max(1, ringCount - 1);
             const rings = [];
             let startIndex = 0;
+            // Fill from outside to inside: start with maxRadius
             for (let i = 0; i < ringCount; i++) {
                 const radius = maxRadius - ringSpan * i;
                 const circumference = 2 * Math.PI * Math.max(40, radius);
@@ -317,17 +318,9 @@
 
             let targetX, targetY;
 
-            if (rawProgress < INTRO_CLUSTER_RATIO) {
-                // Phase 1: Gathering
-                const phaseProgress = rawProgress / INTRO_CLUSTER_RATIO;
-                targetX = particle.originX + (centerW - particle.originX) * phaseProgress;
-                targetY = particle.originY + (centerH - particle.originY) * phaseProgress;
-            } else {
-                // Phase 2: Spreading
-                const phaseProgress = (rawProgress - INTRO_CLUSTER_RATIO) / (1 - INTRO_CLUSTER_RATIO);
-                targetX = centerW + (particle.targetX - centerW) * phaseProgress;
-                targetY = centerH + (particle.targetY - centerH) * phaseProgress;
-            }
+            // Move from edge toward target position (inward)
+            targetX = particle.originX + (particle.targetX - particle.originX) * rawProgress;
+            targetY = particle.originY + (particle.targetY - particle.originY) * rawProgress;
 
             // Calculate force to move towards targetX, targetY at MAX_PARTICLE_SPEED
             const dx = targetX - particle.x;
@@ -619,8 +612,8 @@
             limited.forEach(([text, weight], index) => {
                 const lengthRatio = (maxLength - text.length) / (maxLength - minLength + 1);
                 const targetFontSize = MIN_FONT_SIZE + (MAX_FONT_SIZE - MIN_FONT_SIZE) * lengthRatio;
-                // Reverse spiral index so newer/frequent words go to outer rings first
-                const spiralIndex = limited.length - 1 - index;
+                // Keep normal order: outer rings fill first, then move inward
+                const spiralIndex = index;
 
                 let particle = existingParticles.get(text);
                 if (particle) {
@@ -712,15 +705,20 @@
                     };
                     assignParticleTarget(particle, centerW, centerH, geometry, spiralIndex);
 
-                    // Always start from exact center
-                    particle.originX = centerW;
-                    particle.originY = centerH;
-                    particle.x = centerW;
-                    particle.y = centerH;
-                    particle.prevX = centerW;
-                    particle.prevY = centerH;
-                    wordEl.style.left = `${centerW}px`;
-                    wordEl.style.top = `${centerH}px`;
+                    // Start from outside edge (near target position)
+                    const targetAngle = Math.atan2(particle.targetY - centerH, particle.targetX - centerW);
+                    const startRadius = maxRadius * 0.98; // Start very close to edge
+                    const startX = centerW + Math.cos(targetAngle) * startRadius;
+                    const startY = centerH + Math.sin(targetAngle) * startRadius;
+
+                    particle.originX = startX;
+                    particle.originY = startY;
+                    particle.x = startX;
+                    particle.y = startY;
+                    particle.prevX = startX;
+                    particle.prevY = startY;
+                    wordEl.style.left = `${startX}px`;
+                    wordEl.style.top = `${startY}px`;
                     wordParticles.push(particle);
                     const introParticles = wordParticles.filter(p => p.phase === 'intro');
 
