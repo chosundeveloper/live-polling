@@ -429,6 +429,10 @@
                 .alphaDecay(0.0005)
                 .velocityDecay(0.98)
                 .alphaMin(0.0001)
+                .force('collide', d3.forceCollide(d => {
+                    const { width, height } = getParticleDimensions(d);
+                    return Math.max(width, height) / 2 + MIN_SEPARATION / 2;
+                }).strength(0.3).iterations(1))
                 .force('gentle-separate', () => {
                     // Custom force: when words overlap, move the outer one toward cell boundary
                     const maxRadius = Math.min(containerWidth, containerHeight) * MAX_CELL_SPREAD_RATIO;
@@ -463,9 +467,9 @@
                                     const angle = Math.atan2(outerWord.y - centerH, outerWord.x - centerW);
                                     const overlap = minDist - distance;
 
-                                    // Gentle push with moderate distance-based multiplier
+                                    // Very gentle push with moderate distance-based multiplier
                                     const distRatio = outerDist / maxRadius;
-                                    const pushStrength = overlap * 0.02 * (1 + distRatio);
+                                    const pushStrength = overlap * 0.01 * (1 + distRatio * 0.5);
 
                                     outerWord.vx += Math.cos(angle) * pushStrength;
                                     outerWord.vy += Math.sin(angle) * pushStrength;
