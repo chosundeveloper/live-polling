@@ -1320,6 +1320,14 @@ footer a:hover {
     padding: 8px 18px;
 }
 
+.concept-meta-actions {
+    display: flex;
+    gap: 12px;
+    margin-top: 12px;
+    width: 100%;
+    justify-content: flex-end;
+}
+
 .concept-overlay-bottom-right .concept-action-ghost {
     align-self: flex-end;
 }
