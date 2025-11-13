@@ -38,8 +38,8 @@
                             <p class="concept-value" id="conceptTotal">0</p>
                         </div>
                         <div>
-                            <p class="concept-label">타이머</p>
-                            <p class="concept-value" id="conceptUpdated">10:00</p>
+                            <p class="concept-label">업데이트</p>
+                            <p class="concept-value" id="conceptUpdated">타이머 10:00</p>
                         </div>
                     </div>
                     <button class="concept-action concept-action-ghost" id="toggleMock">모의</button>
@@ -193,13 +193,13 @@
 
         function updateTimerDisplay() {
             if (!timerDeadline) {
-                conceptUpdated.textContent = '10:00';
+                conceptUpdated.textContent = '타이머 10:00';
                 return;
             }
             const remaining = Math.max(0, timerDeadline - Date.now());
             const minutes = Math.floor(remaining / 60000);
             const seconds = String(Math.floor((remaining % 60000) / 1000)).padStart(2, '0');
-            conceptUpdated.textContent = `${minutes}:${seconds}`;
+            conceptUpdated.textContent = `타이머 ${minutes}:${seconds}`;
             if (remaining <= 0) {
                 stopTimer();
             }
@@ -610,7 +610,7 @@
             wordsLayer.innerHTML = '';
             conceptTotal.textContent = '0';
             stopTimer();
-            conceptUpdated.textContent = '10:00';
+            conceptUpdated.textContent = '타이머 10:00';
         }
 
         function startRealtimeSimulation() {
