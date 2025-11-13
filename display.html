@@ -85,6 +85,7 @@
         const PREFIXES = ['따뜻한', '깊은', '새로운', '반짝이는', '집중의', '장난기 있는', '강렬한', '잔잔한', '선명한'];
         const SUFFIXES = ['무드', '아이디어', '영감', '에너지', '발견', '시간', '순간', '대화', '시선'];
         const MAX_WORDS = 150;
+        const WORD_FONT_SIZE_PX = 25;
         const MAX_PARTICLE_SPEED = 0.18;
         const MIN_SEPARATION = 28;
         const DEFAULT_PARTICLE_WIDTH = 48;
@@ -513,7 +514,7 @@
                 const sizeDiff = p.targetFontSize - p.currentFontSize;
                 if (Math.abs(sizeDiff) > 0.01) {
                     p.currentFontSize += sizeDiff * 0.1;
-                    p.el.style.fontSize = `${p.currentFontSize.toFixed(2)}rem`;
+                    p.el.style.fontSize = `${p.currentFontSize.toFixed(2)}px`;
                     const rect = p.el.getBoundingClientRect();
                     p.width = rect.width;
                     p.height = rect.height;
@@ -572,7 +573,7 @@
 
             limited.forEach(([text, weight], index) => {
                 const weightRatio = weight / maxWeight;
-                const targetFontSize = 0.8 + weightRatio * 1.2;
+                const targetFontSize = WORD_FONT_SIZE_PX;
                 const spiralIndex = index;
 
                 let particle = existingParticles.get(text);
@@ -588,8 +589,8 @@
                     wordEl.textContent = text;
                     wordEl.style.color = selectWordColor(weightRatio, index);
 
-                    const initialFontSize = 0.8;
-                    wordEl.style.fontSize = `${initialFontSize}rem`;
+                    const initialFontSize = WORD_FONT_SIZE_PX;
+                    wordEl.style.fontSize = `${initialFontSize}px`;
                     
                     // Click to delete
                     wordEl.addEventListener('click', () => {
