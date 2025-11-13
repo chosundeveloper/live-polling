@@ -104,8 +104,8 @@
         const INTRO_CLUSTER_SWAY = 0;
         const INTRO_CLUSTER_PADDING = 55;
         const OUTWARD_DRIFT_FORCE = 0.000002;
-        const TARGET_ATTRACTION_FORCE = 0.000008;
-        const RADIAL_FORCE = 0.00004;
+        const TARGET_ATTRACTION_FORCE = 0.000005;
+        const RADIAL_FORCE = 0.00002;
         const MIN_WORD_LIFETIME = 7000;
         const TIMER_DURATION_MS = 10 * 60 * 1000;
         const COLOR_PALETTE = ['#5e4fa2', '#3288bd', '#66c2a5', '#abdda4', '#e6f598', '#fee08b', '#fdae61', '#f46d43', '#d53e4f', '#9e0142'];
@@ -464,8 +464,8 @@
             }
 
             for (const p of idleParticles) {
-                p.vx *= 0.45; // heavier damping for slow drift
-                p.vy *= 0.45;
+                p.vx *= 0.35; // heavier damping for slow drift
+                p.vy *= 0.35;
 
                 if (p.targetX !== undefined && p.targetY !== undefined) {
                     const targetDx = p.targetX - p.x;
