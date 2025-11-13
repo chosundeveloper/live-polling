@@ -1,0 +1,148 @@
+🚀 Groq working...
+**Live Polling UI**
+======================
+
+Below is a complete working code for a live-polling UI that handles 300+ answers with smooth animations. This example includes a mock mode for testing purposes.
+
+**HTML**
+```html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Live Polling UI</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="poll-container">
+        <h1>Live Polling Results</h1>
+        <ul id="poll-results"></ul>
+        <button id="toggle-mock-mode">Toggle Mock Mode</button>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
+```
+
+**CSS (in style.css file)**
+```css
+.poll-container {
+    max-width: 800px;
+    margin: 40px auto;
+    padding: 20px;
+    background-color: #f9f9f9;
+    border: 1px solid #ddd;
+    border-radius: 10px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+}
+
+#poll-results {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.poll-result {
+    padding: 10px;
+    border-bottom: 1px solid #ccc;
+    animation: fadeIn 0.5s;
+}
+
+.poll-result:last-child {
+    border-bottom: none;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
+}
+
+#toggle-mock-mode {
+    margin-top: 20px;
+    padding: 10px 20px;
+    background-color: #4CAF50;
+    color: #fff;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+#toggle-mock-mode:hover {
+    background-color: #3e8e41;
+}
+```
+
+**JavaScript (in script.js file)**
+```javascript
+// Mock data for testing purposes
+const mockData = Array(300).fill(0).map((_, index) => ({
+    answer: `Answer ${index + 1}`,
+    votes: Math.floor(Math.random() * 100),
+}));
+
+let mockMode = false;
+let currentAnswerIndex = 0;
+
+const pollResultsList = document.getElementById('poll-results');
+const toggleMockModeButton = document.getElementById('toggle-mock-mode');
+
+// Function to render a single poll result
+function renderPollResult(answer, votes) {
+    const pollResult = document.createElement('li');
+    pollResult.classList.add('poll-result');
+    pollResult.innerHTML = `${answer} - ${votes} votes`;
+    pollResultsList.appendChild(pollResult);
+}
+
+// Function to simulate real-time polling data
+function simulatePollingData() {
+    if (mockMode) {
+        const answer = mockData[currentAnswerIndex];
+        renderPollResult(answer.answer, answer.votes);
+        currentAnswerIndex = (currentAnswerIndex + 1) % mockData.length;
+    } else {
+        // Replace this with your actual polling data API call
+        const answer = {
+            answer: `Answer ${Math.floor(Math.random() * 100)}`,
+            votes: Math.floor(Math.random() * 100),
+        };
+        renderPollResult(answer.answer, answer.votes);
+    }
+}
+
+// Function to handle toggle mock mode button click
+function toggleMockMode() {
+    mockMode = !mockMode;
+    currentAnswerIndex = 0;
+    pollResultsList.innerHTML = ''; // Clear previous results
+    if (mockMode) {
+        toggleMockModeButton.textContent = 'Disable Mock Mode';
+    } else {
+        toggleMockModeButton.textContent = 'Enable Mock Mode';
+    }
+}
+
+// Set up event listeners
+toggleMockModeButton.addEventListener('click', toggleMockMode);
+
+// Simulate real-time polling data every 0.5 seconds
+setInterval(simulatePollingData, 500);
+```
+
+**How it works:**
+
+1. The HTML file creates a basic structure for the live polling UI, including a container, a list for poll results, and a button to toggle mock mode.
+2. The CSS file styles the UI, adding animations and a basic layout.
+3. The JavaScript file handles the logic for rendering poll results, simulating real-time polling data, and toggling mock mode.
+4. In mock mode, the code uses an array of mock data to simulate polling results. In non-mock mode, it generates random answers and votes.
+5. The `simulatePollingData` function is called every 0.5 seconds to simulate real-time polling data.
+6. The `renderPollResult` function creates a new list item for each poll result and appends it to the poll results list.
+7. The `toggleMockMode` function toggles mock mode on and off, clearing previous results and updating the button text.
+
+**Note:** This code is for demonstration purposes only and should be modified to fit your specific use case. You will need to replace the mock data and the `simulatePollingData` function with your actual polling data API call.

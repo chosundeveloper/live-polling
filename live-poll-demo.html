@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Live Polling - 실시간 답변 UI</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .poll-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 40px;
+            background-color: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        }
+
+        h1 {
+            text-align: center;
+            color: #667eea;
+            margin-bottom: 10px;
+            font-size: 2.5em;
+        }
+
+        .stats {
+            text-align: center;
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 1.1em;
+        }
+
+        .controls {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            margin-bottom: 30px;
+        }
+
+        button {
+            padding: 12px 24px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 600;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        }
+
+        button:active {
+            transform: translateY(0);
+        }
+
+        button.active {
+            background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+        }
+
+        #poll-results {
+            list-style: none;
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 15px;
+            max-height: 70vh;
+            overflow-y: auto;
+            padding: 10px;
+        }
+
+        #poll-results::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        #poll-results::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 10px;
+        }
+
+        #poll-results::-webkit-scrollbar-thumb {
+            background: #667eea;
+            border-radius: 10px;
+        }
+
+        .poll-result {
+            padding: 20px;
+            background: white;
+            border-left: 4px solid #667eea;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            animation: slideIn 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .poll-result:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 8px 16px rgba(102, 126, 234, 0.2);
+        }
+
+        .poll-result .answer-text {
+            font-size: 1.1em;
+            color: #333;
+            margin-bottom: 8px;
+            font-weight: 500;
+        }
+
+        .poll-result .votes {
+            color: #667eea;
+            font-size: 0.9em;
+            font-weight: 600;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-20px) scale(0.95);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px;
+            color: #999;
+            font-size: 1.2em;
+        }
+    </style>
+</head>
+<body>
+    <div class="poll-container">
+        <h1>📊 Live Polling - 실시간 답변</h1>
+        <div class="stats">
+            <span id="answer-count">답변 수: 0</span> |
+            <span id="status">대기 중...</span>
+        </div>
+        <div class="controls">
+            <button id="toggle-mock-mode">Mock 모드 시작</button>
+            <button id="clear-results">초기화</button>
+            <button id="speed-control">속도: 보통</button>
+        </div>
+        <ul id="poll-results">
+            <li class="empty-state">Mock 모드를 시작하면 답변이 실시간으로 나타납니다</li>
+        </ul>
+    </div>
+
+    <script>
+        // Mock data - 300개 샘플 답변
+        const mockAnswers = [
+            "정말 유익한 시간이었습니다",
+            "새로운 관점을 배웠어요",
+            "실용적인 내용이 많아서 좋았습니다",
+            "강사님의 열정이 느껴졌어요",
+            "더 많은 시간이 있었으면 좋겠습니다",
+            "실습이 도움이 되었습니다",
+            "질문에 친절하게 답변해주셔서 감사합니다",
+            "내용이 체계적이었어요",
+            "실무에 바로 적용할 수 있을 것 같습니다",
+            "다음 세션도 기대됩니다"
+        ];
+
+        // 300개로 확장
+        const mockData = Array(300).fill(0).map((_, index) => ({
+            answer: mockAnswers[index % mockAnswers.length] + ` (${index + 1})`,
+            timestamp: new Date().toISOString(),
+        }));
+
+        let mockMode = false;
+        let currentAnswerIndex = 0;
+        let intervalId = null;
+        let speed = 500; // ms
+        const speeds = { '빠름': 200, '보통': 500, '느림': 1000 };
+        let currentSpeed = '보통';
+
+        const pollResultsList = document.getElementById('poll-results');
+        const toggleMockModeButton = document.getElementById('toggle-mock-mode');
+        const clearButton = document.getElementById('clear-results');
+        const speedButton = document.getElementById('speed-control');
+        const answerCountSpan = document.getElementById('answer-count');
+        const statusSpan = document.getElementById('status');
+
+        function updateStats() {
+            const count = pollResultsList.querySelectorAll('.poll-result').length;
+            answerCountSpan.textContent = `답변 수: ${count}`;
+        }
+
+        function renderPollResult(answer) {
+            // 빈 상태 메시지 제거
+            const emptyState = pollResultsList.querySelector('.empty-state');
+            if (emptyState) {
+                emptyState.remove();
+            }
+
+            const pollResult = document.createElement('li');
+            pollResult.classList.add('poll-result');
+            pollResult.innerHTML = `
+                <div class="answer-text">${answer.answer}</div>
+                <div class="votes">방금 전</div>
+            `;
+
+            // 맨 앞에 추가 (최신 답변이 위로)
+            pollResultsList.insertBefore(pollResult, pollResultsList.firstChild);
+
+            updateStats();
+
+            // 최대 300개만 유지
+            const results = pollResultsList.querySelectorAll('.poll-result');
+            if (results.length > 300) {
+                results[results.length - 1].remove();
+            }
+        }
+
+        function simulatePollingData() {
+            if (currentAnswerIndex >= mockData.length) {
+                stopMockMode();
+                statusSpan.textContent = '완료!';
+                return;
+            }
+
+            const answer = mockData[currentAnswerIndex];
+            renderPollResult(answer);
+            currentAnswerIndex++;
+            statusSpan.textContent = `진행 중... (${currentAnswerIndex}/${mockData.length})`;
+        }
+
+        function startMockMode() {
+            mockMode = true;
+            currentAnswerIndex = 0;
+            toggleMockModeButton.textContent = 'Mock 모드 중지';
+            toggleMockModeButton.classList.add('active');
+            statusSpan.textContent = '시작!';
+            intervalId = setInterval(simulatePollingData, speed);
+        }
+
+        function stopMockMode() {
+            mockMode = false;
+            toggleMockModeButton.textContent = 'Mock 모드 시작';
+            toggleMockModeButton.classList.remove('active');
+            if (intervalId) {
+                clearInterval(intervalId);
+                intervalId = null;
+            }
+        }
+
+        function toggleMockMode() {
+            if (mockMode) {
+                stopMockMode();
+            } else {
+                startMockMode();
+            }
+        }
+
+        function clearResults() {
+            pollResultsList.innerHTML = '<li class="empty-state">Mock 모드를 시작하면 답변이 실시간으로 나타납니다</li>';
+            currentAnswerIndex = 0;
+            updateStats();
+            statusSpan.textContent = '초기화됨';
+        }
+
+        function cycleSpeed() {
+            const speedKeys = Object.keys(speeds);
+            const currentIndex = speedKeys.indexOf(currentSpeed);
+            const nextIndex = (currentIndex + 1) % speedKeys.length;
+            currentSpeed = speedKeys[nextIndex];
+            speed = speeds[currentSpeed];
+            speedButton.textContent = `속도: ${currentSpeed}`;
+
+            // 실행 중이면 재시작
+            if (mockMode) {
+                clearInterval(intervalId);
+                intervalId = setInterval(simulatePollingData, speed);
+            }
+        }
+
+        // Event listeners
+        toggleMockModeButton.addEventListener('click', toggleMockMode);
+        clearButton.addEventListener('click', clearResults);
+        speedButton.addEventListener('click', cycleSpeed);
+
+        // 초기 상태
+        updateStats();
+    </script>
+</body>
+</html>
