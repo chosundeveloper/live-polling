@@ -93,15 +93,15 @@
         const MIN_SEPARATION = 28;
         const DEFAULT_PARTICLE_WIDTH = 48;
         const DEFAULT_PARTICLE_HEIGHT = 22;
-        const INTRO_DURATION_BASE = 2200;
-        const INTRO_DURATION_VARIANCE = 1200;
+        const INTRO_DURATION_BASE = 2600;
+        const INTRO_DURATION_VARIANCE = 1500;
         const INTRO_BLOOM_JITTER = 22;
         const INTRO_SPIRAL_TWIST = Math.PI * 1.45;
         const INTRO_SWAY_AMPLITUDE = 18;
         const INTRO_SWAY_FREQUENCY = 1.1;
-        const INTRO_STAGE_MIN_RADIUS = 50;
-        const INTRO_STAGE_MAX_RADIUS = 110;
-        const INTRO_CLUSTER_RATIO = 0.35;
+        const INTRO_STAGE_MIN_RADIUS = 40;
+        const INTRO_STAGE_MAX_RADIUS = 90;
+        const INTRO_CLUSTER_RATIO = 0.6;
         const INTRO_CLUSTER_SWAY = 10;
         const OUTWARD_DRIFT_FORCE = 0.00002;
         const TARGET_ATTRACTION_FORCE = 0.00012;
@@ -109,6 +109,7 @@
         const MIN_WORD_LIFETIME = 7000;
         const TIMER_DURATION_MS = 10 * 60 * 1000;
         const NAVY_BASE_PALETTE = ['#050914', '#0a1628', '#0f2138', '#142c48', '#193859'];
+        const MAX_CELL_SPREAD_RATIO = 0.45;
         const NAVY_ACCENT_PALETTE = ['#1e446b', '#25507d', '#2c5c90', '#3368a3', '#3a74b6'];
         const NAVY_GLOW_PALETTE = ['#4180c9', '#4a8cdc', '#5398ef', '#66a8ff', '#7ab7ff'];
 
@@ -139,7 +140,8 @@
         const GOLDEN_ANGLE = Math.PI * (3 - Math.sqrt(5));
 
         function getSpiralGeometry(width, height, wordCount = MAX_WORDS) {
-            const maxRadius = Math.max(220, Math.min(width, height) / 2 - 20);
+            const usableRadius = Math.min(width, height) * MAX_CELL_SPREAD_RATIO;
+            const maxRadius = Math.max(180, usableRadius);
             const minRadius = Math.max(30, maxRadius * 0.15);
             const count = Math.max(1, wordCount);
             const ringCount = Math.min(10, Math.max(3, Math.ceil(count / 25)));
