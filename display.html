@@ -88,7 +88,7 @@
         const MAX_WORDS = 150;
         const MIN_FONT_SIZE = 18;
         const MAX_FONT_SIZE = 32;
-        const MAX_PARTICLE_SPEED = 0.02;
+        const MAX_PARTICLE_SPEED = 0.03;
         const MIN_SEPARATION = 58;
         const DEFAULT_PARTICLE_WIDTH = 48;
         const DEFAULT_PARTICLE_HEIGHT = 22;
@@ -459,7 +459,7 @@
                     const dirY = p.forceY / forceMagnitude;
                     
                     // Apply smoothing to direction changes
-                    const smoothFactor = 0.05; // Adjust for desired smoothness
+                    const smoothFactor = 0.08; // Adjust for desired smoothness
                     p.smoothVx = (p.smoothVx ?? dirX) * (1 - smoothFactor) + dirX * smoothFactor;
                     p.smoothVy = (p.smoothVy ?? dirY) * (1 - smoothFactor) + dirY * smoothFactor;
 
