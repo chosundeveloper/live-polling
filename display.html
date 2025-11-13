@@ -99,7 +99,7 @@
         const INTRO_STAGE_MAX_RADIUS = 70;
         const INTRO_CLUSTER_RATIO = 0.85;
         const INTRO_CLUSTER_SWAY = 10;
-        const INTRO_CLUSTER_PADDING = 18;
+        const INTRO_CLUSTER_PADDING = 28;
         const OUTWARD_DRIFT_FORCE = 0.000005;
         const TARGET_ATTRACTION_FORCE = 0.000035;
         const RADIAL_FORCE = 0.00016;
@@ -135,6 +135,36 @@
         }
 
         const GOLDEN_ANGLE = Math.PI * (3 - Math.sqrt(5));
+
+        function separateParticles(particles, padding = INTRO_CLUSTER_PADDING) {
+            for (let i = 0; i < particles.length; i++) {
+                const p1 = particles[i];
+                for (let j = i + 1; j < particles.length; j++) {
+                    const p2 = particles[j];
+                    const dx = p1.x - p2.x;
+                    const dy = p1.y - p2.y;
+                    const dist = Math.hypot(dx, dy) || 1;
+                    const minDist = ((p1.width || DEFAULT_PARTICLE_WIDTH) + (p2.width || DEFAULT_PARTICLE_WIDTH)) / 2 + padding;
+                    if (dist < minDist) {
+                        const push = (minDist - dist) * 0.5;
+                        const ux = dx / dist;
+                        const uy = dy / dist;
+                        p1.x += ux * push;
+                        p1.y += uy * push;
+                        p2.x -= ux * push;
+                        p2.y -= uy * push;
+                        if (p1.el) {
+                            p1.el.style.left = `${p1.x}px`;
+                            p1.el.style.top = `${p1.y}px`;
+                        }
+                        if (p2.el) {
+                            p2.el.style.left = `${p2.x}px`;
+                            p2.el.style.top = `${p2.y}px`;
+                        }
+                    }
+                }
+            }
+        }
 
         function getSpiralGeometry(width, height, wordCount = MAX_WORDS) {
             const usableRadius = Math.min(width, height) * MAX_CELL_SPREAD_RATIO;
@@ -339,30 +369,7 @@
                     idleParticles.push(p);
                 }
             }
-
-            for (let j = 0; j < clusterParticles.length; j++) {
-                const p1 = clusterParticles[j];
-                for (let k = j + 1; k < clusterParticles.length; k++) {
-                    const p2 = clusterParticles[k];
-                    const dx = p1.x - p2.x;
-                    const dy = p1.y - p2.y;
-                    const dist = Math.hypot(dx, dy) || 1;
-                    const minDist = ((p1.width || DEFAULT_PARTICLE_WIDTH) + (p2.width || DEFAULT_PARTICLE_WIDTH)) / 2 + INTRO_CLUSTER_PADDING;
-                    if (dist < minDist) {
-                        const push = (minDist - dist) * 0.5;
-                        const ux = dx / dist;
-                        const uy = dy / dist;
-                        p1.x += ux * push;
-                        p1.y += uy * push;
-                        p2.x -= ux * push;
-                        p2.y -= uy * push;
-                        p1.el.style.left = `${p1.x}px`;
-                        p1.el.style.top = `${p1.y}px`;
-                        p2.el.style.left = `${p2.x}px`;
-                        p2.el.style.top = `${p2.y}px`;
-                    }
-                }
-            }
+            separateParticles(clusterParticles, INTRO_CLUSTER_PADDING);
 
             for (let j = 0; j < idleParticles.length; j++) {
                 const p1 = idleParticles[j];
@@ -607,6 +614,8 @@
                     wordEl.style.left = `${stageX}px`;
                     wordEl.style.top = `${stageY}px`;
                     wordParticles.push(particle);
+                    const introParticles = wordParticles.filter(p => p.phase === 'intro');
+                    separateParticles(introParticles, INTRO_CLUSTER_PADDING);
 
                     requestAnimationFrame(() => {
                         wordEl.classList.add('concept-word-visible');
