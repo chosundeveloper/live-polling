@@ -99,7 +99,7 @@
         const INTRO_STAGE_MAX_RADIUS = 70;
         const INTRO_CLUSTER_RATIO = 0.92;
         const INTRO_CLUSTER_SWAY = 10;
-        const INTRO_CLUSTER_PADDING = 48;
+        const INTRO_CLUSTER_PADDING = 38;
         const OUTWARD_DRIFT_FORCE = 0.000002;
         const TARGET_ATTRACTION_FORCE = 0.000012;
         const RADIAL_FORCE = 0.00006;
@@ -147,7 +147,7 @@
                         const dist = Math.hypot(dx, dy) || 1;
                         const minDist = ((p1.width || DEFAULT_PARTICLE_WIDTH) + (p2.width || DEFAULT_PARTICLE_WIDTH)) / 2 + padding;
                         if (dist < minDist) {
-                            const push = (minDist - dist) * 0.5;
+                            const push = (minDist - dist) * 0.3;
                             const ux = dx / dist;
                             const uy = dy / dist;
                             p1.x += ux * push;
