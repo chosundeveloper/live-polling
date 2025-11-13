@@ -1283,15 +1283,15 @@ footer a:hover {
 }
 
 .concept-qr-card .concept-label {
-    font-size: 0.65rem;
+    font-size: 0.6rem;
     color: rgba(15, 23, 42, 0.6);
-    font-weight: normal;
+    font-weight: 300;
 }
 
 .concept-qr-card .concept-value {
-    font-size: 1rem;
+    font-size: 0.9rem;
     color: var(--ink-primary);
-    font-weight: normal;
+    font-weight: 300;
 }
 
 .concept-qr-card .concept-action-ghost {
