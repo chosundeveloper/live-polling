@@ -3,9 +3,10 @@
 
 @font-face {
     font-family: 'KOTRA_Bold';
-    src: url('https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_six@1.2/KOTRA_Bold.woff2') format('woff2');
+    src: url('./fonts/KOTRA_BOLD.otf') format('opentype');
     font-weight: 700;
     font-style: normal;
+    font-display: swap;
 }
 
 /* ===== Reset & Base Styles ===== */
