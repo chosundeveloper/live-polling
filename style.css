@@ -1,6 +1,13 @@
 @import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css');
 @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600&family=Outfit:wght@300;400;600&display=swap');
 
+@font-face {
+    font-family: 'KOTRA_Bold';
+    src: url('https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_six@1.2/KOTRA_Bold.woff2') format('woff2');
+    font-weight: 700;
+    font-style: normal;
+}
+
 /* ===== Reset & Base Styles ===== */
 :root {
     --color-deep: #648DA3;
@@ -21,7 +28,7 @@
 }
 
 body {
-    font-family: 'Space Grotesk', 'Outfit', 'Pretendard Variable', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', sans-serif;
+    font-family: 'KOTRA_Bold', 'Space Grotesk', 'Outfit', 'Pretendard Variable', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', sans-serif;
     background: linear-gradient(135deg, var(--color-deep) 0%, var(--color-sky) 100%);
     min-height: 100vh;
     color: var(--ink-primary);
@@ -1091,7 +1098,7 @@ footer a:hover {
     align-items: center;
     justify-content: center;
     padding: 24px;
-    font-family: 'Space Grotesk', 'Outfit', 'Apple SD Gothic Neo', 'Spoqa Han Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    font-family: 'KOTRA_Bold', 'Space Grotesk', 'Outfit', 'Apple SD Gothic Neo', 'Spoqa Han Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
     overflow: hidden;
 }
 
