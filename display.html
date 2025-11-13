@@ -142,7 +142,7 @@
 
             let best = null;
             let bestScore = -Infinity;
-            for (let attempt = 0; attempt < 24; attempt++) {
+            for (let attempt = 0; attempt < 100; attempt++) {
                 const angle = baseAngle + attempt * (GOLDEN_ANGLE * 0.25) + (Math.random() - 0.5) * 0.25;
                 const radius = baseRadius + attempt * 3;
                 const x = centerW + Math.cos(angle) * radius;
@@ -159,7 +159,7 @@
                     }
                     minDist = Math.min(minDist, dist - needed);
                 }
-                if (minDist > INTRO_CLUSTER_PADDING * 0.5) {
+                if (minDist >= INTRO_CLUSTER_PADDING) {
                     return { x, y };
                 }
                 if (minDist > bestScore) {
