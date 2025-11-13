@@ -75,6 +75,7 @@
         let simulationInterval = null;
         let mockAnswers = [];
         let wordParticles = [];
+        let hiddenWords = [];
         let qrCodeInstance = null;
         let animationFrameId = null;
         let timerInterval = null;
@@ -87,10 +88,10 @@
         const MAX_WORDS = 150;
         const WORD_FONT_SIZE_PX = 25;
         const MAX_PARTICLE_SPEED = 0.18;
-        const MIN_SEPARATION = 38;
+        const MIN_SEPARATION = 42;
         const DEFAULT_PARTICLE_WIDTH = 48;
         const DEFAULT_PARTICLE_HEIGHT = 22;
-        const INTRO_DURATION_BASE = 8000; // slower duration
+        const INTRO_DURATION_BASE = 10000; // slower duration
         const INTRO_DURATION_VARIANCE = 2000;
         const INTRO_BLOOM_JITTER = 0; // No bloom
         const INTRO_SPIRAL_TWIST = 0; // No spiral
@@ -100,7 +101,7 @@
         const INTRO_STAGE_MAX_RADIUS = 70;
         const INTRO_CLUSTER_RATIO = 0.4; // 40% for gathering, 60% for spreading
         const INTRO_CLUSTER_SWAY = 0;
-        const INTRO_CLUSTER_PADDING = 36;
+        const INTRO_CLUSTER_PADDING = 40;
         const OUTWARD_DRIFT_FORCE = 0.000002;
         const TARGET_ATTRACTION_FORCE = 0.000012;
         const RADIAL_FORCE = 0.00006;
@@ -137,7 +138,7 @@
 
         const GOLDEN_ANGLE = Math.PI * (3 - Math.sqrt(5));
 
-        function separateParticles(particles, padding = INTRO_CLUSTER_PADDING, passes = 3) {
+        function separateParticles(particles, padding = INTRO_CLUSTER_PADDING, passes = 5) {
             for (let pass = 0; pass < passes; pass++) {
                 for (let i = 0; i < particles.length; i++) {
                     const p1 = particles[i];
@@ -555,7 +556,7 @@
             }
 
             const sortedWords = [...frequencyMap.entries()].sort((a, b) => b[1] - a[1]);
-            const limited = sortedWords.slice(0, MAX_WORDS);
+            const limited = sortedWords.slice(0, MAX_WORDS).filter(([text]) => !hiddenWords.includes(text));
             const newWordTexts = new Set(limited.map(item => item[0]));
             
             wordParticles = wordParticles.filter(p => {
@@ -600,13 +601,14 @@
                     
                     // Click to delete
                     wordEl.addEventListener('click', () => {
+                        hiddenWords.push(text);
                         wordEl.classList.remove('concept-word-visible');
                         wordEl.classList.add('concept-word-hidden');
                         setTimeout(() => {
                             wordEl.remove();
                             wordParticles = wordParticles.filter(p => p.el !== wordEl);
                             if (wordParticles.length > 0) {
-                                wordParticles.forEach(p => { p.vx += (Math.random() - 0.5) * 5; p.vy += (Math.random() - 0.5) * 5; });
+                                updateParticleTargets();
                                 if (!animationFrameId) simulationLoop(performance.now());
                             } else {
                                 wordsLayer.innerHTML = '<div class="concept-empty">첫 번째 단어를 기다리고 있어요</div>';
@@ -697,6 +699,7 @@
             stopAllIntervals();
             mockAnswers = [];
             wordParticles = [];
+            hiddenWords = [];
             wordsLayer.innerHTML = '';
             conceptTotal.textContent = '0';
             stopTimer();
