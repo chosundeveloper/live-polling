@@ -95,6 +95,8 @@
         const INTRO_SPIRAL_TWIST = Math.PI * 1.45;
         const INTRO_SWAY_AMPLITUDE = 18;
         const INTRO_SWAY_FREQUENCY = 1.1;
+        const INTRO_STAGE_MIN_RADIUS = 60;
+        const INTRO_STAGE_MAX_RADIUS = 140;
         const OUTWARD_DRIFT_FORCE = 0.00002;
         const TARGET_ATTRACTION_FORCE = 0.00012;
         const RADIAL_FORCE = 0.0004;
@@ -503,19 +505,14 @@
                     }
 
                     const rect = wordEl.getBoundingClientRect();
-                    const spawnJitter = 4;
-                    const startX = centerW + (Math.random() - 0.5) * spawnJitter;
-                    const startY = centerH + (Math.random() - 0.5) * spawnJitter;
-                    wordEl.style.left = `${startX}px`;
-                    wordEl.style.top = `${startY}px`;
                     particle = {
                         el: wordEl,
-                        x: startX,
-                        y: startY,
-                        prevX: startX,
-                        prevY: startY,
-                        originX: startX,
-                        originY: startY,
+                        x: centerW,
+                        y: centerH,
+                        prevX: centerW,
+                        prevY: centerH,
+                        originX: centerW,
+                        originY: centerH,
                         vx: 0,
                         vy: 0,
                         width: rect.width,
@@ -531,6 +528,18 @@
                         bornAt: now
                     };
                     assignParticleTarget(particle, centerW, centerH, geometry, spiralIndex);
+                    const stageRadius = INTRO_STAGE_MIN_RADIUS + Math.random() * (INTRO_STAGE_MAX_RADIUS - INTRO_STAGE_MIN_RADIUS);
+                    const stageAngle = (particle.ringAngle || 0) + (Math.random() - 0.5) * 0.35;
+                    const stageX = centerW + Math.cos(stageAngle) * stageRadius;
+                    const stageY = centerH + Math.sin(stageAngle) * stageRadius;
+                    particle.originX = stageX;
+                    particle.originY = stageY;
+                    particle.x = stageX;
+                    particle.y = stageY;
+                    particle.prevX = stageX;
+                    particle.prevY = stageY;
+                    wordEl.style.left = `${stageX}px`;
+                    wordEl.style.top = `${stageY}px`;
                     wordParticles.push(particle);
 
                     requestAnimationFrame(() => {
