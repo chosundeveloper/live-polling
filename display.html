@@ -86,7 +86,8 @@
         const PREFIXES = ['따뜻한', '깊은', '새로운', '반짝이는', '집중의', '장난기 있는', '강렬한', '잔잔한', '선명한'];
         const SUFFIXES = ['무드', '아이디어', '영감', '에너지', '발견', '시간', '순간', '대화', '시선'];
         const MAX_WORDS = 150;
-        const WORD_FONT_SIZE_PX = 25;
+        const MIN_FONT_SIZE = 18;
+        const MAX_FONT_SIZE = 32;
         const MAX_PARTICLE_SPEED = 0.1;
         const MIN_SEPARATION = 58;
         const DEFAULT_PARTICLE_WIDTH = 48;
@@ -103,23 +104,15 @@
         const INTRO_CLUSTER_SWAY = 0;
         const INTRO_CLUSTER_PADDING = 55;
         const OUTWARD_DRIFT_FORCE = 0.000002;
-        const TARGET_ATTRACTION_FORCE = 0.000012;
-        const RADIAL_FORCE = 0.00006;
+        const TARGET_ATTRACTION_FORCE = 0.000008;
+        const RADIAL_FORCE = 0.00004;
         const MIN_WORD_LIFETIME = 7000;
         const TIMER_DURATION_MS = 10 * 60 * 1000;
-        const NAVY_BASE_PALETTE = ['#050914', '#0a1628', '#0f2138', '#142c48', '#193859'];
+        const COLOR_PALETTE = ['#5e4fa2', '#3288bd', '#66c2a5', '#abdda4', '#e6f598', '#fee08b', '#fdae61', '#f46d43', '#d53e4f', '#9e0142'];
         const MAX_CELL_SPREAD_RATIO = 0.3;
-        const NAVY_ACCENT_PALETTE = ['#1e446b', '#25507d', '#2c5c90', '#3368a3', '#3a74b6'];
-        const NAVY_GLOW_PALETTE = ['#4180c9', '#4a8cdc', '#5398ef', '#66a8ff', '#7ab7ff'];
 
         function selectWordColor(weightRatio, index) {
-            if (weightRatio > 0.65) {
-                return NAVY_GLOW_PALETTE[index % NAVY_GLOW_PALETTE.length];
-            }
-            if (weightRatio > 0.35) {
-                return NAVY_ACCENT_PALETTE[index % NAVY_ACCENT_PALETTE.length];
-            }
-            return NAVY_BASE_PALETTE[index % NAVY_BASE_PALETTE.length];
+            return COLOR_PALETTE[index % COLOR_PALETTE.length];
         }
         window.selectWordColor = selectWordColor;
 
@@ -580,7 +573,7 @@
 
             limited.forEach(([text, weight], index) => {
                 const weightRatio = weight / maxWeight;
-                const targetFontSize = WORD_FONT_SIZE_PX;
+                const targetFontSize = MIN_FONT_SIZE + (MAX_FONT_SIZE - MIN_FONT_SIZE) * weightRatio;
                 const spiralIndex = index;
 
                 let particle = existingParticles.get(text);
@@ -596,7 +589,7 @@
                     wordEl.textContent = text;
                     wordEl.style.color = selectWordColor(weightRatio, index);
 
-                    const initialFontSize = WORD_FONT_SIZE_PX;
+                    const initialFontSize = MIN_FONT_SIZE + (MAX_FONT_SIZE - MIN_FONT_SIZE) * weightRatio;
                     wordEl.style.fontSize = `${initialFontSize}px`;
                     
                     // Click to delete
