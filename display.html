@@ -10,6 +10,7 @@
     <!-- <script src="supabase-config.js"></script> -->
     <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/motion@11.11.13/dist/motion.min.js"></script>
+    <script src="https://d3js.org/d3.v7.min.js"></script>
 </head>
 <body class="concept-body">
     <div class="concept-wrapper">
@@ -81,6 +82,7 @@
         let animationFrameId = null;
         let timerInterval = null;
         let timerDeadline = null;
+        let d3Simulation = null;
 
         // --- Constants ---
         const KEYWORDS = ['연결', '성장', '도전', '몰입', '설렘', '공감', '협업', '집중', '영감', '감동', '시너지', '에너지', '환대', '몰두', '발견', '혁신', '팀워크', '지원', '아이디어', '탐험', '성찰', '축제', '유연함', '치열함', '여유', '흥미', '모험', '발표', '피드백', '브레인스토밍', 'collaboration', 'momentum', 'breakthrough', 'catalyst', 'insight', 'iteration', 'community', 'confidence', 'empathy', 'curiosity'];
@@ -89,19 +91,19 @@
         const MAX_WORDS = 150;
         const MIN_FONT_SIZE = 18;
         const MAX_FONT_SIZE = 32;
-        const MAX_PARTICLE_SPEED = 0.03;
+        const MAX_PARTICLE_SPEED = 0.002;
         const MIN_SEPARATION = 58;
         const DEFAULT_PARTICLE_WIDTH = 48;
         const DEFAULT_PARTICLE_HEIGHT = 22;
-        const INTRO_DURATION_BASE = 35000; // extremely slow duration
-        const INTRO_DURATION_VARIANCE = 3000;
+        const INTRO_DURATION_BASE = 120000; // ultra slow duration for smooth spread (2 minutes)
+        const INTRO_DURATION_VARIANCE = 15000;
         const INTRO_BLOOM_JITTER = 0; // No bloom
         const INTRO_SPIRAL_TWIST = 0; // No spiral
         const INTRO_SWAY_AMPLITUDE = 0; // No sway
         const INTRO_SWAY_FREQUENCY = 1.1;
-        const INTRO_STAGE_MIN_RADIUS = 30;
-        const INTRO_STAGE_MAX_RADIUS = 70;
-        const INTRO_CLUSTER_RATIO = 0.4; // 40% for gathering, 60% for spreading
+        const INTRO_STAGE_MIN_RADIUS = 10;
+        const INTRO_STAGE_MAX_RADIUS = 40;
+        const INTRO_CLUSTER_RATIO = 0.3; // 30% for gathering, 70% for spreading (slower spread)
         const INTRO_CLUSTER_SWAY = 0;
         const INTRO_CLUSTER_PADDING = 120;
         const OUTWARD_DRIFT_FORCE = 0.000002;
@@ -110,7 +112,7 @@
         const MIN_WORD_LIFETIME = 7000;
         const TIMER_DURATION_MS = 10 * 60 * 1000;
         const COLOR_PALETTE = ['#5e4fa2', '#3288bd', '#66c2a5', '#abdda4', '#e6f598', '#fee08b', '#fdae61', '#f46d43', '#d53e4f', '#9e0142'];
-        const MAX_CELL_SPREAD_RATIO = 0.3;
+        const MAX_CELL_SPREAD_RATIO = 0.25; // Tighter containment within cell image
 
         function selectWordColor(weightRatio, index) {
             return COLOR_PALETTE[index % COLOR_PALETTE.length];
@@ -144,17 +146,17 @@
 
             wordEl.style.setProperty('--concept-scale', '0.8');
 
-            const envelopeSpring = spring({ stiffness: 140, damping: 22, mass: 1 });
-            const letterSpring = spring({ stiffness: 120, damping: 20, mass: 0.8 });
+            const envelopeSpring = spring({ stiffness: 100, damping: 28, mass: 1.2 });
+            const letterSpring = spring({ stiffness: 85, damping: 26, mass: 1.0 });
 
             animate(wordEl, { opacity: [0, 0.96] }, {
-                duration: 0.45,
-                easing: 'ease-out'
+                duration: 0.65,
+                easing: [0.25, 0.1, 0.25, 1.0]
             });
 
             animate(wordEl, { '--concept-scale': ['0.8', '1'] }, {
                 easing: envelopeSpring,
-                duration: 0.95
+                duration: 1.2
             });
 
             animate(chars, {
@@ -165,8 +167,8 @@
                 skewY: [isVertical ? -6 : 0, 0]
             }, {
                 easing: letterSpring,
-                duration: 1.05,
-                delay: stagger(0.014)
+                duration: 1.35,
+                delay: stagger(0.018)
             });
         }
 
@@ -226,8 +228,8 @@
 
         function getSpiralGeometry(width, height, wordCount = MAX_WORDS) {
             const usableRadius = Math.min(width, height) * MAX_CELL_SPREAD_RATIO;
-            const maxRadius = Math.max(180, usableRadius);
-            const minRadius = Math.max(30, maxRadius * 0.15);
+            const maxRadius = usableRadius;
+            const minRadius = Math.max(20, maxRadius * 0.1);
             const count = Math.max(1, wordCount);
             const ringCount = Math.min(10, Math.max(3, Math.ceil(count / 25)));
             const ringSpan = (maxRadius - minRadius) / Math.max(1, ringCount - 1);
@@ -358,6 +360,11 @@
             const centerH = height / 2;
             const geometry = getSpiralGeometry(width, height, wordParticles.length);
             wordParticles.forEach(p => assignParticleTarget(p, centerW, centerH, geometry, p.spiralIndex || 0));
+
+            // Reinitialize D3 simulation with updated targets
+            if (d3Simulation) {
+                initD3Simulation();
+            }
         }
 
         // --- Core Functions ---
@@ -411,150 +418,100 @@
             return frequency;
         }
 
-        // --- Simulation Loop ---
-        function simulationLoop(timestamp = performance.now()) {
+        // --- D3 Force Simulation Setup ---
+        function initD3Simulation() {
             const { width: containerWidth, height: containerHeight } = getCloudBounds();
             const centerW = containerWidth / 2;
             const centerH = containerHeight / 2;
 
-            // Initialize force accumulators for all particles
-            wordParticles.forEach(p => {
-                p.forceX = 0;
-                p.forceY = 0;
-            });
+            if (d3Simulation) {
+                d3Simulation.stop();
+            }
 
-            // Apply intro motion forces and collect particles
-            wordParticles.forEach(p => {
-                updateIntroMotion(p, centerW, centerH, timestamp);
-            });
+            d3Simulation = d3.forceSimulation(wordParticles)
+                .alphaDecay(0.003)
+                .velocityDecay(0.9)
+                .alphaMin(0.001)
+                .force('collide', d3.forceCollide(d => {
+                    const { width, height } = getParticleDimensions(d);
+                    return Math.max(width, height) / 2 + MIN_SEPARATION / 2;
+                }).strength(0.3).iterations(2))
+                .force('radial', d3.forceRadial(d => d.ringRadius || 100, centerW, centerH).strength(0.01))
+                .force('x', d3.forceX(d => d.targetX || centerW).strength(0.008))
+                .force('y', d3.forceY(d => d.targetY || centerH).strength(0.008))
+                .on('tick', () => {
+                    const timestamp = performance.now();
+                    const currentAlpha = d3Simulation.alpha();
 
-            // Calculate pairwise separation forces for all particles
-            for (let j = 0; j < wordParticles.length; j++) {
-                const p1 = wordParticles[j];
-                for (let k = j + 1; k < wordParticles.length; k++) {
-                    const p2 = wordParticles[k];
-                    const dx = p1.x - p2.x;
-                    const dy = p1.y - p2.y;
-                    const { width: w1, height: h1 } = getParticleDimensions(p1);
-                    const { width: w2, height: h2 } = getParticleDimensions(p2);
-                    
-                    // AABB-style separation for direct overlaps
-                    const paddedHalfWidth = (w1 + w2) / 2 + MIN_SEPARATION;
-                    const paddedHalfHeight = (h1 + h2) / 2 + MIN_SEPARATION;
-                    const overlapX = paddedHalfWidth - Math.abs(dx);
-                    const overlapY = paddedHalfHeight - Math.abs(dy);
-
-                    if (overlapX > 0 && overlapY > 0) {
-                        let sepForceX = 0;
-                        let sepForceY = 0;
-                        if (overlapX < overlapY) {
-                            const push = overlapX;
-                            const direction = dx >= 0 ? 1 : -1;
-                            sepForceX = direction * push * 2.5; // Apply as force
-                        } else {
-                            const push = overlapY;
-                            const direction = dy >= 0 ? 1 : -1;
-                            sepForceY = direction * push * 1.0; // Apply as force
+                    wordParticles.forEach(p => {
+                        // Apply intro motion override
+                        if (p.phase === 'intro') {
+                            updateIntroMotion(p, centerW, centerH, timestamp);
+                            p.vx = (p.x - (p.prevX || p.x)) * 0.5;
+                            p.vy = (p.y - (p.prevY || p.y)) * 0.5;
                         }
-                        p1.forceX += sepForceX;
-                        p1.forceY += sepForceY;
-                        p2.forceX -= sepForceX;
-                        p2.forceY -= sepForceY;
-                    }
 
-                    // General radial separation force for closeness
-                    const distance = Math.hypot(dx, dy) || 1;
-                    const minDistance = Math.max(Math.min(paddedHalfWidth, paddedHalfHeight), MIN_SEPARATION);
-                    if (distance < minDistance) {
-                        const force = ((minDistance - distance) / minDistance) * 8.0; // Stronger push
-                        const angle = Math.atan2(dy, dx);
-                        const fx = Math.cos(angle) * force;
-                        const fy = Math.sin(angle) * force;
-                        p1.forceX += fx;
-                        p1.forceY += fy;
-                        p2.forceX -= fx;
-                        p2.forceY -= fy;
-                    }
+                        // Gradually reduce velocity as simulation stabilizes
+                        if (currentAlpha < 0.1 && p.phase !== 'intro') {
+                            p.vx *= 0.5;
+                            p.vy *= 0.5;
+                        }
+
+                        // Hard limit on velocity to prevent spinning
+                        const speed = Math.hypot(p.vx || 0, p.vy || 0);
+                        if (speed > MAX_PARTICLE_SPEED) {
+                            const ratio = MAX_PARTICLE_SPEED / speed;
+                            p.vx *= ratio;
+                            p.vy *= ratio;
+                        }
+
+                        // Strict boundary handling to keep within cell image
+                        const maxRadius = Math.min(containerWidth, containerHeight) * MAX_CELL_SPREAD_RATIO;
+                        const dx = p.x - centerW;
+                        const dy = p.y - centerH;
+                        const distFromCenter = Math.hypot(dx, dy);
+
+                        if (distFromCenter > maxRadius) {
+                            const angle = Math.atan2(dy, dx);
+                            p.x = centerW + Math.cos(angle) * maxRadius;
+                            p.y = centerH + Math.sin(angle) * maxRadius;
+                            p.vx *= 0.5;
+                            p.vy *= 0.5;
+                        }
+
+                        // Animate font size with D3 easing
+                        const sizeDiff = p.targetFontSize - p.currentFontSize;
+                        if (Math.abs(sizeDiff) > 0.01) {
+                            p.currentFontSize += sizeDiff * 0.15;
+                            p.el.style.fontSize = `${p.currentFontSize.toFixed(2)}px`;
+                            const rect = p.el.getBoundingClientRect();
+                            p.width = rect.width;
+                            p.height = rect.height;
+                        }
+
+                        // Update DOM position
+                        p.el.style.left = `${p.x}px`;
+                        p.el.style.top = `${p.y}px`;
+
+                        p.prevX = p.x;
+                        p.prevY = p.y;
+                    });
+                });
+
+            return d3Simulation;
+        }
+
+        // --- Legacy Simulation Loop (now simplified) ---
+        function simulationLoop(timestamp = performance.now()) {
+            if (!d3Simulation || wordParticles.length === 0) {
+                if (wordParticles.length > 0) {
+                    initD3Simulation();
                 }
+                animationFrameId = requestAnimationFrame(simulationLoop);
+                return;
             }
 
-            // Add other forces, normalize, and set constant velocity for all particles
-            for (const p of wordParticles) {
-                // Target attraction force (only for idle particles, intro particles are guided by intro motion force)
-                if (p.phase === 'idle' && p.targetX !== undefined && p.targetY !== undefined) {
-                    const targetDx = p.targetX - p.x;
-                    const targetDy = p.targetY - p.y;
-                    p.forceX += targetDx * TARGET_ATTRACTION_FORCE;
-                    p.forceY += targetDy * TARGET_ATTRACTION_FORCE;
-                }
-
-                // Radial force to keep particles in their rings
-                const radialDx = p.x - centerW;
-                const radialDy = p.y - centerH;
-                const radialDist = Math.hypot(radialDx, radialDy) || 1;
-                if (p.ringRadius) {
-                    const radialError = p.ringRadius - radialDist;
-                    const radialForce = radialError * RADIAL_FORCE;
-                    p.forceX += (radialDx / radialDist) * radialForce;
-                    p.forceY += (radialDy / radialDist) * radialForce;
-                }
-                
-                // Outward drift force
-                const centerDx = p.x - centerW;
-                const centerDy = p.y - centerH;
-                p.forceX += centerDx * OUTWARD_DRIFT_FORCE;
-                p.forceY += centerDy * OUTWARD_DRIFT_FORCE;
-
-                // --- Set velocity based on normalized total force ---
-                const forceMagnitude = Math.hypot(p.forceX, p.forceY);
-
-                if (forceMagnitude > 0.000001) { // Epsilon to prevent division by zero and small jitters
-                    const dirX = p.forceX / forceMagnitude;
-                    const dirY = p.forceY / forceMagnitude;
-                    
-                    // Apply smoothing to direction changes
-                    const smoothFactor = 0.08; // Adjust for desired smoothness
-                    p.smoothVx = (p.smoothVx ?? dirX) * (1 - smoothFactor) + dirX * smoothFactor;
-                    p.smoothVy = (p.smoothVy ?? dirY) * (1 - smoothFactor) + dirY * smoothFactor;
-
-                    const smoothDirMagnitude = Math.hypot(p.smoothVx, p.smoothVy);
-                    if (smoothDirMagnitude > 0.000001) {
-                        p.vx = (p.smoothVx / smoothDirMagnitude) * MAX_PARTICLE_SPEED;
-                        p.vy = (p.smoothVy / smoothDirMagnitude) * MAX_PARTICLE_SPEED;
-                    } else {
-                        p.vx = 0;
-                        p.vy = 0;
-                    }
-                } else {
-                    p.vx = 0;
-                    p.vy = 0;
-                }
-
-                p.x += p.vx;
-                p.y += p.vy;
-
-                // Boundary handling (simple stop, no bounce)
-                const edgePadding = Math.min(containerWidth, containerHeight) * 0.05;
-                if (p.x < edgePadding) p.x = edgePadding;
-                else if (p.x > containerWidth - edgePadding) p.x = containerWidth - edgePadding;
-                if (p.y < edgePadding) p.y = edgePadding;
-                else if (p.y > containerHeight - edgePadding) p.y = containerHeight - edgePadding;
-
-                // Animate font size
-                const sizeDiff = p.targetFontSize - p.currentFontSize;
-                if (Math.abs(sizeDiff) > 0.01) {
-                    p.currentFontSize += sizeDiff * 0.1;
-                    p.el.style.fontSize = `${p.currentFontSize.toFixed(2)}px`;
-                    const rect = p.el.getBoundingClientRect();
-                    p.width = rect.width;
-                    p.height = rect.height;
-                }
-                
-                // Update position via left/top (CSS handles translate centering)
-                p.el.style.left = `${p.x}px`;
-                p.el.style.top = `${p.y}px`;
-            }
-
+            // D3 simulation handles everything via 'tick' event
             animationFrameId = requestAnimationFrame(simulationLoop);
         }
 
@@ -607,7 +564,8 @@
             limited.forEach(([text, weight], index) => {
                 const lengthRatio = (maxLength - text.length) / (maxLength - minLength + 1);
                 const targetFontSize = MIN_FONT_SIZE + (MAX_FONT_SIZE - MIN_FONT_SIZE) * lengthRatio;
-                const spiralIndex = index;
+                // Reverse spiral index so newer/frequent words go to outer rings first
+                const spiralIndex = limited.length - 1 - index;
 
                 let particle = existingParticles.get(text);
                 if (particle) {
@@ -629,19 +587,41 @@
                     // Click to delete
                     wordEl.addEventListener('click', () => {
                         hiddenWords.push(text);
-                        wordEl.classList.remove('concept-word-visible');
-                        wordEl.classList.add('concept-word-hidden');
-                        setTimeout(() => {
-                            wordEl.remove();
-                            wordParticles = wordParticles.filter(p => p.el !== wordEl);
-                            if (wordParticles.length > 0) {
-                                updateParticleTargets();
-                                if (!animationFrameId) simulationLoop(performance.now());
-                            } else {
-                                wordsLayer.innerHTML = '<div class="concept-empty">첫 번째 단어를 기다리고 있어요</div>';
-                                if (animationFrameId) { cancelAnimationFrame(animationFrameId); animationFrameId = null; }
-                            }
-                        }, 700);
+
+                        // D3 transition for smooth fade out
+                        if (window.d3) {
+                            d3.select(wordEl)
+                                .transition()
+                                .duration(600)
+                                .ease(d3.easeCubicOut)
+                                .style('opacity', 0)
+                                .style('transform', 'scale(0.7)')
+                                .on('end', () => {
+                                    wordEl.remove();
+                                    wordParticles = wordParticles.filter(p => p.el !== wordEl);
+                                    if (wordParticles.length > 0) {
+                                        updateParticleTargets();
+                                        if (!animationFrameId) simulationLoop(performance.now());
+                                    } else {
+                                        wordsLayer.innerHTML = '<div class="concept-empty">첫 번째 단어를 기다리고 있어요</div>';
+                                        if (animationFrameId) { cancelAnimationFrame(animationFrameId); animationFrameId = null; }
+                                    }
+                                });
+                        } else {
+                            wordEl.classList.remove('concept-word-visible');
+                            wordEl.classList.add('concept-word-hidden');
+                            setTimeout(() => {
+                                wordEl.remove();
+                                wordParticles = wordParticles.filter(p => p.el !== wordEl);
+                                if (wordParticles.length > 0) {
+                                    updateParticleTargets();
+                                    if (!animationFrameId) simulationLoop(performance.now());
+                                } else {
+                                    wordsLayer.innerHTML = '<div class="concept-empty">첫 번째 단어를 기다리고 있어요</div>';
+                                    if (animationFrameId) { cancelAnimationFrame(animationFrameId); animationFrameId = null; }
+                                }
+                            }, 700);
+                        }
                     });
 
                     wordsLayer.appendChild(wordEl);
@@ -676,19 +656,16 @@
                         color: assignedColor
                     };
                     assignParticleTarget(particle, centerW, centerH, geometry, spiralIndex);
-                    const baseAngle = (particle.spiralIndex * GOLDEN_ANGLE) % (Math.PI * 2);
-                    const targetRadius = Math.min(INTRO_STAGE_MAX_RADIUS, Math.max(INTRO_STAGE_MIN_RADIUS, (particle.ringRadius || INTRO_STAGE_MAX_RADIUS) * 0.35));
-                    const existingIntro = wordParticles.filter(p => p.phase === 'intro');
-                    const { x: stageX, y: stageY } = findClusterPosition(existingIntro, centerW, centerH, targetRadius, baseAngle);
 
-                    particle.originX = stageX;
-                    particle.originY = stageY;
-                    particle.x = stageX;
-                    particle.y = stageY;
-                    particle.prevX = stageX;
-                    particle.prevY = stageY;
-                    wordEl.style.left = `${stageX}px`;
-                    wordEl.style.top = `${stageY}px`;
+                    // Always start from exact center
+                    particle.originX = centerW;
+                    particle.originY = centerH;
+                    particle.x = centerW;
+                    particle.y = centerH;
+                    particle.prevX = centerW;
+                    particle.prevY = centerH;
+                    wordEl.style.left = `${centerW}px`;
+                    wordEl.style.top = `${centerH}px`;
                     wordParticles.push(particle);
                     const introParticles = wordParticles.filter(p => p.phase === 'intro');
 
@@ -709,6 +686,12 @@
             if (!animationFrameId && wordParticles.length > 0) {
                 simulationLoop(performance.now());
             }
+
+            // Update D3 simulation with new particles
+            if (d3Simulation && wordParticles.length > 0) {
+                d3Simulation.nodes(wordParticles);
+                d3Simulation.alpha(0.15).restart();
+            }
         }
 
         // --- Data Fetching & Control ---
@@ -719,9 +702,11 @@
             if (pollingInterval) clearInterval(pollingInterval);
             if (simulationInterval) clearInterval(simulationInterval);
             if (animationFrameId) cancelAnimationFrame(animationFrameId);
+            if (d3Simulation) d3Simulation.stop();
             pollingInterval = null;
             simulationInterval = null;
             animationFrameId = null;
+            d3Simulation = null;
         }
         
         function resetDisplay() {
