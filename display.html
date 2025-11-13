@@ -112,9 +112,9 @@
         const MIN_WORD_LIFETIME = 7000;
         const TIMER_DURATION_MS = 10 * 60 * 1000;
         const COLOR_PALETTE = ['#5e4fa2', '#3288bd', '#66c2a5', '#abdda4', '#e6f598', '#fee08b', '#fdae61', '#f46d43', '#d53e4f', '#9e0142'];
-        const MAX_CELL_SPREAD_RATIO = 0.28; // Tighter containment within cell image
-        const INNER_CORE_RATIO = 0.15; // Inner core that stays stable
-        const PUSH_THRESHOLD_RATIO = 0.22; // Only push if beyond this threshold
+        const MAX_CELL_SPREAD_RATIO = 0.30; // Expanded for outward push
+        const INNER_CORE_RATIO = 0.12; // Inner core that stays stable (smaller)
+        const PUSH_THRESHOLD_RATIO = 0.18; // Start pushing outward earlier
 
         function selectWordColor(weightRatio, index) {
             return COLOR_PALETTE[index % COLOR_PALETTE.length];
@@ -447,12 +447,32 @@
                     const pushThreshold = maxRadius * (PUSH_THRESHOLD_RATIO / MAX_CELL_SPREAD_RATIO);
 
                     // Inner core: almost immovable
-                    if (distFromCenter < innerCore) return 0.05;
+                    if (distFromCenter < innerCore) return 0.02;
                     // Middle zone: slightly movable
-                    if (distFromCenter < pushThreshold) return 0.15;
-                    // Outer zone: can be pushed
-                    return 0.4;
-                }).iterations(2))
+                    if (distFromCenter < pushThreshold) return 0.1;
+                    // Outer zone: can be pushed outward
+                    return 0.5;
+                }).iterations(3))
+                .force('outward-push', d => {
+                    // Push outer words outward when they collide
+                    return (node) => {
+                        const dx = node.x - centerW;
+                        const dy = node.y - centerH;
+                        const distFromCenter = Math.hypot(dx, dy);
+                        const maxRadius = Math.min(containerWidth, containerHeight) * MAX_CELL_SPREAD_RATIO;
+                        const pushThreshold = maxRadius * (PUSH_THRESHOLD_RATIO / MAX_CELL_SPREAD_RATIO);
+
+                        // Only push if in outer zone
+                        if (distFromCenter > pushThreshold && distFromCenter < maxRadius) {
+                            const pushRatio = (distFromCenter - pushThreshold) / (maxRadius - pushThreshold);
+                            const angle = Math.atan2(dy, dx);
+                            const pushStrength = 0.002 * pushRatio;
+
+                            node.vx += Math.cos(angle) * pushStrength;
+                            node.vy += Math.sin(angle) * pushStrength;
+                        }
+                    };
+                })
                 .force('radial', d3.forceRadial(d => d.ringRadius || 100, centerW, centerH).strength(0.01))
                 .force('x', d3.forceX(d => d.targetX || centerW).strength(0.008))
                 .force('y', d3.forceY(d => d.targetY || centerH).strength(0.008))
