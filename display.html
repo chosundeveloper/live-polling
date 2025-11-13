@@ -411,6 +411,13 @@
             }
             separateParticles(clusterParticles, INTRO_CLUSTER_PADDING, 4);
 
+            // 1. Initialize force accumulators for all idle particles
+            idleParticles.forEach(p => {
+                p.forceX = 0;
+                p.forceY = 0;
+            });
+
+            // 2. Calculate pairwise separation forces and accumulate them
             for (let j = 0; j < idleParticles.length; j++) {
                 const p1 = idleParticles[j];
                 for (let k = j + 1; k < idleParticles.length; k++) {
@@ -419,99 +426,96 @@
                     const dy = p1.y - p2.y;
                     const { width: w1, height: h1 } = getParticleDimensions(p1);
                     const { width: w2, height: h2 } = getParticleDimensions(p2);
+                    
+                    // AABB-style separation for direct overlaps
                     const paddedHalfWidth = (w1 + w2) / 2 + MIN_SEPARATION;
                     const paddedHalfHeight = (h1 + h2) / 2 + MIN_SEPARATION;
                     const overlapX = paddedHalfWidth - Math.abs(dx);
                     const overlapY = paddedHalfHeight - Math.abs(dy);
 
                     if (overlapX > 0 && overlapY > 0) {
+                        let sepForceX = 0;
+                        let sepForceY = 0;
                         if (overlapX < overlapY) {
-                            const push = overlapX / 2;
+                            const push = overlapX;
                             const direction = dx >= 0 ? 1 : -1;
-                            p1.x += direction * push;
-                            p2.x -= direction * push;
-                            p1.vx += direction * push * 0.05;
-                            p2.vx -= direction * push * 0.05;
+                            sepForceX = direction * push * 0.1; // Apply as force
                         } else {
-                            const push = overlapY / 2;
+                            const push = overlapY;
                             const direction = dy >= 0 ? 1 : -1;
-                            p1.y += direction * push;
-                            p2.y -= direction * push;
-                            p1.vy += direction * push * 0.05;
-                            p2.vy -= direction * push * 0.05;
+                            sepForceY = direction * push * 0.1; // Apply as force
                         }
+                        p1.forceX += sepForceX;
+                        p1.forceY += sepForceY;
+                        p2.forceX -= sepForceX;
+                        p2.forceY -= sepForceY;
                     }
 
-                    const distance = Math.sqrt(dx * dx + dy * dy);
+                    // General radial separation force for closeness
+                    const distance = Math.hypot(dx, dy) || 1;
                     const minDistance = Math.max(Math.min(paddedHalfWidth, paddedHalfHeight), MIN_SEPARATION);
-
-                    if (distance < minDistance && distance > 0) {
-                        const force = ((minDistance - distance) / minDistance) * 0.08;
+                    if (distance < minDistance) {
+                        const force = ((minDistance - distance) / minDistance) * 0.5; // Stronger push
                         const angle = Math.atan2(dy, dx);
                         const fx = Math.cos(angle) * force;
                         const fy = Math.sin(angle) * force;
-                        p1.vx += fx;
-                        p1.vy += fy;
-                        p2.vx -= fx;
-                        p2.vy -= fy;
+                        p1.forceX += fx;
+                        p1.forceY += fy;
+                        p2.forceX -= fx;
+                        p2.forceY -= fy;
                     }
                 }
-                const centerDx = p1.x - centerW;
-                const centerDy = p1.y - centerH;
-                p1.vx += centerDx * OUTWARD_DRIFT_FORCE;
-                p1.vy += centerDy * OUTWARD_DRIFT_FORCE;
             }
 
+            // 3. Add other forces, normalize, and set constant velocity
             for (const p of idleParticles) {
-                p.vx *= 0.5; // less aggressive damping for a floatier feel
-                p.vy *= 0.5;
-
+                // Target attraction force
                 if (p.targetX !== undefined && p.targetY !== undefined) {
                     const targetDx = p.targetX - p.x;
                     const targetDy = p.targetY - p.y;
-                    p.vx += targetDx * TARGET_ATTRACTION_FORCE;
-                    p.vy += targetDy * TARGET_ATTRACTION_FORCE;
+                    p.forceX += targetDx * TARGET_ATTRACTION_FORCE;
+                    p.forceY += targetDy * TARGET_ATTRACTION_FORCE;
                 }
 
+                // Radial force to keep particles in their rings
                 const radialDx = p.x - centerW;
                 const radialDy = p.y - centerH;
                 const radialDist = Math.hypot(radialDx, radialDy) || 1;
                 if (p.ringRadius) {
                     const radialError = p.ringRadius - radialDist;
                     const radialForce = radialError * RADIAL_FORCE;
-                    p.vx += (radialDx / radialDist) * radialForce;
-                    p.vy += (radialDy / radialDist) * radialForce;
+                    p.forceX += (radialDx / radialDist) * radialForce;
+                    p.forceY += (radialDy / radialDist) * radialForce;
+                }
+                
+                // Outward drift force
+                const centerDx = p.x - centerW;
+                const centerDy = p.y - centerH;
+                p.forceX += centerDx * OUTWARD_DRIFT_FORCE;
+                p.forceY += centerDy * OUTWARD_DRIFT_FORCE;
+
+                // --- Set velocity based on normalized total force ---
+                const forceMagnitude = Math.hypot(p.forceX, p.forceY);
+
+                if (forceMagnitude > 0.000001) { // Epsilon to prevent division by zero and small jitters
+                    const dirX = p.forceX / forceMagnitude;
+                    const dirY = p.forceY / forceMagnitude;
+                    p.vx = dirX * MAX_PARTICLE_SPEED;
+                    p.vy = dirY * MAX_PARTICLE_SPEED;
+                } else {
+                    p.vx = 0;
+                    p.vy = 0;
                 }
 
-                // Clamp velocity to prevent runaway movement
-                if (p.vx > MAX_PARTICLE_SPEED) p.vx = MAX_PARTICLE_SPEED;
-                else if (p.vx < -MAX_PARTICLE_SPEED) p.vx = -MAX_PARTICLE_SPEED;
-                if (p.vy > MAX_PARTICLE_SPEED) p.vy = MAX_PARTICLE_SPEED;
-                else if (p.vy < -MAX_PARTICLE_SPEED) p.vy = -MAX_PARTICLE_SPEED;
+                p.x += p.vx;
+                p.y += p.vy;
 
-                // Introduce smoothed velocity to prevent jerky movements
-                p.smoothVx = (p.smoothVx || p.vx) * 0.9 + p.vx * 0.1;
-                p.smoothVy = (p.smoothVy || p.vy) * 0.9 + p.vy * 0.1;
-
-                p.x += p.smoothVx;
-                p.y += p.smoothVy;
-
-                const edgePadding = Math.min(containerWidth, containerHeight) * 0.1;
-                if (p.x < edgePadding) {
-                    p.x = edgePadding;
-                    p.vx *= -0.25;
-                } else if (p.x > containerWidth - edgePadding) {
-                    p.x = containerWidth - edgePadding;
-                    p.vx *= -0.25;
-                }
-
-                if (p.y < edgePadding) {
-                    p.y = edgePadding;
-                    p.vy *= -0.25;
-                } else if (p.y > containerHeight - edgePadding) {
-                    p.y = containerHeight - edgePadding;
-                    p.vy *= -0.25;
-                }
+                // Boundary handling (simple stop, no bounce)
+                const edgePadding = Math.min(containerWidth, containerHeight) * 0.05;
+                if (p.x < edgePadding) p.x = edgePadding;
+                else if (p.x > containerWidth - edgePadding) p.x = containerWidth - edgePadding;
+                if (p.y < edgePadding) p.y = edgePadding;
+                else if (p.y > containerHeight - edgePadding) p.y = containerHeight - edgePadding;
 
                 // Animate font size
                 const sizeDiff = p.targetFontSize - p.currentFontSize;
