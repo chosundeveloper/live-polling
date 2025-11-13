@@ -396,11 +396,11 @@
                         if (overlapX < overlapY) {
                             const push = overlapX;
                             const direction = dx >= 0 ? 1 : -1;
-                            sepForceX = direction * push * 0.5; // Apply as force
+                            sepForceX = direction * push * 1.0; // Apply as force
                         } else {
                             const push = overlapY;
                             const direction = dy >= 0 ? 1 : -1;
-                            sepForceY = direction * push * 0.5; // Apply as force
+                            sepForceY = direction * push * 1.0; // Apply as force
                         }
                         p1.forceX += sepForceX;
                         p1.forceY += sepForceY;
@@ -412,7 +412,7 @@
                     const distance = Math.hypot(dx, dy) || 1;
                     const minDistance = Math.max(Math.min(paddedHalfWidth, paddedHalfHeight), MIN_SEPARATION);
                     if (distance < minDistance) {
-                        const force = ((minDistance - distance) / minDistance) * 2.0; // Stronger push
+                        const force = ((minDistance - distance) / minDistance) * 4.0; // Stronger push
                         const angle = Math.atan2(dy, dx);
                         const fx = Math.cos(angle) * force;
                         const fy = Math.sin(angle) * force;
