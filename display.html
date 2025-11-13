@@ -298,15 +298,15 @@
             if (rawProgress < INTRO_CLUSTER_RATIO) {
                 // Phase 1: Gathering
                 const phaseProgress = rawProgress / INTRO_CLUSTER_RATIO;
-                const eased = easeOutCubic(phaseProgress);
-                currentX = particle.originX + (centerW - particle.originX) * eased;
-                currentY = particle.originY + (centerH - particle.originY) * eased;
+                // const eased = easeOutCubic(phaseProgress); // Removed easing for constant speed
+                currentX = particle.originX + (centerW - particle.originX) * phaseProgress;
+                currentY = particle.originY + (centerH - particle.originY) * phaseProgress;
             } else {
                 // Phase 2: Spreading
                 const phaseProgress = (rawProgress - INTRO_CLUSTER_RATIO) / (1 - INTRO_CLUSTER_RATIO);
-                const eased = easeOutCubic(phaseProgress);
-                currentX = centerW + (particle.targetX - centerW) * eased;
-                currentY = centerH + (particle.targetY - centerH) * eased;
+                // const eased = easeOutCubic(phaseProgress); // Removed easing for constant speed
+                currentX = centerW + (particle.targetX - centerW) * phaseProgress;
+                currentY = centerH + (particle.targetY - centerH) * phaseProgress;
             }
 
             particle.prevX = particle.x;
