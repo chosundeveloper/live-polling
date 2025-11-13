@@ -26,6 +26,7 @@ body {
     min-height: 100vh;
     color: var(--ink-primary);
     line-height: 1.6;
+    font-weight: 500;
 }
 
 body.display-body {
