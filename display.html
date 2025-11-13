@@ -320,7 +320,7 @@
 
             let targetX, targetY;
 
-            // Move from edge toward target position (inward)
+            // Move from center toward target position (outward)
             targetX = particle.originX + (particle.targetX - particle.originX) * rawProgress;
             targetY = particle.originY + (particle.targetY - particle.originY) * rawProgress;
 
@@ -426,13 +426,9 @@
             }
 
             d3Simulation = d3.forceSimulation(wordParticles)
-                .alphaDecay(0.001)
-                .velocityDecay(0.95)
-                .alphaMin(0.001)
-                .force('collide', d3.forceCollide(d => {
-                    const { width, height } = getParticleDimensions(d);
-                    return Math.max(width, height) / 2 + MIN_SEPARATION / 2;
-                }).strength(0.5).iterations(2))
+                .alphaDecay(0.0005)
+                .velocityDecay(0.98)
+                .alphaMin(0.0001)
                 .force('gentle-separate', () => {
                     // Custom force: when words overlap, move the outer one toward cell boundary
                     const maxRadius = Math.min(containerWidth, containerHeight) * MAX_CELL_SPREAD_RATIO;
@@ -467,9 +463,9 @@
                                     const angle = Math.atan2(outerWord.y - centerH, outerWord.x - centerW);
                                     const overlap = minDist - distance;
 
-                                    // Very strong push with aggressive distance-based multiplier
+                                    // Gentle push with moderate distance-based multiplier
                                     const distRatio = outerDist / maxRadius;
-                                    const pushStrength = overlap * 0.08 * (3 + distRatio * 4);
+                                    const pushStrength = overlap * 0.02 * (1 + distRatio);
 
                                     outerWord.vx += Math.cos(angle) * pushStrength;
                                     outerWord.vy += Math.sin(angle) * pushStrength;
@@ -478,9 +474,9 @@
                         }
                     }
                 })
-                .force('radial', d3.forceRadial(d => d.ringRadius || 100, centerW, centerH).strength(0.01))
-                .force('x', d3.forceX(d => d.targetX || centerW).strength(0.008))
-                .force('y', d3.forceY(d => d.targetY || centerH).strength(0.008))
+                .force('radial', d3.forceRadial(d => d.ringRadius || 100, centerW, centerH).strength(0.005))
+                .force('x', d3.forceX(d => d.targetX || centerW).strength(0.004))
+                .force('y', d3.forceY(d => d.targetY || centerH).strength(0.004))
                 .on('tick', () => {
                     const timestamp = performance.now();
                     const currentAlpha = d3Simulation.alpha();
@@ -707,20 +703,15 @@
                     };
                     assignParticleTarget(particle, centerW, centerH, geometry, spiralIndex);
 
-                    // Start from outside edge (near target position)
-                    const targetAngle = Math.atan2(particle.targetY - centerH, particle.targetX - centerW);
-                    const startRadius = maxRadius * 0.98; // Start very close to edge
-                    const startX = centerW + Math.cos(targetAngle) * startRadius;
-                    const startY = centerH + Math.sin(targetAngle) * startRadius;
-
-                    particle.originX = startX;
-                    particle.originY = startY;
-                    particle.x = startX;
-                    particle.y = startY;
-                    particle.prevX = startX;
-                    particle.prevY = startY;
-                    wordEl.style.left = `${startX}px`;
-                    wordEl.style.top = `${startY}px`;
+                    // Always start from exact center
+                    particle.originX = centerW;
+                    particle.originY = centerH;
+                    particle.x = centerW;
+                    particle.y = centerH;
+                    particle.prevX = centerW;
+                    particle.prevY = centerH;
+                    wordEl.style.left = `${centerW}px`;
+                    wordEl.style.top = `${centerH}px`;
                     wordParticles.push(particle);
                     const introParticles = wordParticles.filter(p => p.phase === 'intro');
 
