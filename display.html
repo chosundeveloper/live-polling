@@ -92,7 +92,7 @@
         const MIN_FONT_SIZE = 18;
         const MAX_FONT_SIZE = 32;
         const MAX_PARTICLE_SPEED = 0.004;
-        const MIN_SEPARATION = 58;
+        const MIN_SEPARATION = 80;
         const DEFAULT_PARTICLE_WIDTH = 48;
         const DEFAULT_PARTICLE_HEIGHT = 22;
         const INTRO_DURATION_BASE = 120000; // ultra slow duration for smooth spread (2 minutes)
@@ -112,9 +112,9 @@
         const MIN_WORD_LIFETIME = 7000;
         const TIMER_DURATION_MS = 10 * 60 * 1000;
         const COLOR_PALETTE = ['#5e4fa2', '#3288bd', '#66c2a5', '#abdda4', '#e6f598', '#fee08b', '#fdae61', '#f46d43', '#d53e4f', '#9e0142'];
-        const MAX_CELL_SPREAD_RATIO = 0.32; // Expanded for outward push to boundary
-        const INNER_CORE_RATIO = 0.08; // Inner core that stays stable (very small)
-        const PUSH_THRESHOLD_RATIO = 0.12; // Start pushing outward early
+        const MAX_CELL_SPREAD_RATIO = 0.35; // Expanded for more space
+        const INNER_CORE_RATIO = 0.06; // Inner core that stays stable (very small)
+        const PUSH_THRESHOLD_RATIO = 0.10; // Start pushing outward very early
 
         function selectWordColor(weightRatio, index) {
             return COLOR_PALETTE[index % COLOR_PALETTE.length];
@@ -470,7 +470,7 @@
 
                                     // Much stronger push with aggressive distance-based multiplier
                                     const distRatio = outerDist / maxRadius;
-                                    const pushStrength = overlap * 0.025 * (1.5 + distRatio * 2);
+                                    const pushStrength = overlap * 0.04 * (2 + distRatio * 3);
 
                                     outerWord.vx += Math.cos(angle) * pushStrength;
                                     outerWord.vy += Math.sin(angle) * pushStrength;
