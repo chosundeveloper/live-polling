@@ -99,6 +99,7 @@
         const INTRO_STAGE_MAX_RADIUS = 70;
         const INTRO_CLUSTER_RATIO = 0.85;
         const INTRO_CLUSTER_SWAY = 10;
+        const INTRO_CLUSTER_PADDING = 18;
         const OUTWARD_DRIFT_FORCE = 0.000005;
         const TARGET_ATTRACTION_FORCE = 0.000035;
         const RADIAL_FORCE = 0.00016;
@@ -326,13 +327,39 @@
             const centerH = containerHeight / 2;
 
             const idleParticles = [];
+            const clusterParticles = [];
             for (const p of wordParticles) {
                 const isIntro = updateIntroMotion(p, centerW, centerH, timestamp);
                 if (isIntro) {
                     p.el.style.left = `${p.x}px`;
                     p.el.style.top = `${p.y}px`;
+                    clusterParticles.push(p);
                 } else {
                     idleParticles.push(p);
+                }
+            }
+
+            for (let j = 0; j < clusterParticles.length; j++) {
+                const p1 = clusterParticles[j];
+                for (let k = j + 1; k < clusterParticles.length; k++) {
+                    const p2 = clusterParticles[k];
+                    const dx = p1.x - p2.x;
+                    const dy = p1.y - p2.y;
+                    const dist = Math.hypot(dx, dy) || 1;
+                    const minDist = ((p1.width || DEFAULT_PARTICLE_WIDTH) + (p2.width || DEFAULT_PARTICLE_WIDTH)) / 2 + INTRO_CLUSTER_PADDING;
+                    if (dist < minDist) {
+                        const push = (minDist - dist) * 0.5;
+                        const ux = dx / dist;
+                        const uy = dy / dist;
+                        p1.x += ux * push;
+                        p1.y += uy * push;
+                        p2.x -= ux * push;
+                        p2.y -= uy * push;
+                        p1.el.style.left = `${p1.x}px`;
+                        p1.el.style.top = `${p1.y}px`;
+                        p2.el.style.left = `${p2.x}px`;
+                        p2.el.style.top = `${p2.y}px`;
+                    }
                 }
             }
 
@@ -566,7 +593,8 @@
                     };
                     assignParticleTarget(particle, centerW, centerH, geometry, spiralIndex);
                     const stageAngle = (particle.spiralIndex * GOLDEN_ANGLE) % (Math.PI * 2);
-                    const stageRadius = INTRO_STAGE_MIN_RADIUS + ((particle.spiralIndex % 6) / 5) * (INTRO_STAGE_MAX_RADIUS - INTRO_STAGE_MIN_RADIUS);
+                    const targetRadius = Math.min(INTRO_STAGE_MAX_RADIUS, Math.max(INTRO_STAGE_MIN_RADIUS, (particle.ringRadius || INTRO_STAGE_MAX_RADIUS) * 0.35));
+                    const stageRadius = targetRadius;
                     const stageX = centerW + Math.cos(stageAngle) * stageRadius;
                     const stageY = centerH + Math.sin(stageAngle) * stageRadius;
                     particle.originX = stageX;
