@@ -1254,6 +1254,8 @@ footer a:hover {
     bottom: 26px;
     right: 26px;
     align-items: flex-end;
+    max-width: min(360px, calc(100% - 56px));
+    width: max-content;
 }
 
 .concept-qr-card {
@@ -1292,7 +1294,8 @@ footer a:hover {
     border: 1px solid rgba(148, 163, 184, 0.35);
     border-radius: 18px;
     padding: 14px 16px;
-    min-width: 260px;
+    min-width: 220px;
+    max-width: 100%;
     box-shadow: 0 12px 30px rgba(15, 23, 42, 0.08);
 }
 
