@@ -131,37 +131,7 @@
 
         const GOLDEN_ANGLE = Math.PI * (3 - Math.sqrt(5));
 
-        function separateParticles(particles, padding = INTRO_CLUSTER_PADDING, passes = 8) {
-            for (let pass = 0; pass < passes; pass++) {
-                for (let i = 0; i < particles.length; i++) {
-                    const p1 = particles[i];
-                    for (let j = i + 1; j < particles.length; j++) {
-                        const p2 = particles[j];
-                        const dx = p1.x - p2.x;
-                        const dy = p1.y - p2.y;
-                        const dist = Math.hypot(dx, dy) || 1;
-                        const minDist = ((p1.width || DEFAULT_PARTICLE_WIDTH) + (p2.width || DEFAULT_PARTICLE_WIDTH)) / 2 + padding;
-                        if (dist < minDist) {
-                            const push = (minDist - dist) * 0.12;
-                            const ux = dx / dist;
-                            const uy = dy / dist;
-                            p1.x += ux * push;
-                            p1.y += uy * push;
-                            p2.x -= ux * push;
-                            p2.y -= uy * push;
-                            if (p1.el) {
-                                p1.el.style.left = `${p1.x}px`;
-                                p1.el.style.top = `${p1.y}px`;
-                            }
-                            if (p2.el) {
-                                p2.el.style.left = `${p2.x}px`;
-                                p2.el.style.top = `${p2.y}px`;
-                            }
-                        }
-                    }
-                }
-            }
-        }
+
 
         function findClusterPosition(existing, centerW, centerH, baseRadius, baseAngle) {
             if (!existing.length) {
@@ -287,28 +257,30 @@
             const duration = particle.introDuration || INTRO_DURATION_BASE;
             const rawProgress = duration <= 0 ? 1 : Math.min(1, (timestamp - particle.introStart) / duration);
 
-            let currentX, currentY;
+            let targetX, targetY;
 
             if (rawProgress < INTRO_CLUSTER_RATIO) {
                 // Phase 1: Gathering
                 const phaseProgress = rawProgress / INTRO_CLUSTER_RATIO;
-                // const eased = easeOutCubic(phaseProgress); // Removed easing for constant speed
-                currentX = particle.originX + (centerW - particle.originX) * phaseProgress;
-                currentY = particle.originY + (centerH - particle.originY) * phaseProgress;
+                targetX = particle.originX + (centerW - particle.originX) * phaseProgress;
+                targetY = particle.originY + (centerH - particle.originY) * phaseProgress;
             } else {
                 // Phase 2: Spreading
                 const phaseProgress = (rawProgress - INTRO_CLUSTER_RATIO) / (1 - INTRO_CLUSTER_RATIO);
-                // const eased = easeOutCubic(phaseProgress); // Removed easing for constant speed
-                currentX = centerW + (particle.targetX - centerW) * phaseProgress;
-                currentY = centerH + (particle.targetY - centerH) * phaseProgress;
+                targetX = centerW + (particle.targetX - centerW) * phaseProgress;
+                targetY = centerH + (particle.targetY - centerH) * phaseProgress;
             }
 
-            particle.prevX = particle.x;
-            particle.prevY = particle.y;
-            particle.x = currentX;
-            particle.y = currentY;
-            particle.vx = (particle.x - (particle.prevX ?? particle.x)) * 0.5;
-            particle.vy = (particle.y - (particle.prevY ?? particle.y)) * 0.5;
+            // Calculate force to move towards targetX, targetY at MAX_PARTICLE_SPEED
+            const dx = targetX - particle.x;
+            const dy = targetY - particle.y;
+            const dist = Math.hypot(dx, dy);
+
+            if (dist > 0.000001) { // Apply force if not already at target
+                const forceMagnitude = dist * 0.005; // A small force to guide it
+                particle.forceX += (dx / dist) * forceMagnitude;
+                particle.forceY += (dy / dist) * forceMagnitude;
+            }
 
             if (rawProgress >= 1) {
                 particle.x = particle.targetX;
@@ -391,31 +363,22 @@
             const centerW = containerWidth / 2;
             const centerH = containerHeight / 2;
 
-            const idleParticles = [];
-            const clusterParticles = [];
-            for (const p of wordParticles) {
-                const isIntro = updateIntroMotion(p, centerW, centerH, timestamp);
-                if (isIntro) {
-                    p.el.style.left = `${p.x}px`;
-                    p.el.style.top = `${p.y}px`;
-                    clusterParticles.push(p);
-                } else {
-                    idleParticles.push(p);
-                }
-            }
-            separateParticles(clusterParticles, INTRO_CLUSTER_PADDING, 4);
-
-            // 1. Initialize force accumulators for all idle particles
-            idleParticles.forEach(p => {
+            // Initialize force accumulators for all particles
+            wordParticles.forEach(p => {
                 p.forceX = 0;
                 p.forceY = 0;
             });
 
-            // 2. Calculate pairwise separation forces and accumulate them
-            for (let j = 0; j < idleParticles.length; j++) {
-                const p1 = idleParticles[j];
-                for (let k = j + 1; k < idleParticles.length; k++) {
-                    const p2 = idleParticles[k];
+            // Apply intro motion forces and collect particles
+            wordParticles.forEach(p => {
+                updateIntroMotion(p, centerW, centerH, timestamp);
+            });
+
+            // Calculate pairwise separation forces for all particles
+            for (let j = 0; j < wordParticles.length; j++) {
+                const p1 = wordParticles[j];
+                for (let k = j + 1; k < wordParticles.length; k++) {
+                    const p2 = wordParticles[k];
                     const dx = p1.x - p2.x;
                     const dy = p1.y - p2.y;
                     const { width: w1, height: h1 } = getParticleDimensions(p1);
@@ -461,10 +424,10 @@
                 }
             }
 
-            // 3. Add other forces, normalize, and set constant velocity
-            for (const p of idleParticles) {
-                // Target attraction force
-                if (p.targetX !== undefined && p.targetY !== undefined) {
+            // Add other forces, normalize, and set constant velocity for all particles
+            for (const p of wordParticles) {
+                // Target attraction force (only for idle particles, intro particles are guided by intro motion force)
+                if (p.phase === 'idle' && p.targetX !== undefined && p.targetY !== undefined) {
                     const targetDx = p.targetX - p.x;
                     const targetDy = p.targetY - p.y;
                     p.forceX += targetDx * TARGET_ATTRACTION_FORCE;
