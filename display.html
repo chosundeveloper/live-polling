@@ -88,11 +88,11 @@
         const MAX_WORDS = 150;
         const MIN_FONT_SIZE = 18;
         const MAX_FONT_SIZE = 32;
-        const MAX_PARTICLE_SPEED = 0.1;
+        const MAX_PARTICLE_SPEED = 0.08;
         const MIN_SEPARATION = 58;
         const DEFAULT_PARTICLE_WIDTH = 48;
         const DEFAULT_PARTICLE_HEIGHT = 22;
-        const INTRO_DURATION_BASE = 15000; // slower duration
+        const INTRO_DURATION_BASE = 25000; // much slower duration
         const INTRO_DURATION_VARIANCE = 3000;
         const INTRO_BLOOM_JITTER = 0; // No bloom
         const INTRO_SPIRAL_TWIST = 0; // No spiral
@@ -104,8 +104,8 @@
         const INTRO_CLUSTER_SWAY = 0;
         const INTRO_CLUSTER_PADDING = 55;
         const OUTWARD_DRIFT_FORCE = 0.000002;
-        const TARGET_ATTRACTION_FORCE = 0.000005;
-        const RADIAL_FORCE = 0.00002;
+        const TARGET_ATTRACTION_FORCE = 0.000002;
+        const RADIAL_FORCE = 0.000008;
         const MIN_WORD_LIFETIME = 7000;
         const TIMER_DURATION_MS = 10 * 60 * 1000;
         const COLOR_PALETTE = ['#5e4fa2', '#3288bd', '#66c2a5', '#abdda4', '#e6f598', '#fee08b', '#fdae61', '#f46d43', '#d53e4f', '#9e0142'];
@@ -464,8 +464,8 @@
             }
 
             for (const p of idleParticles) {
-                p.vx *= 0.35; // heavier damping for slow drift
-                p.vy *= 0.35;
+                p.vx *= 0.25; // heavier damping for slow drift
+                p.vy *= 0.25;
 
                 if (p.targetX !== undefined && p.targetY !== undefined) {
                     const targetDx = p.targetX - p.x;
@@ -565,15 +565,18 @@
                 return true;
             });
 
-            const maxWeight = Math.max(...limited.map(item => item[1]));
+            const lengths = limited.map(([text]) => text.length);
+            const minLength = Math.min(...lengths) || 1;
+            const maxLength = Math.max(...lengths) || 10;
+
             const { width: containerWidth, height: containerHeight } = getCloudBounds();
             const centerW = containerWidth / 2;
             const centerH = containerHeight / 2;
             const geometry = getSpiralGeometry(containerWidth, containerHeight, limited.length);
 
             limited.forEach(([text, weight], index) => {
-                const weightRatio = weight / maxWeight;
-                const targetFontSize = MIN_FONT_SIZE + (MAX_FONT_SIZE - MIN_FONT_SIZE) * weightRatio;
+                const lengthRatio = (maxLength - text.length) / (maxLength - minLength + 1);
+                const targetFontSize = MIN_FONT_SIZE + (MAX_FONT_SIZE - MIN_FONT_SIZE) * lengthRatio;
                 const spiralIndex = index;
 
                 let particle = existingParticles.get(text);
@@ -582,14 +585,14 @@
                     if (particle.phase !== 'intro') {
                         assignParticleTarget(particle, centerW, centerH, geometry, spiralIndex);
                     }
-                    particle.el.style.color = selectWordColor(weightRatio, index);
+                    particle.el.style.color = selectWordColor(weight / Math.max(...limited.map(item => item[1])), index);
                 } else {
                     const wordEl = document.createElement('span');
                     wordEl.className = 'concept-word';
                     wordEl.textContent = text;
-                    wordEl.style.color = selectWordColor(weightRatio, index);
+                    wordEl.style.color = selectWordColor(weight / Math.max(...limited.map(item => item[1])), index);
 
-                    const initialFontSize = MIN_FONT_SIZE + (MAX_FONT_SIZE - MIN_FONT_SIZE) * weightRatio;
+                    const initialFontSize = MIN_FONT_SIZE + (MAX_FONT_SIZE - MIN_FONT_SIZE) * lengthRatio;
                     wordEl.style.fontSize = `${initialFontSize}px`;
                     
                     // Click to delete
@@ -663,6 +666,7 @@
                     });
                 }
                 
+                const weightRatio = weight / Math.max(...limited.map(item => item[1]));
                 const isHero = weightRatio > 0.7;
                 const isAccent = !isHero && weightRatio > 0.4;
                 particle.el.classList.toggle('concept-word-hero', isHero);
