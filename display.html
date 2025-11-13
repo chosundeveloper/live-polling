@@ -707,15 +707,22 @@
                     };
                     assignParticleTarget(particle, centerW, centerH, geometry, spiralIndex);
 
-                    // Always start from exact center
-                    particle.originX = centerW;
-                    particle.originY = centerH;
-                    particle.x = centerW;
-                    particle.y = centerH;
-                    particle.prevX = centerW;
-                    particle.prevY = centerH;
-                    wordEl.style.left = `${centerW}px`;
-                    wordEl.style.top = `${centerH}px`;
+                    // Start near target position to avoid initial overlap
+                    const targetAngle = Math.atan2(particle.targetY - centerH, particle.targetX - centerW);
+                    const targetDist = Math.hypot(particle.targetX - centerW, particle.targetY - centerH);
+                    const startDist = Math.max(targetDist * 0.7, 50); // Start 70% of the way there
+
+                    const startX = centerW + Math.cos(targetAngle) * startDist;
+                    const startY = centerH + Math.sin(targetAngle) * startDist;
+
+                    particle.originX = startX;
+                    particle.originY = startY;
+                    particle.x = startX;
+                    particle.y = startY;
+                    particle.prevX = startX;
+                    particle.prevY = startY;
+                    wordEl.style.left = `${startX}px`;
+                    wordEl.style.top = `${startY}px`;
                     wordParticles.push(particle);
                     const introParticles = wordParticles.filter(p => p.phase === 'intro');
 
