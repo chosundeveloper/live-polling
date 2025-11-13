@@ -168,6 +168,43 @@
             }
         }
 
+        function findClusterPosition(existing, centerW, centerH, baseRadius, baseAngle) {
+            if (!existing.length) {
+                const x = centerW + Math.cos(baseAngle) * baseRadius;
+                const y = centerH + Math.sin(baseAngle) * baseRadius;
+                return { x, y };
+            }
+
+            let best = null;
+            let bestScore = -Infinity;
+            for (let attempt = 0; attempt < 24; attempt++) {
+                const angle = baseAngle + attempt * (GOLDEN_ANGLE * 0.25) + (Math.random() - 0.5) * 0.25;
+                const radius = baseRadius + attempt * 3;
+                const x = centerW + Math.cos(angle) * radius;
+                const y = centerH + Math.sin(angle) * radius;
+                let minDist = Infinity;
+                for (const p of existing) {
+                    const dx = x - p.x;
+                    const dy = y - p.y;
+                    const dist = Math.hypot(dx, dy);
+                    const needed = ((p.width || DEFAULT_PARTICLE_WIDTH) / 2) + INTRO_CLUSTER_PADDING;
+                    if (dist < needed) {
+                        minDist = dist - needed;
+                        break;
+                    }
+                    minDist = Math.min(minDist, dist - needed);
+                }
+                if (minDist > INTRO_CLUSTER_PADDING * 0.5) {
+                    return { x, y };
+                }
+                if (minDist > bestScore) {
+                    bestScore = minDist;
+                    best = { x, y };
+                }
+            }
+            return best || { x: centerW + Math.cos(baseAngle) * baseRadius, y: centerH + Math.sin(baseAngle) * baseRadius };
+        }
+
         function getSpiralGeometry(width, height, wordCount = MAX_WORDS) {
             const usableRadius = Math.min(width, height) * MAX_CELL_SPREAD_RATIO;
             const maxRadius = Math.max(180, usableRadius);
@@ -602,11 +639,11 @@
                         bornAt: now
                     };
                     assignParticleTarget(particle, centerW, centerH, geometry, spiralIndex);
-                    const stageAngle = (particle.spiralIndex * GOLDEN_ANGLE) % (Math.PI * 2);
+                    const baseAngle = (particle.spiralIndex * GOLDEN_ANGLE) % (Math.PI * 2);
                     const targetRadius = Math.min(INTRO_STAGE_MAX_RADIUS, Math.max(INTRO_STAGE_MIN_RADIUS, (particle.ringRadius || INTRO_STAGE_MAX_RADIUS) * 0.35));
-                    const stageRadius = targetRadius;
-                    const stageX = centerW + Math.cos(stageAngle) * stageRadius;
-                    const stageY = centerH + Math.sin(stageAngle) * stageRadius;
+                    const existingIntro = wordParticles.filter(p => p.phase === 'intro');
+                    const { x: stageX, y: stageY } = findClusterPosition(existingIntro, centerW, centerH, targetRadius, baseAngle);
+
                     particle.originX = stageX;
                     particle.originY = stageY;
                     particle.x = stageX;
@@ -617,7 +654,7 @@
                     wordEl.style.top = `${stageY}px`;
                     wordParticles.push(particle);
                     const introParticles = wordParticles.filter(p => p.phase === 'intro');
-                    separateParticles(introParticles, INTRO_CLUSTER_PADDING, 5);
+                    separateParticles(introParticles, INTRO_CLUSTER_PADDING, 6);
 
                     requestAnimationFrame(() => {
                         wordEl.classList.add('concept-word-visible');
