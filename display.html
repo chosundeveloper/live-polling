@@ -568,8 +568,8 @@
                         bornAt: now
                     };
                     assignParticleTarget(particle, centerW, centerH, geometry, spiralIndex);
-                    const stageRadius = INTRO_STAGE_MIN_RADIUS + Math.random() * (INTRO_STAGE_MAX_RADIUS - INTRO_STAGE_MIN_RADIUS);
-                    const stageAngle = (particle.ringAngle || 0) + (Math.random() - 0.5) * 0.35;
+                    const stageAngle = (particle.spiralIndex * GOLDEN_ANGLE) % (Math.PI * 2);
+                    const stageRadius = INTRO_STAGE_MIN_RADIUS + ((particle.spiralIndex % 6) / 5) * (INTRO_STAGE_MAX_RADIUS - INTRO_STAGE_MIN_RADIUS);
                     const stageX = centerW + Math.cos(stageAngle) * stageRadius;
                     const stageY = centerH + Math.sin(stageAngle) * stageRadius;
                     particle.originX = stageX;
