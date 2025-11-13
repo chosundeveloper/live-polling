@@ -113,8 +113,8 @@
         const TIMER_DURATION_MS = 10 * 60 * 1000;
         const COLOR_PALETTE = ['#5e4fa2', '#3288bd', '#66c2a5', '#abdda4', '#e6f598', '#fee08b', '#fdae61', '#f46d43', '#d53e4f', '#9e0142'];
         const MAX_CELL_SPREAD_RATIO = 0.30; // Expanded for outward push
-        const INNER_CORE_RATIO = 0.12; // Inner core that stays stable (smaller)
-        const PUSH_THRESHOLD_RATIO = 0.18; // Start pushing outward earlier
+        const INNER_CORE_RATIO = 0.10; // Inner core that stays stable (smaller)
+        const PUSH_THRESHOLD_RATIO = 0.15; // Start pushing outward earlier
 
         function selectWordColor(weightRatio, index) {
             return COLOR_PALETTE[index % COLOR_PALETTE.length];
@@ -434,44 +434,47 @@
                 .alphaDecay(0.003)
                 .velocityDecay(0.9)
                 .alphaMin(0.001)
-                .force('collide', d3.forceCollide(d => {
-                    const { width, height } = getParticleDimensions(d);
-                    return Math.max(width, height) / 2 + MIN_SEPARATION / 2;
-                }).strength(d => {
-                    // Only outer words can be pushed
-                    const dx = d.x - centerW;
-                    const dy = d.y - centerH;
-                    const distFromCenter = Math.hypot(dx, dy);
+                .force('gentle-separate', () => {
+                    // Custom force: when words overlap, only move the outer one outward
                     const maxRadius = Math.min(containerWidth, containerHeight) * MAX_CELL_SPREAD_RATIO;
-                    const innerCore = maxRadius * (INNER_CORE_RATIO / MAX_CELL_SPREAD_RATIO);
-                    const pushThreshold = maxRadius * (PUSH_THRESHOLD_RATIO / MAX_CELL_SPREAD_RATIO);
 
-                    // Inner core: almost immovable
-                    if (distFromCenter < innerCore) return 0.02;
-                    // Middle zone: slightly movable
-                    if (distFromCenter < pushThreshold) return 0.1;
-                    // Outer zone: can be pushed outward
-                    return 0.5;
-                }).iterations(3))
-                .force('outward-push', d => {
-                    // Push outer words outward when they collide
-                    return (node) => {
-                        const dx = node.x - centerW;
-                        const dy = node.y - centerH;
-                        const distFromCenter = Math.hypot(dx, dy);
-                        const maxRadius = Math.min(containerWidth, containerHeight) * MAX_CELL_SPREAD_RATIO;
-                        const pushThreshold = maxRadius * (PUSH_THRESHOLD_RATIO / MAX_CELL_SPREAD_RATIO);
+                    for (let i = 0; i < wordParticles.length; i++) {
+                        for (let j = i + 1; j < wordParticles.length; j++) {
+                            const p1 = wordParticles[i];
+                            const p2 = wordParticles[j];
 
-                        // Only push if in outer zone
-                        if (distFromCenter > pushThreshold && distFromCenter < maxRadius) {
-                            const pushRatio = (distFromCenter - pushThreshold) / (maxRadius - pushThreshold);
-                            const angle = Math.atan2(dy, dx);
-                            const pushStrength = 0.002 * pushRatio;
+                            const dx = p2.x - p1.x;
+                            const dy = p2.y - p1.y;
+                            const distance = Math.hypot(dx, dy);
 
-                            node.vx += Math.cos(angle) * pushStrength;
-                            node.vy += Math.sin(angle) * pushStrength;
+                            const { width: w1, height: h1 } = getParticleDimensions(p1);
+                            const { width: w2, height: h2 } = getParticleDimensions(p2);
+                            const minDist = (Math.max(w1, w2) / 2 + Math.max(h1, h2) / 2) + MIN_SEPARATION;
+
+                            // Check if overlapping
+                            if (distance < minDist && distance > 0) {
+                                // Determine which is further from center
+                                const dist1 = Math.hypot(p1.x - centerW, p1.y - centerH);
+                                const dist2 = Math.hypot(p2.x - centerW, p2.y - centerH);
+
+                                const outerWord = dist1 > dist2 ? p1 : p2;
+
+                                // Only move if it's actually in outer zone
+                                const outerDist = Math.hypot(outerWord.x - centerW, outerWord.y - centerH);
+                                const pushThreshold = maxRadius * (PUSH_THRESHOLD_RATIO / MAX_CELL_SPREAD_RATIO);
+
+                                if (outerDist > pushThreshold) {
+                                    // Gently push outward (radial direction)
+                                    const angle = Math.atan2(outerWord.y - centerH, outerWord.x - centerW);
+                                    const overlap = minDist - distance;
+                                    const pushStrength = overlap * 0.001;
+
+                                    outerWord.vx += Math.cos(angle) * pushStrength;
+                                    outerWord.vy += Math.sin(angle) * pushStrength;
+                                }
+                            }
                         }
-                    };
+                    }
                 })
                 .force('radial', d3.forceRadial(d => d.ringRadius || 100, centerW, centerH).strength(0.01))
                 .force('x', d3.forceX(d => d.targetX || centerW).strength(0.008))
