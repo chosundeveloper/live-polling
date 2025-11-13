@@ -1266,35 +1266,40 @@ footer a:hover {
 .concept-qr-card {
     display: flex;
     align-items: center;
-    gap: 20px;
-    background: rgba(255, 255, 255, 0.92);
-    border: 2px solid rgba(15, 23, 42, 0.08);
-    border-radius: 28px;
-    padding: 20px 26px;
-    box-shadow: 0 30px 55px rgba(5, 5, 20, 0.08);
+    gap: 16px;
+    background: rgba(255, 255, 255, 0.85);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(226, 232, 240, 0.7);
+    border-radius: 20px;
+    padding: 16px;
+    box-shadow: 0 10px 30px rgba(15, 23, 42, 0.05);
     color: var(--ink-secondary);
 }
 
 .concept-qr-box {
-    padding: 12px;
-    background: rgba(15, 23, 42, 0.05);
-    border-radius: 18px;
+    padding: 8px;
+    background: white;
+    border-radius: 12px;
     display: inline-flex;
     justify-content: center;
     align-items: center;
 }
 
 .concept-qr-card .concept-label {
+    font-size: 0.75rem;
     color: rgba(15, 23, 42, 0.6);
 }
 
 .concept-qr-card .concept-value {
+    font-size: 1.1rem;
     color: var(--ink-primary);
 }
 
 .concept-qr-card .concept-action-ghost {
     border-color: rgba(15, 23, 42, 0.2);
     color: var(--ink-secondary);
+    padding: 6px 12px;
+    font-size: 0.75rem;
 }
 
 #conceptQrCode {
@@ -1304,14 +1309,15 @@ footer a:hover {
 #conceptQrCode img,
 #conceptQrCode canvas {
     display: block;
-    width: 120px;
-    height: 120px;
+    width: 96px !important;
+    height: 96px !important;
 }
 
 .concept-qr-meta {
     display: flex;
-    flex-direction: column;
-    gap: 12px;
+    flex-direction: row;
+    align-items: center;
+    gap: 20px;
 }
 
 .concept-action-ghost {
