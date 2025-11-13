@@ -35,10 +35,7 @@ body {
     color: var(--ink-primary);
     line-height: 1.6;
     font-weight: 500;
-}
-
-body, body * {
-    font-size: 25px !important;
+    font-size: 25px; /* Default font size */
 }
 
 body.display-body {
@@ -1286,13 +1283,15 @@ footer a:hover {
 }
 
 .concept-qr-card .concept-label {
-    font-size: 0.75rem;
+    font-size: 0.65rem;
     color: rgba(15, 23, 42, 0.6);
+    font-weight: normal;
 }
 
 .concept-qr-card .concept-value {
-    font-size: 1.1rem;
+    font-size: 1rem;
     color: var(--ink-primary);
+    font-weight: normal;
 }
 
 .concept-qr-card .concept-action-ghost {

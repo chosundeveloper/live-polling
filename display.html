@@ -88,7 +88,7 @@
         const MAX_WORDS = 150;
         const WORD_FONT_SIZE_PX = 25;
         const MAX_PARTICLE_SPEED = 0.18;
-        const MIN_SEPARATION = 42;
+        const MIN_SEPARATION = 50;
         const DEFAULT_PARTICLE_WIDTH = 48;
         const DEFAULT_PARTICLE_HEIGHT = 22;
         const INTRO_DURATION_BASE = 10000; // slower duration
@@ -101,7 +101,7 @@
         const INTRO_STAGE_MAX_RADIUS = 70;
         const INTRO_CLUSTER_RATIO = 0.4; // 40% for gathering, 60% for spreading
         const INTRO_CLUSTER_SWAY = 0;
-        const INTRO_CLUSTER_PADDING = 40;
+        const INTRO_CLUSTER_PADDING = 48;
         const OUTWARD_DRIFT_FORCE = 0.000002;
         const TARGET_ATTRACTION_FORCE = 0.000012;
         const RADIAL_FORCE = 0.00006;
@@ -138,7 +138,7 @@
 
         const GOLDEN_ANGLE = Math.PI * (3 - Math.sqrt(5));
 
-        function separateParticles(particles, padding = INTRO_CLUSTER_PADDING, passes = 5) {
+        function separateParticles(particles, padding = INTRO_CLUSTER_PADDING, passes = 8) {
             for (let pass = 0; pass < passes; pass++) {
                 for (let i = 0; i < particles.length; i++) {
                     const p1 = particles[i];
