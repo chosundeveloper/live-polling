@@ -170,7 +170,7 @@
         </ul>
     </div>
 
-    <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/gsap.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/motion@11.11.13/dist/motion.min.js"></script>
     <script>
         // Mock data - 300개 샘플 답변
         const mockAnswers = [
@@ -240,7 +240,7 @@
         }
 
         function animatePollResult(pollResult) {
-            if (typeof gsap === 'undefined') return;
+            if (!window.motion) return;
 
             const textEl = pollResult.querySelector('.answer-text');
             if (!textEl) return;
@@ -257,10 +257,26 @@
             textEl.appendChild(fragment);
 
             const charSpans = textEl.querySelectorAll('.char');
+            const { animate, stagger } = window.motion;
 
-            const tl = gsap.timeline();
-            tl.fromTo(pollResult, { y: -24, opacity: 0, scale: 0.96 }, { y: 0, opacity: 1, scale: 1, duration: 0.55, ease: 'power3.out' })
-              .fromTo(charSpans, { opacity: 0, y: 24, rotateX: -35 }, { opacity: 1, y: 0, rotateX: 0, duration: 0.5, ease: 'power4.out', stagger: { each: 0.015 } }, 0.05);
+            animate(pollResult, {
+                opacity: [0, 1],
+                y: [-26, 0],
+                scale: [0.95, 1]
+            }, {
+                duration: 0.55,
+                easing: 'cubic-bezier(0.22, 1, 0.36, 1)'
+            });
+
+            animate(charSpans, {
+                opacity: [0, 1],
+                y: [20, 0],
+                rotateX: [-32, 0]
+            }, {
+                duration: 0.55,
+                easing: 'cubic-bezier(0.23, 1, 0.32, 1)',
+                delay: stagger(0.012)
+            });
         }
 
         function simulatePollingData() {
