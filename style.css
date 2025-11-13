@@ -1258,24 +1258,39 @@ footer a:hover {
     left: 26px;
 }
 
+
 .concept-qr-card {
     display: flex;
     align-items: center;
     gap: 20px;
-    background: rgba(8, 12, 24, 0.85);
-    border: 2px solid rgba(255, 255, 255, 0.25);
+    background: rgba(255, 255, 255, 0.92);
+    border: 2px solid rgba(15, 23, 42, 0.08);
     border-radius: 28px;
     padding: 20px 26px;
-    box-shadow: 0 20px 45px rgba(5, 5, 20, 0.3);
+    box-shadow: 0 30px 55px rgba(5, 5, 20, 0.08);
+    color: var(--ink-secondary);
 }
 
 .concept-qr-box {
     padding: 12px;
-    background: rgba(255, 255, 255, 0.08);
+    background: rgba(15, 23, 42, 0.05);
     border-radius: 18px;
     display: inline-flex;
     justify-content: center;
     align-items: center;
+}
+
+.concept-qr-card .concept-label {
+    color: rgba(15, 23, 42, 0.6);
+}
+
+.concept-qr-card .concept-value {
+    color: var(--ink-primary);
+}
+
+.concept-qr-card .concept-action-ghost {
+    border-color: rgba(15, 23, 42, 0.2);
+    color: var(--ink-secondary);
 }
 
 #conceptQrCode {
