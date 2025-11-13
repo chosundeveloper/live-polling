@@ -1323,12 +1323,20 @@ footer a:hover {
     padding: 8px 18px;
 }
 
+.concept-note {
+    font-size: 0.75rem;
+    color: var(--ink-muted);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+}
+
 .concept-meta-actions {
     display: flex;
-    gap: 12px;
-    margin-top: 12px;
+    gap: 10px;
+    margin-top: 8px;
     width: 100%;
     justify-content: flex-end;
+    align-items: center;
 }
 
 .concept-overlay-bottom-right .concept-action-ghost {

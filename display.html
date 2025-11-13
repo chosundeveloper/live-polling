@@ -38,12 +38,14 @@
                             <p class="concept-value" id="conceptTotal">0</p>
                         </div>
                         <div>
-                            <p class="concept-label">업데이트</p>
+                            <p class="concept-label">타이머</p>
                             <p class="concept-value" id="conceptUpdated">타이머 10:00</p>
+                            <p class="concept-note" id="conceptTimerNote">남은 시간</p>
                         </div>
                     </div>
                     <div class="concept-meta-actions">
-                        <button class="concept-action concept-action-ghost" id="toggleMock">모의</button>
+                        <span class="concept-note">모의</span>
+                        <button class="concept-action concept-action-ghost" id="toggleMock">ON/OFF</button>
                     </div>
                 </div>
             </div>
@@ -66,6 +68,7 @@
         const wordsLayer = document.getElementById('conceptWords');
         const conceptTotal = document.getElementById('conceptTotal');
         const conceptUpdated = document.getElementById('conceptUpdated');
+        const conceptTimerNote = document.getElementById('conceptTimerNote');
         const qrCodeContainer = document.getElementById('conceptQrCode');
         const toggleMockBtn = document.getElementById('toggleMock');
         const prevQuestionBtn = document.getElementById('prevQuestionBtn');
@@ -99,8 +102,10 @@
         const INTRO_SPIRAL_TWIST = Math.PI * 1.45;
         const INTRO_SWAY_AMPLITUDE = 18;
         const INTRO_SWAY_FREQUENCY = 1.1;
-        const INTRO_STAGE_MIN_RADIUS = 60;
-        const INTRO_STAGE_MAX_RADIUS = 140;
+        const INTRO_STAGE_MIN_RADIUS = 50;
+        const INTRO_STAGE_MAX_RADIUS = 110;
+        const INTRO_CLUSTER_RATIO = 0.35;
+        const INTRO_CLUSTER_SWAY = 10;
         const OUTWARD_DRIFT_FORCE = 0.00002;
         const TARGET_ATTRACTION_FORCE = 0.00012;
         const RADIAL_FORCE = 0.0004;
@@ -196,12 +201,16 @@
         function updateTimerDisplay() {
             if (!timerDeadline) {
                 conceptUpdated.textContent = '타이머 10:00';
+                if (conceptTimerNote) conceptTimerNote.textContent = '남은 시간';
                 return;
             }
             const remaining = Math.max(0, timerDeadline - Date.now());
             const minutes = Math.floor(remaining / 60000);
             const seconds = String(Math.floor((remaining % 60000) / 1000)).padStart(2, '0');
             conceptUpdated.textContent = `타이머 ${minutes}:${seconds}`;
+            if (conceptTimerNote) {
+                conceptTimerNote.textContent = remaining <= 0 ? '종료' : '남은 시간';
+            }
             if (remaining <= 0) {
                 stopTimer();
             }
@@ -221,15 +230,18 @@
             }
             const duration = particle.introDuration || INTRO_DURATION_BASE;
             const rawProgress = duration <= 0 ? 1 : Math.min(1, (timestamp - particle.introStart) / duration);
-            const eased = easeOutCubic(rawProgress);
+            const eased = easeOutCubic(Math.max(0, (rawProgress - INTRO_CLUSTER_RATIO) / Math.max(0.0001, 1 - INTRO_CLUSTER_RATIO)));
             particle.originX = particle.originX ?? centerW;
             particle.originY = particle.originY ?? centerH;
             const finalX = particle.targetX ?? centerW;
             const finalY = particle.targetY ?? centerH;
             const swirl = (1 - eased) * INTRO_SPIRAL_TWIST;
             const orbitAngle = (particle.ringAngle || 0) - swirl;
-            const pathX = particle.originX + (finalX - particle.originX) * eased;
-            const pathY = particle.originY + (finalY - particle.originY) * eased;
+            const clusterWeight = Math.max(0, 1 - rawProgress / Math.max(INTRO_CLUSTER_RATIO, 0.0001));
+            const clusterX = particle.originX + Math.cos(orbitAngle) * INTRO_CLUSTER_SWAY * clusterWeight;
+            const clusterY = particle.originY + Math.sin(orbitAngle) * INTRO_CLUSTER_SWAY * clusterWeight;
+            const pathX = clusterX + (finalX - particle.originX) * eased;
+            const pathY = clusterY + (finalY - particle.originY) * eased;
             const bloom = (1 - eased) * INTRO_BLOOM_JITTER;
             const sway = Math.sin(rawProgress * Math.PI * INTRO_SWAY_FREQUENCY) * INTRO_SWAY_AMPLITUDE * (1 - eased);
             const normalAngle = orbitAngle + Math.PI / 2;
