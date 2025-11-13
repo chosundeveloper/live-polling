@@ -440,14 +440,13 @@
                             p1.vy += direction * push * 0.05;
                             p2.vy -= direction * push * 0.05;
                         }
-                        continue;
                     }
 
                     const distance = Math.sqrt(dx * dx + dy * dy);
                     const minDistance = Math.max(Math.min(paddedHalfWidth, paddedHalfHeight), MIN_SEPARATION);
 
                     if (distance < minDistance && distance > 0) {
-                        const force = ((minDistance - distance) / minDistance) * 0.12;
+                        const force = ((minDistance - distance) / minDistance) * 0.08;
                         const angle = Math.atan2(dy, dx);
                         const fx = Math.cos(angle) * force;
                         const fy = Math.sin(angle) * force;
