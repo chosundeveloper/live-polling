@@ -246,15 +246,9 @@
             return { width, height };
         }
 
-        function easeOutCubic(t) {
-            const clamped = Math.min(1, Math.max(0, t));
-            return 1 - Math.pow(1 - clamped, 3);
-        }
 
-        function easeInCubic(t) {
-            const clamped = Math.min(1, Math.max(0, t));
-            return clamped * clamped * clamped;
-        }
+
+
 
 
         function stopTimer() {
