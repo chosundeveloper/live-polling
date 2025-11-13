@@ -592,12 +592,13 @@
                     if (particle.phase !== 'intro') {
                         assignParticleTarget(particle, centerW, centerH, geometry, spiralIndex);
                     }
-                    particle.el.style.color = selectWordColor(weight / Math.max(...limited.map(item => item[1])), index);
+                    particle.el.style.color = particle.color;
                 } else {
                     const wordEl = document.createElement('span');
                     wordEl.className = 'concept-word';
                     wordEl.textContent = text;
-                    wordEl.style.color = selectWordColor(weight / Math.max(...limited.map(item => item[1])), index);
+                    const assignedColor = selectWordColor(weight / Math.max(...limited.map(item => item[1])), index);
+                    wordEl.style.color = assignedColor;
 
                     const initialFontSize = MIN_FONT_SIZE + (MAX_FONT_SIZE - MIN_FONT_SIZE) * lengthRatio;
                     wordEl.style.fontSize = `${initialFontSize}px`;
@@ -648,7 +649,8 @@
                         spiralProgress: 0,
                         introDuration: INTRO_DURATION_BASE + Math.random() * INTRO_DURATION_VARIANCE,
                         introStart: null,
-                        bornAt: now
+                        bornAt: now,
+                        color: assignedColor
                     };
                     assignParticleTarget(particle, centerW, centerH, geometry, spiralIndex);
                     const baseAngle = (particle.spiralIndex * GOLDEN_ANGLE) % (Math.PI * 2);
