@@ -463,8 +463,8 @@
             }
 
             for (const p of idleParticles) {
-                p.vx *= 0.15; // heavier damping for slow drift
-                p.vy *= 0.15;
+                p.vx *= 0.5; // less aggressive damping for a floatier feel
+                p.vy *= 0.5;
 
                 if (p.targetX !== undefined && p.targetY !== undefined) {
                     const targetDx = p.targetX - p.x;
@@ -489,8 +489,12 @@
                 if (p.vy > MAX_PARTICLE_SPEED) p.vy = MAX_PARTICLE_SPEED;
                 else if (p.vy < -MAX_PARTICLE_SPEED) p.vy = -MAX_PARTICLE_SPEED;
 
-                p.x += p.vx;
-                p.y += p.vy;
+                // Introduce smoothed velocity to prevent jerky movements
+                p.smoothVx = (p.smoothVx || p.vx) * 0.9 + p.vx * 0.1;
+                p.smoothVy = (p.smoothVy || p.vy) * 0.9 + p.vy * 0.1;
+
+                p.x += p.smoothVx;
+                p.y += p.smoothVy;
 
                 const edgePadding = Math.min(containerWidth, containerHeight) * 0.1;
                 if (p.x < edgePadding) {
