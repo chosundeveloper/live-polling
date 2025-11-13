@@ -257,24 +257,27 @@
             textEl.appendChild(fragment);
 
             const charSpans = textEl.querySelectorAll('.char');
-            const { animate, stagger } = window.motion;
+            const { animate, stagger, spring } = window.motion;
+
+            const cardSpring = spring({ stiffness: 130, damping: 18, mass: 0.9 });
+            const charSpring = spring({ stiffness: 110, damping: 18, mass: 0.8 });
 
             animate(pollResult, {
                 opacity: [0, 1],
-                y: [-26, 0],
-                scale: [0.95, 1]
+                y: [-30, 0],
+                scale: [0.94, 1]
             }, {
-                duration: 0.55,
-                easing: 'cubic-bezier(0.22, 1, 0.36, 1)'
+                easing: cardSpring,
+                duration: 0.7
             });
 
             animate(charSpans, {
                 opacity: [0, 1],
-                y: [20, 0],
-                rotateX: [-32, 0]
+                y: [24, 0],
+                rotateX: [-28, 0]
             }, {
-                duration: 0.55,
-                easing: 'cubic-bezier(0.23, 1, 0.32, 1)',
+                easing: charSpring,
+                duration: 0.8,
                 delay: stagger(0.012)
             });
         }
