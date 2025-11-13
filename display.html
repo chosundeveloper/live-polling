@@ -39,15 +39,14 @@
                         </div>
                         <div>
                             <p class="concept-label">타이머</p>
-                            <p class="concept-value" id="conceptUpdated">타이머 10:00</p>
-                            <p class="concept-note" id="conceptTimerNote">남은 시간</p>
+                            <p class="concept-value" id="conceptUpdated">10:00</p>
                         </div>
                     </div>
                     <div class="concept-meta-actions">
                         <span class="concept-note">모의</span>
                         <button class="concept-action concept-action-ghost" id="toggleMock">ON/OFF</button>
-                    </div>
                 </div>
+            </div>
             </div>
         </main>
     </div>
@@ -68,7 +67,6 @@
         const wordsLayer = document.getElementById('conceptWords');
         const conceptTotal = document.getElementById('conceptTotal');
         const conceptUpdated = document.getElementById('conceptUpdated');
-        const conceptTimerNote = document.getElementById('conceptTimerNote');
         const qrCodeContainer = document.getElementById('conceptQrCode');
         const toggleMockBtn = document.getElementById('toggleMock');
         const prevQuestionBtn = document.getElementById('prevQuestionBtn');
@@ -200,17 +198,13 @@
 
         function updateTimerDisplay() {
             if (!timerDeadline) {
-                conceptUpdated.textContent = '타이머 10:00';
-                if (conceptTimerNote) conceptTimerNote.textContent = '남은 시간';
+                conceptUpdated.textContent = '10:00';
                 return;
             }
             const remaining = Math.max(0, timerDeadline - Date.now());
             const minutes = Math.floor(remaining / 60000);
             const seconds = String(Math.floor((remaining % 60000) / 1000)).padStart(2, '0');
-            conceptUpdated.textContent = `타이머 ${minutes}:${seconds}`;
-            if (conceptTimerNote) {
-                conceptTimerNote.textContent = remaining <= 0 ? '종료' : '남은 시간';
-            }
+            conceptUpdated.textContent = `${minutes}:${seconds}`;
             if (remaining <= 0) {
                 stopTimer();
             }
@@ -624,7 +618,7 @@
             wordsLayer.innerHTML = '';
             conceptTotal.textContent = '0';
             stopTimer();
-            conceptUpdated.textContent = '타이머 10:00';
+            conceptUpdated.textContent = '10:00';
         }
 
         function startRealtimeSimulation() {
