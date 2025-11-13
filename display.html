@@ -91,7 +91,7 @@
         const MAX_WORDS = 150;
         const MIN_FONT_SIZE = 18;
         const MAX_FONT_SIZE = 32;
-        const MAX_PARTICLE_SPEED = 0.002;
+        const MAX_PARTICLE_SPEED = 0.004;
         const MIN_SEPARATION = 58;
         const DEFAULT_PARTICLE_WIDTH = 48;
         const DEFAULT_PARTICLE_HEIGHT = 22;
@@ -464,13 +464,13 @@
                                 const pushThreshold = maxRadius * (PUSH_THRESHOLD_RATIO / MAX_CELL_SPREAD_RATIO);
 
                                 if (outerDist > pushThreshold) {
-                                    // Push strongly toward cell boundary (radial direction)
+                                    // Push rapidly toward cell boundary (radial direction)
                                     const angle = Math.atan2(outerWord.y - centerH, outerWord.x - centerW);
                                     const overlap = minDist - distance;
 
-                                    // Stronger push with distance-based multiplier
+                                    // Much stronger push with aggressive distance-based multiplier
                                     const distRatio = outerDist / maxRadius;
-                                    const pushStrength = overlap * 0.008 * (1 + distRatio);
+                                    const pushStrength = overlap * 0.025 * (1.5 + distRatio * 2);
 
                                     outerWord.vx += Math.cos(angle) * pushStrength;
                                     outerWord.vy += Math.sin(angle) * pushStrength;
