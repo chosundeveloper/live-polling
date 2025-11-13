@@ -112,9 +112,9 @@
         const MIN_WORD_LIFETIME = 7000;
         const TIMER_DURATION_MS = 10 * 60 * 1000;
         const COLOR_PALETTE = ['#5e4fa2', '#3288bd', '#66c2a5', '#abdda4', '#e6f598', '#fee08b', '#fdae61', '#f46d43', '#d53e4f', '#9e0142'];
-        const MAX_CELL_SPREAD_RATIO = 0.30; // Expanded for outward push
-        const INNER_CORE_RATIO = 0.10; // Inner core that stays stable (smaller)
-        const PUSH_THRESHOLD_RATIO = 0.15; // Start pushing outward earlier
+        const MAX_CELL_SPREAD_RATIO = 0.32; // Expanded for outward push to boundary
+        const INNER_CORE_RATIO = 0.08; // Inner core that stays stable (very small)
+        const PUSH_THRESHOLD_RATIO = 0.12; // Start pushing outward early
 
         function selectWordColor(weightRatio, index) {
             return COLOR_PALETTE[index % COLOR_PALETTE.length];
@@ -435,7 +435,7 @@
                 .velocityDecay(0.9)
                 .alphaMin(0.001)
                 .force('gentle-separate', () => {
-                    // Custom force: when words overlap, only move the outer one outward
+                    // Custom force: when words overlap, move the outer one toward cell boundary
                     const maxRadius = Math.min(containerWidth, containerHeight) * MAX_CELL_SPREAD_RATIO;
 
                     for (let i = 0; i < wordParticles.length; i++) {
@@ -458,16 +458,19 @@
                                 const dist2 = Math.hypot(p2.x - centerW, p2.y - centerH);
 
                                 const outerWord = dist1 > dist2 ? p1 : p2;
+                                const outerDist = dist1 > dist2 ? dist1 : dist2;
 
-                                // Only move if it's actually in outer zone
-                                const outerDist = Math.hypot(outerWord.x - centerW, outerWord.y - centerH);
+                                // Only move if it's in outer zone
                                 const pushThreshold = maxRadius * (PUSH_THRESHOLD_RATIO / MAX_CELL_SPREAD_RATIO);
 
                                 if (outerDist > pushThreshold) {
-                                    // Gently push outward (radial direction)
+                                    // Push strongly toward cell boundary (radial direction)
                                     const angle = Math.atan2(outerWord.y - centerH, outerWord.x - centerW);
                                     const overlap = minDist - distance;
-                                    const pushStrength = overlap * 0.001;
+
+                                    // Stronger push with distance-based multiplier
+                                    const distRatio = outerDist / maxRadius;
+                                    const pushStrength = overlap * 0.008 * (1 + distRatio);
 
                                     outerWord.vx += Math.cos(angle) * pushStrength;
                                     outerWord.vy += Math.sin(angle) * pushStrength;
