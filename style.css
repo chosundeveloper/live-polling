@@ -1258,32 +1258,28 @@ footer a:hover {
     left: 26px;
 }
 
-.concept-overlay-bottom-right {
-    bottom: 26px;
-    right: 26px;
-    align-items: flex-end;
-    max-width: min(360px, calc(100% - 56px));
-    width: max-content;
-}
-
 .concept-qr-card {
     display: flex;
-    flex-direction: column;
-    gap: 12px;
-    text-align: center;
-    background: transparent;
-    border: none;
-    padding: 0;
-    box-shadow: none;
+    align-items: center;
+    gap: 20px;
+    background: rgba(255, 255, 255, 0.96);
+    border: 1px solid rgba(148, 163, 184, 0.35);
+    border-radius: 24px;
+    padding: 18px 22px;
+    box-shadow: 0 18px 40px rgba(15, 23, 42, 0.12);
+}
+
+.concept-qr-box {
+    padding: 12px;
+    background: #0b1526;
+    border-radius: 18px;
+    display: inline-flex;
+    justify-content: center;
+    align-items: center;
 }
 
 #conceptQrCode {
     padding: 0;
-    background: transparent;
-    border-radius: 0;
-    display: inline-flex;
-    justify-content: center;
-    align-items: center;
 }
 
 #conceptQrCode img,
@@ -1293,49 +1289,17 @@ footer a:hover {
     height: 120px;
 }
 
-.concept-meta-stack {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 18px;
-    background: rgba(255, 255, 255, 0.92);
-    border: 1px solid rgba(148, 163, 184, 0.35);
-    border-radius: 18px;
-    padding: 14px 16px;
-    min-width: 220px;
-    max-width: 100%;
-    box-shadow: 0 12px 30px rgba(15, 23, 42, 0.08);
-}
-
-.concept-overlay-bottom-right .concept-meta-stack {
-    flex-direction: column;
-    align-items: flex-end;
-}
-
-.concept-meta {
-    display: flex;
-    justify-content: space-between;
-    gap: 14px;
-}
-
-.concept-meta > div {
+.concept-qr-meta {
     display: flex;
     flex-direction: column;
-    gap: 4px;
+    gap: 12px;
 }
 
 .concept-action-ghost {
     border: 1px solid rgba(15, 23, 42, 0.15);
     background: transparent;
     color: var(--ink-secondary);
-    padding: 8px 18px;
-}
-
-.concept-note {
-    font-size: 0.75rem;
-    color: var(--ink-muted);
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
+    padding: 8px 16px;
 }
 
 
@@ -1425,10 +1389,10 @@ footer a:hover {
 }
 
 #conceptQrCode {
-    padding: 8px;
-    background: white;
-    border-radius: 8px;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.07);
+    padding: 0;
+    background: transparent;
+    border-radius: 0;
+    box-shadow: none;
 }
 
 #conceptQrCode img {
@@ -1494,17 +1458,8 @@ footer a:hover {
     .concept-wrapper { padding: 20px; }
     .concept-cloud { padding: 20px; }
     .concept-top { flex-direction: column; align-items: flex-start; gap: 12px; }
-    .concept-meta-stack {
-        flex-direction: column;
-        align-items: flex-start;
-    }
-    .concept-overlay-bottom-right {
-        align-items: flex-start;
-        width: 100%;
-    }
-    .concept-action-ghost {
-        align-self: flex-start;
-    }
+    .concept-qr-card { flex-direction: column; align-items: flex-start; }
+    .concept-qr-box { align-self: center; }
     .concept-words { padding-bottom: 0; }
     .concept-overlay {
         position: static;
@@ -1513,7 +1468,6 @@ footer a:hover {
         text-align: left;
         margin-top: 12px;
     }
-    .concept-meta { justify-content: flex-start; }
 }
 
 @media (max-width: 600px) {
