@@ -102,7 +102,7 @@
         const NAVY_ACCENT_PALETTE = ['#1e446b', '#25507d', '#2c5c90', '#3368a3', '#3a74b6'];
         const NAVY_GLOW_PALETTE = ['#4180c9', '#4a8cdc', '#5398ef', '#66a8ff', '#7ab7ff'];
 
-        function selectWordColor(weightRatio, index) {
+        const selectWordColor = (weightRatio, index) => {
             if (weightRatio > 0.65) {
                 return NAVY_GLOW_PALETTE[index % NAVY_GLOW_PALETTE.length];
             }
@@ -110,7 +110,8 @@
                 return NAVY_ACCENT_PALETTE[index % NAVY_ACCENT_PALETTE.length];
             }
             return NAVY_BASE_PALETTE[index % NAVY_BASE_PALETTE.length];
-        }
+        };
+        window.selectWordColor = selectWordColor;
 
         function getCloudBounds() {
             const rect = wordsLayer.getBoundingClientRect();
