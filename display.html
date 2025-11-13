@@ -89,15 +89,16 @@
         const MIN_SEPARATION = 28;
         const DEFAULT_PARTICLE_WIDTH = 48;
         const DEFAULT_PARTICLE_HEIGHT = 22;
-        const INTRO_DURATION_BASE = 1350;
-        const INTRO_DURATION_VARIANCE = 650;
-        const INTRO_BLOOM_JITTER = 18;
-        const INTRO_SPIRAL_TWIST = Math.PI * 1.35;
-        const INTRO_SWAY_AMPLITUDE = 26;
-        const INTRO_SWAY_FREQUENCY = 1.6;
+        const INTRO_DURATION_BASE = 2200;
+        const INTRO_DURATION_VARIANCE = 1200;
+        const INTRO_BLOOM_JITTER = 22;
+        const INTRO_SPIRAL_TWIST = Math.PI * 1.45;
+        const INTRO_SWAY_AMPLITUDE = 18;
+        const INTRO_SWAY_FREQUENCY = 1.1;
         const OUTWARD_DRIFT_FORCE = 0.00002;
         const TARGET_ATTRACTION_FORCE = 0.00012;
         const RADIAL_FORCE = 0.0004;
+        const MIN_WORD_LIFETIME = 7000;
         const NAVY_BASE_PALETTE = ['#050914', '#0a1628', '#0f2138', '#142c48', '#193859'];
         const NAVY_ACCENT_PALETTE = ['#1e446b', '#25507d', '#2c5c90', '#3368a3', '#3a74b6'];
         const NAVY_GLOW_PALETTE = ['#4180c9', '#4a8cdc', '#5398ef', '#66a8ff', '#7ab7ff'];
@@ -408,7 +409,11 @@
         function renderWords(frequencyMap) {
             console.log('renderWords called with frequencyMap:', frequencyMap);
             const existingParticles = new Map();
-            wordParticles.forEach(p => existingParticles.set(p.el.textContent, p));
+            const now = performance.now();
+            wordParticles.forEach(p => {
+                if (!p.bornAt) p.bornAt = now;
+                existingParticles.set(p.el.textContent, p);
+            });
 
             if (frequencyMap.size === 0 && wordParticles.length === 0) {
                 wordsLayer.innerHTML = '<div class="concept-empty">첫 번째 단어를 기다리고 있어요</div>';
@@ -427,6 +432,9 @@
             
             wordParticles = wordParticles.filter(p => {
                 if (!newWordTexts.has(p.el.textContent)) {
+                    if (now - (p.bornAt || now) < MIN_WORD_LIFETIME) {
+                        return true;
+                    }
                     p.el.classList.remove('concept-word-visible');
                     p.el.classList.add('concept-word-hidden');
                     setTimeout(() => p.el.remove(), 700);
@@ -507,7 +515,8 @@
                         phase: 'intro',
                         spiralProgress: 0,
                         introDuration: INTRO_DURATION_BASE + Math.random() * INTRO_DURATION_VARIANCE,
-                        introStart: null
+                        introStart: null,
+                        bornAt: now
                     };
                     assignParticleTarget(particle, centerW, centerH, geometry, spiralIndex);
                     wordParticles.push(particle);
