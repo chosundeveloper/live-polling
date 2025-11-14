@@ -1083,87 +1083,98 @@ footer a:hover {
 
     /* 모바일 전용 answer 페이지 스타일 */
     .answer-body {
-        font-size: 14px;
+        font-size: 13px;
         padding: 16px;
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
     }
 
     .answer-container {
-        padding: 24px;
+        padding: 20px;
         border-radius: 12px;
     }
 
     .answer-header h1 {
-        font-size: 1.2em;
-        font-weight: 400;
-        margin-bottom: 12px;
+        font-size: 1.1em;
+        font-weight: 300;
+        margin-bottom: 10px;
     }
 
     .timer-circle {
-        width: 80px;
-        height: 80px;
+        width: 70px;
+        height: 70px;
+    }
+
+    .timer-bg {
+        stroke-width: 4;
+    }
+
+    .timer-progress {
+        stroke-width: 4;
     }
 
     .timer-text {
-        font-size: 1.5em;
-        font-weight: 300;
+        font-size: 1.3em;
+        font-weight: 200;
     }
 
     .timer-label {
-        font-size: 0.7em;
-        font-weight: 300;
+        font-size: 0.65em;
+        font-weight: 200;
     }
 
     .question-display {
-        padding: 16px;
+        padding: 14px;
         border-radius: 10px;
-        margin-bottom: 20px;
+        margin-bottom: 18px;
+        border-left-width: 2px;
     }
 
     .question-label {
-        font-size: 0.65em;
-        font-weight: 300;
+        font-size: 0.6em;
+        font-weight: 200;
     }
 
     .question-text {
-        font-size: 0.95em;
-        font-weight: 300;
+        font-size: 0.9em;
+        font-weight: 200;
         line-height: 1.6;
     }
 
     .form-group label {
-        font-size: 0.8em;
-        font-weight: 300;
+        font-size: 0.75em;
+        font-weight: 200;
         margin-bottom: 6px;
     }
 
     .answer-input {
-        font-size: 0.85em;
-        font-weight: 300;
+        font-size: 0.8em;
+        font-weight: 200;
         padding: 10px 12px;
         line-height: 1.6;
     }
 
     .char-count {
-        font-size: 0.75em;
-        font-weight: 300;
+        font-size: 0.7em;
+        font-weight: 200;
     }
 
     .btn-submit {
-        font-size: 0.9em;
+        font-size: 0.85em;
         font-weight: 300;
-        padding: 12px;
+        padding: 11px;
     }
 
     .success-message h3,
     .error-message h3 {
-        font-size: 1.2em;
-        font-weight: 400;
+        font-size: 1.1em;
+        font-weight: 300;
     }
 
     .success-message p,
     .error-message p {
-        font-size: 0.85em;
-        font-weight: 300;
+        font-size: 0.8em;
+        font-weight: 200;
     }
 }
 
