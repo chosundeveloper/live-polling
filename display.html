@@ -851,7 +851,11 @@
 
             // Subscribe to broadcast messages (no DB, direct messaging)
             realtimeChannel = supabase
-                .channel('answers-broadcast')
+                .channel('answers-broadcast', {
+                    config: {
+                        broadcast: { self: true }
+                    }
+                })
                 .on('broadcast', { event: 'new-answer' }, (payload) => {
                     console.log('🔥 New answer received via broadcast:', payload);
 
@@ -873,6 +877,9 @@
                 })
                 .subscribe((status) => {
                     console.log('Broadcast subscription status:', status);
+                    if (status === 'SUBSCRIBED') {
+                        console.log('✅ Ready to receive answers!');
+                    }
                 });
         }
 

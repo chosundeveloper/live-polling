@@ -59,8 +59,24 @@ const QUESTIONS = [
 // 답변 제출 - DB 저장 없이 Realtime Broadcast로 전송
 async function submitAnswer(questionId, answerText) {
     try {
-        const channel = supabase.channel('answers-broadcast');
+        // 채널 생성 및 구독 후 전송
+        const channel = supabase.channel('answers-broadcast', {
+            config: {
+                broadcast: { self: true }
+            }
+        });
 
+        // 먼저 구독
+        await new Promise((resolve) => {
+            channel.subscribe((status) => {
+                console.log('Submit channel status:', status);
+                if (status === 'SUBSCRIBED') {
+                    resolve();
+                }
+            });
+        });
+
+        // 메시지 전송
         const response = await channel.send({
             type: 'broadcast',
             event: 'new-answer',
@@ -72,6 +88,12 @@ async function submitAnswer(questionId, answerText) {
         });
 
         console.log('Broadcast sent:', response);
+
+        // 잠시 대기 후 채널 정리
+        setTimeout(() => {
+            supabase.removeChannel(channel);
+        }, 1000);
+
         return { success: true };
     } catch (error) {
         console.error('Error broadcasting answer:', error);
