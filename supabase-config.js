@@ -37,19 +37,22 @@ const QUESTIONS = [
         id: 1,
         question: "오늘 가장 기억에 남는 순간은?",
         placeholder: "예: 친구와 나눈 대화, 배운 새로운 것...",
-        color: "#667eea"
+        color: "#667eea",
+        type: "text"
     },
     {
         id: 2,
         question: "이 자리에서 배운 것 한 가지는?",
         placeholder: "예: 새로운 기술, 인사이트, 경험...",
-        color: "#f093fb"
+        color: "#f093fb",
+        type: "text"
     },
     {
         id: 3,
         question: "한 단어로 오늘을 표현한다면?",
         placeholder: "예: 행복, 성장, 도전...",
-        color: "#4facfe"
+        color: "#4facfe",
+        type: "text"
     }
 ];
 

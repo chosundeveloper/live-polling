@@ -6,6 +6,7 @@
     <title>답변하기</title>
     <link rel="stylesheet" href="style.css">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="supabase-config.js"></script>
 </head>
 <body class="answer-body">
     <div class="answer-container">
@@ -71,8 +72,9 @@
         </div>
     </div>
 
-    <script src="supabase-config.js"></script>
     <script>
+        // Questions loaded from supabase-config.js
+
         class AnswerPage {
             constructor() {
                 this.questionId = this.getQuestionId();
@@ -116,14 +118,37 @@
                 this.input.addEventListener('input', () => this.updateCharCount());
                 this.form.addEventListener('submit', (e) => this.handleSubmit(e));
 
-                // 타이머 시작
+                // 타이머 시작 - URL 파라미터에서 동기화
                 this.startTimer();
             }
 
             startTimer() {
+                // Get timer start time from URL parameter
+                const params = new URLSearchParams(window.location.search);
+                const startTime = parseInt(params.get('startTime'));
+
+                if (startTime) {
+                    const now = Date.now();
+                    const elapsed = Math.floor((now - startTime) / 1000);
+                    this.timeLeft = Math.max(0, 100 - elapsed);
+                    console.log('Timer synced from URL:', { startTime, elapsed, timeLeft: this.timeLeft });
+                } else {
+                    console.warn('No timer start time in URL, using default 100 seconds');
+                    this.timeLeft = 100;
+                }
+
                 const circumference = 2 * Math.PI * 45; // r=45
                 this.timerProgress.style.strokeDasharray = circumference;
                 this.timerProgress.style.strokeDashoffset = 0;
+
+                // Initial update
+                this.updateTimer();
+
+                // Check if already expired
+                if (this.timeLeft <= 0) {
+                    this.handleTimeout();
+                    return;
+                }
 
                 this.timerInterval = setInterval(() => {
                     this.timeLeft--;
@@ -190,7 +215,7 @@
                 this.submitBtn.disabled = true;
                 this.submitBtn.textContent = '제출 중...';
 
-                // 답변 제출
+                // 답변 제출 using Supabase
                 const result = await submitAnswer(this.questionId, answerText);
 
                 if (result.success) {

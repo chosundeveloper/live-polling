@@ -51,7 +51,13 @@
     <script>
         console.log('Script started executing'); // Very early log
 
-        // QUESTIONS is loaded from supabase-config.js
+        // Questions loaded from supabase-config.js
+
+        // Public URL for QR code (GitHub Pages)
+        const PUBLIC_URL = 'https://chosundeveloper.github.io/live-polling';
+
+        // Timer state
+        let questionStartTime = null;
 
         // --- DOM Elements ---
         const conceptQuestion = document.getElementById('conceptQuestion');
@@ -70,7 +76,6 @@
         let isMockMode = params.get('mock') === '1';
         let pollingInterval = null;
         let simulationInterval = null;
-        let realtimeSubscription = null;
         let mockAnswers = [];
         let wordParticles = [];
         let hiddenWords = [];
@@ -123,7 +128,7 @@
         const TARGET_ATTRACTION_FORCE = 0.000001;
         const RADIAL_FORCE = 0.000004;
         const MIN_WORD_LIFETIME = 7000;
-        const TIMER_DURATION_MS = 10 * 60 * 1000;
+        const TIMER_DURATION_MS = 100 * 1000; // 100 seconds to match answer page
         const COLOR_PALETTE = ['#5e4fa2', '#3288bd', '#66c2a5', '#abdda4', '#e6f598', '#fee08b', '#fdae61', '#f46d43', '#d53e4f', '#9e0142'];
         const MAX_CELL_SPREAD_RATIO = 0.38; // Expanded for much more space
         const INNER_CORE_RATIO = 0.06; // Inner core that stays stable (very small)
@@ -381,12 +386,12 @@
             conceptQuestion.textContent = question.question;
             document.documentElement.style.setProperty('--concept-accent', question.color || '#7c3aed');
 
-            // Use current host for QR code
-            const answerUrl = new URL(window.location.href);
-            answerUrl.pathname = answerUrl.pathname.replace(/[^/]+$/, 'answer.html');
-            answerUrl.search = `?q=${question.id}`;
-            answerUrl.hash = '';
-            const urlString = answerUrl.toString();
+            // Set question start time for timer sync
+            questionStartTime = Date.now();
+            timerDeadline = questionStartTime + TIMER_DURATION_MS;
+
+            // Pass START TIME (not deadline) so timer syncs correctly
+            const urlString = `${PUBLIC_URL}/answer.html?q=${question.id}&startTime=${questionStartTime}`;
 
             console.log('📱 QR Code URL:', urlString);
 
@@ -394,6 +399,11 @@
             const qrUrlDisplay = document.getElementById('qrUrl');
             if (qrUrlDisplay) {
                 qrUrlDisplay.textContent = urlString;
+            }
+
+            // Clear and regenerate QR code
+            if (qrCodeContainer) {
+                qrCodeContainer.innerHTML = '';
             }
 
             if (qrCodeInstance) {
@@ -415,10 +425,10 @@
 
             currentQuestionIndex = newIndex;
             const question = QUESTIONS[currentQuestionIndex];
-            
+
             updateQuestionMeta(question);
             questionCounter.textContent = `${currentQuestionIndex + 1} / ${QUESTIONS.length}`;
-            
+
             prevQuestionBtn.disabled = currentQuestionIndex === 0;
             nextQuestionBtn.disabled = currentQuestionIndex === QUESTIONS.length - 1;
 
@@ -774,6 +784,7 @@
             if (!question) return;
 
             const result = await getAnswers(question.id, 300);
+
             if (result.success && result.data) {
                 mockAnswers = result.data.map(item => ({
                     id: item.id,
@@ -786,6 +797,8 @@
                 const frequencyMap = extractWordInstances(mockAnswers);
                 renderWords(frequencyMap);
                 conceptTotal.textContent = mockAnswers.length;
+            } else {
+                console.error('Error fetching answers:', result.error);
             }
         }
 
@@ -794,10 +807,6 @@
             if (simulationInterval) clearInterval(simulationInterval);
             if (animationFrameId) cancelAnimationFrame(animationFrameId);
             if (d3Simulation) d3Simulation.stop();
-            if (realtimeSubscription) {
-                supabase.removeChannel(realtimeSubscription);
-                realtimeSubscription = null;
-            }
             pollingInterval = null;
             simulationInterval = null;
             animationFrameId = null;
@@ -864,34 +873,7 @@
             resetDisplay();
             startTimer();
             fetchRealAnswers(); // Initial fetch
-            pollingInterval = setInterval(fetchRealAnswers, 2000); // Poll every 2 seconds
-
-            // Supabase Realtime 구독 시작
-            const question = QUESTIONS[currentQuestionIndex];
-            console.log('Starting realtime subscription for question:', question.id);
-
-            realtimeSubscription = subscribeToAnswers(question.id, (payload) => {
-                console.log('Realtime update received:', payload);
-
-                // 새로운 답변 추가
-                if (payload.new && payload.new.answer_text) {
-                    const newAnswer = {
-                        id: payload.new.id,
-                        question_id: payload.new.question_id,
-                        answer: payload.new.answer_text,
-                        answer_text: payload.new.answer_text,
-                        created_at: payload.new.created_at
-                    };
-
-                    // 중복 체크 후 추가
-                    if (!mockAnswers.find(a => a.id === newAnswer.id)) {
-                        mockAnswers.unshift(newAnswer);
-                        const frequencyMap = extractWordInstances(mockAnswers);
-                        renderWords(frequencyMap);
-                        conceptTotal.textContent = mockAnswers.length;
-                    }
-                }
-            });
+            pollingInterval = setInterval(fetchRealAnswers, 1000); // Poll every 1 second for real-time feel
         }
 
         // --- Event Listeners ---

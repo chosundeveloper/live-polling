@@ -75,4 +75,4 @@ if __name__ == '__main__':
     print("   POST   /api/answers/clear    - Clear all answers")
     print("   GET    /api/health           - Health check")
     print()
-    app.run(host='0.0.0.0', port=5000, debug=True)
+    app.run(host='0.0.0.0', port=5001, debug=True)
