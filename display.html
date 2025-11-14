@@ -107,8 +107,7 @@
             '오늘 하루가 뜻깊었습니다'
         ];
         const MAX_WORDS = 150;
-        const MIN_FONT_SIZE = 18;
-        const MAX_FONT_SIZE = 32;
+        const FIXED_FONT_SIZE = 24; // Fixed font size for all words
         const MAX_PARTICLE_SPEED = 0.001;
         const MIN_SEPARATION = 150;
         const DEFAULT_PARTICLE_WIDTH = 48;
@@ -564,15 +563,7 @@
                             p.vy = 0;
                         }
 
-                        // Animate font size with D3 easing
-                        const sizeDiff = p.targetFontSize - p.currentFontSize;
-                        if (Math.abs(sizeDiff) > 0.01) {
-                            p.currentFontSize += sizeDiff * 0.15;
-                            p.el.style.fontSize = `${p.currentFontSize.toFixed(2)}px`;
-                            const rect = p.el.getBoundingClientRect();
-                            p.width = rect.width;
-                            p.height = rect.height;
-                        }
+                        // Font size is fixed - no animation needed
 
                         // Update DOM position
                         p.el.style.left = `${p.x}px`;
@@ -638,24 +629,18 @@
                 return true;
             });
 
-            const lengths = limited.map(([text]) => text.length);
-            const minLength = Math.min(...lengths) || 1;
-            const maxLength = Math.max(...lengths) || 10;
-
             const { width: containerWidth, height: containerHeight } = getCloudBounds();
             const centerW = containerWidth / 2;
             const centerH = containerHeight / 2;
             const geometry = getSpiralGeometry(containerWidth, containerHeight, limited.length);
 
             limited.forEach(([text, weight], index) => {
-                const lengthRatio = (maxLength - text.length) / (maxLength - minLength + 1);
-                const targetFontSize = MIN_FONT_SIZE + (MAX_FONT_SIZE - MIN_FONT_SIZE) * lengthRatio;
                 // Keep normal order: outer rings fill first, then move inward
                 const spiralIndex = index;
 
                 let particle = existingParticles.get(text);
                 if (particle) {
-                    particle.targetFontSize = targetFontSize;
+                    // Existing particle - keep fixed font size, no changes
                     if (particle.phase !== 'intro') {
                         assignParticleTarget(particle, centerW, centerH, geometry, spiralIndex);
                     }
@@ -667,8 +652,8 @@
                     const assignedColor = selectWordColor(weight / Math.max(...limited.map(item => item[1])), index);
                     wordEl.style.color = assignedColor;
 
-                    const initialFontSize = MIN_FONT_SIZE + (MAX_FONT_SIZE - MIN_FONT_SIZE) * lengthRatio;
-                    wordEl.style.fontSize = `${initialFontSize}px`;
+                    // Use fixed font size for all words
+                    wordEl.style.fontSize = `${FIXED_FONT_SIZE}px`;
                     
                     // Click to delete
                     wordEl.addEventListener('click', () => {
@@ -730,8 +715,8 @@
                         vy: 0,
                         width: rect.width,
                         height: rect.height,
-                        currentFontSize: initialFontSize,
-                        targetFontSize: targetFontSize,
+                        currentFontSize: FIXED_FONT_SIZE,
+                        targetFontSize: FIXED_FONT_SIZE,
                         isVertical,
                         spiralIndex,
                         phase: 'intro',
