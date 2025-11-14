@@ -92,7 +92,7 @@
         const MIN_FONT_SIZE = 18;
         const MAX_FONT_SIZE = 32;
         const MAX_PARTICLE_SPEED = 0.001;
-        const MIN_SEPARATION = 120;
+        const MIN_SEPARATION = 150;
         const DEFAULT_PARTICLE_WIDTH = 48;
         const DEFAULT_PARTICLE_HEIGHT = 22;
         const INTRO_DURATION_BASE = 180000; // extremely slow duration (3 minutes)
@@ -431,7 +431,7 @@
                 .force('collide', d3.forceCollide(d => {
                     const { width, height } = getParticleDimensions(d);
                     return Math.max(width, height) / 2 + MIN_SEPARATION / 2;
-                }).strength(0.3).iterations(1))
+                }).strength(0.6).iterations(3))
                 .force('gentle-separate', () => {
                     // Custom force: when words overlap, move the outer one toward cell boundary
                     const maxRadius = Math.min(containerWidth, containerHeight) * MAX_CELL_SPREAD_RATIO;
