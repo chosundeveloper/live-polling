@@ -73,7 +73,7 @@
         const params = new URLSearchParams(window.location.search);
         let currentQuestionIndex = 0;
         let isMockMode = params.get('mock') === '1';
-        let pollingInterval = null;
+        let realtimeChannel = null;
         let simulationInterval = null;
         let mockAnswers = [];
         let wordParticles = [];
@@ -427,7 +427,7 @@
 
             resetDisplay();
             if (isMockMode) startRealtimeSimulation();
-            else startRealDataPolling();
+            else startRealtimeSubscription();
         }
 
         function extractWordInstances(answers) {
@@ -771,36 +771,16 @@
         }
 
         // --- Data Fetching & Control ---
-        async function fetchRealAnswers() {
-            console.log('fetchRealAnswers called');
-            const question = QUESTIONS[currentQuestionIndex];
-            if (!question) return;
-
-            const result = await getAnswers(question.id, 300);
-
-            if (result.success && result.data) {
-                mockAnswers = result.data.map(item => ({
-                    id: item.id,
-                    question_id: item.question_id,
-                    answer: item.answer_text,
-                    answer_text: item.answer_text,
-                    created_at: item.created_at
-                }));
-
-                const frequencyMap = extractWordInstances(mockAnswers);
-                renderWords(frequencyMap);
-                conceptTotal.textContent = mockAnswers.length;
-            } else {
-                console.error('Error fetching answers:', result.error);
-            }
-        }
+        // No longer needed - using broadcast only
 
         function stopAllIntervals() {
-            if (pollingInterval) clearInterval(pollingInterval);
+            if (realtimeChannel) {
+                supabase.removeChannel(realtimeChannel);
+                realtimeChannel = null;
+            }
             if (simulationInterval) clearInterval(simulationInterval);
             if (animationFrameId) cancelAnimationFrame(animationFrameId);
             if (d3Simulation) d3Simulation.stop();
-            pollingInterval = null;
             simulationInterval = null;
             animationFrameId = null;
             d3Simulation = null;
@@ -861,12 +841,39 @@
             // Simulation loop is started by renderWords if words exist
         }
 
-        function startRealDataPolling() {
-            console.log('startRealDataPolling called');
+        function startRealtimeSubscription() {
+            console.log('startRealtimeSubscription called');
             resetDisplay();
             startTimer();
-            fetchRealAnswers(); // Initial fetch
-            pollingInterval = setInterval(fetchRealAnswers, 1000); // Poll every 1 second for real-time feel
+
+            const question = QUESTIONS[currentQuestionIndex];
+            if (!question) return;
+
+            // Subscribe to broadcast messages (no DB, direct messaging)
+            realtimeChannel = supabase
+                .channel('answers-broadcast')
+                .on('broadcast', { event: 'new-answer' }, (payload) => {
+                    console.log('🔥 New answer received via broadcast:', payload);
+
+                    // Filter for current question
+                    if (payload.payload.question_id === question.id) {
+                        const newAnswer = {
+                            id: `broadcast-${Date.now()}-${Math.random()}`,
+                            question_id: payload.payload.question_id,
+                            answer: payload.payload.answer_text,
+                            answer_text: payload.payload.answer_text,
+                            created_at: payload.payload.created_at
+                        };
+
+                        mockAnswers.unshift(newAnswer);
+                        const frequencyMap = extractWordInstances(mockAnswers);
+                        renderWords(frequencyMap);
+                        conceptTotal.textContent = mockAnswers.length;
+                    }
+                })
+                .subscribe((status) => {
+                    console.log('Broadcast subscription status:', status);
+                });
         }
 
         // --- Event Listeners ---

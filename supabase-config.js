@@ -56,19 +56,25 @@ const QUESTIONS = [
     }
 ];
 
-// 답변 제출
+// 답변 제출 - DB 저장 없이 Realtime Broadcast로 전송
 async function submitAnswer(questionId, answerText) {
     try {
-        const { data, error } = await supabase
-            .from('answers')
-            .insert([
-                { question_id: questionId, answer_text: answerText }
-            ]);
+        const channel = supabase.channel('answers-broadcast');
 
-        if (error) throw error;
-        return { success: true, data };
+        const response = await channel.send({
+            type: 'broadcast',
+            event: 'new-answer',
+            payload: {
+                question_id: questionId,
+                answer_text: answerText,
+                created_at: new Date().toISOString()
+            }
+        });
+
+        console.log('Broadcast sent:', response);
+        return { success: true };
     } catch (error) {
-        console.error('Error submitting answer:', error);
+        console.error('Error broadcasting answer:', error);
         return { success: false, error: error.message };
     }
 }
