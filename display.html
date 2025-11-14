@@ -158,7 +158,11 @@
         }
 
         function animateWordEntry(wordEl) {
-            if (!window.motion || !wordEl) return;
+            console.log('🎬 animateWordEntry called for:', wordEl.textContent);
+            if (!window.motion || !wordEl) {
+                console.log('❌ No motion library or wordEl');
+                return;
+            }
             const chars = splitWordIntoCharacters(wordEl);
             if (!chars || chars.length === 0) return;
             const isVertical = wordEl.classList.contains('concept-word-vertical');
@@ -167,8 +171,13 @@
             const envelopeSpring = spring({ stiffness: 120, damping: 22, mass: 1.0 });
             const letterSpring = spring({ stiffness: 85, damping: 26, mass: 1.0 });
 
+            const initialSize = FIXED_FONT_SIZE * 2.5;
+            const finalSize = FIXED_FONT_SIZE;
+            console.log(`📏 Animating fontSize from ${initialSize}px to ${finalSize}px`);
+
             // Set initial large size
-            wordEl.style.fontSize = `${FIXED_FONT_SIZE * 2.5}px`;
+            wordEl.style.fontSize = `${initialSize}px`;
+            console.log('✅ Initial fontSize set:', wordEl.style.fontSize);
 
             animate(wordEl, { opacity: [0, 0.96] }, {
                 duration: 0.65,
@@ -177,7 +186,7 @@
 
             // Animate font size from 2.5x down to normal
             animate(wordEl, {
-                fontSize: [`${FIXED_FONT_SIZE * 2.5}px`, `${FIXED_FONT_SIZE}px`]
+                fontSize: [`${initialSize}px`, `${finalSize}px`]
             }, {
                 easing: envelopeSpring,
                 duration: 1.4
