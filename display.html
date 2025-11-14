@@ -432,12 +432,20 @@
         }
 
         function extractWordInstances(answers) {
+            console.log('extractWordInstances called with answers:', answers);
             const frequency = new Map();
             answers.forEach(answer => {
-                if (!answer.answer_text) return;
+                console.log('Processing answer:', answer);
+                if (!answer.answer_text) {
+                    console.log('No answer_text found, skipping');
+                    return;
+                }
+                console.log('answer_text:', answer.answer_text);
                 const tokens = answer.answer_text.split(/[\s,.;!?"'()\[\]{}]+/).map(token => token.replace(/^[^0-9a-zA-Z가-힣]+|[^0-9a-zA-Z가-힣]+$/g, '').trim()).filter(token => token.length > 1);
+                console.log('Extracted tokens:', tokens);
                 tokens.forEach(token => frequency.set(token, (frequency.get(token) || 0) + 1));
             });
+            console.log('Final frequency map:', frequency);
             return frequency;
         }
 
