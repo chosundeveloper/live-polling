@@ -441,7 +441,8 @@
                     return;
                 }
                 console.log('answer_text:', answer.answer_text);
-                const tokens = answer.answer_text.split(/[\s,.;!?"'()\[\]{}]+/).map(token => token.replace(/^[^0-9a-zA-Z가-힣]+|[^0-9a-zA-Z가-힣]+$/g, '').trim()).filter(token => token.length > 1);
+                // Include Korean jamo (ㄱ-ㅎ, ㅏ-ㅣ) in addition to complete Hangul (가-힣)
+                const tokens = answer.answer_text.split(/[\s,.;!?"'()\[\]{}]+/).map(token => token.replace(/^[^0-9a-zA-Zㄱ-ㅎㅏ-ㅣ가-힣]+|[^0-9a-zA-Zㄱ-ㅎㅏ-ㅣ가-힣]+$/g, '').trim()).filter(token => token.length > 0);
                 console.log('Extracted tokens:', tokens);
                 tokens.forEach(token => frequency.set(token, (frequency.get(token) || 0) + 1));
             });
