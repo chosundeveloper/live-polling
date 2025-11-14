@@ -1,4 +1,4 @@
-@import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css');
+@import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/variable/pretendardvariable.css');
 @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600&family=Outfit:wght@300;400;600&display=swap');
 
 @font-face {
@@ -1083,7 +1083,8 @@ footer a:hover {
 
     /* 모바일 전용 answer 페이지 스타일 */
     .answer-body {
-        font-size: 13px;
+        font-size: 14px;
+        font-weight: 300;
         padding: 16px;
         -webkit-font-smoothing: antialiased;
         -moz-osx-font-smoothing: grayscale;
@@ -1095,8 +1096,8 @@ footer a:hover {
     }
 
     .answer-header h1 {
-        font-size: 1.1em;
-        font-weight: 300;
+        font-size: 1.15em;
+        font-weight: 250;
         margin-bottom: 10px;
     }
 
@@ -1115,12 +1116,12 @@ footer a:hover {
 
     .timer-text {
         font-size: 1.3em;
-        font-weight: 200;
+        font-weight: 250;
     }
 
     .timer-label {
         font-size: 0.65em;
-        font-weight: 200;
+        font-weight: 250;
     }
 
     .question-display {
@@ -1132,49 +1133,49 @@ footer a:hover {
 
     .question-label {
         font-size: 0.6em;
-        font-weight: 200;
+        font-weight: 250;
     }
 
     .question-text {
-        font-size: 0.9em;
-        font-weight: 200;
+        font-size: 0.95em;
+        font-weight: 250;
         line-height: 1.6;
     }
 
     .form-group label {
-        font-size: 0.75em;
-        font-weight: 200;
+        font-size: 0.8em;
+        font-weight: 250;
         margin-bottom: 6px;
     }
 
     .answer-input {
-        font-size: 0.8em;
-        font-weight: 200;
+        font-size: 0.85em;
+        font-weight: 250;
         padding: 10px 12px;
         line-height: 1.6;
     }
 
     .char-count {
-        font-size: 0.7em;
-        font-weight: 200;
+        font-size: 0.75em;
+        font-weight: 250;
     }
 
     .btn-submit {
-        font-size: 0.85em;
-        font-weight: 300;
+        font-size: 0.9em;
+        font-weight: 350;
         padding: 11px;
     }
 
     .success-message h3,
     .error-message h3 {
-        font-size: 1.1em;
+        font-size: 1.15em;
         font-weight: 300;
     }
 
     .success-message p,
     .error-message p {
-        font-size: 0.8em;
-        font-weight: 200;
+        font-size: 0.85em;
+        font-weight: 250;
     }
 }
 
