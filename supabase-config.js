@@ -94,6 +94,24 @@ async function getAnswers(questionId, limit = 50) {
     }
 }
 
+// 답변 초기화 - 특정 질문의 모든 답변 삭제
+async function resetAnswers(questionId) {
+    try {
+        const { data, error } = await supabase
+            .from('answers')
+            .delete()
+            .eq('question_id', questionId);
+
+        if (error) throw error;
+
+        console.log(`✅ Reset answers for question ${questionId}`);
+        return { success: true };
+    } catch (error) {
+        console.error('Error resetting answers:', error);
+        return { success: false, error: error.message };
+    }
+}
+
 // Realtime 구독 (선택사항 - polling 대신 사용 가능)
 function subscribeToAnswers(questionId, callback) {
     const subscription = supabase

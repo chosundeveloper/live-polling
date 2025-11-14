@@ -841,13 +841,17 @@
             // Simulation loop is started by renderWords if words exist
         }
 
-        function startRealtimeSubscription() {
+        async function startRealtimeSubscription() {
             console.log('startRealtimeSubscription called');
             resetDisplay();
             startTimer();
 
             const question = QUESTIONS[currentQuestionIndex];
             if (!question) return;
+
+            // DB 초기화 - 이전 답변 모두 삭제
+            console.log('🗑️ Resetting DB for question:', question.id);
+            await resetAnswers(question.id);
 
             // Subscribe to DB changes (Realtime)
             realtimeChannel = supabase
