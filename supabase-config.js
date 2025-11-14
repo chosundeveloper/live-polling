@@ -56,47 +56,22 @@ const QUESTIONS = [
     }
 ];
 
-// 답변 제출 - DB 저장 없이 Realtime Broadcast로 전송
+// 답변 제출 - DB에 저장 (Realtime으로 자동 전달됨)
 async function submitAnswer(questionId, answerText) {
     try {
-        // 채널 생성 및 구독 후 전송
-        const channel = supabase.channel('answers-broadcast', {
-            config: {
-                broadcast: { self: true }
-            }
-        });
+        const { data, error } = await supabase
+            .from('answers')
+            .insert([
+                { question_id: questionId, answer_text: answerText }
+            ])
+            .select();
 
-        // 먼저 구독
-        await new Promise((resolve) => {
-            channel.subscribe((status) => {
-                console.log('Submit channel status:', status);
-                if (status === 'SUBSCRIBED') {
-                    resolve();
-                }
-            });
-        });
+        if (error) throw error;
 
-        // 메시지 전송
-        const response = await channel.send({
-            type: 'broadcast',
-            event: 'new-answer',
-            payload: {
-                question_id: questionId,
-                answer_text: answerText,
-                created_at: new Date().toISOString()
-            }
-        });
-
-        console.log('Broadcast sent:', response);
-
-        // 잠시 대기 후 채널 정리
-        setTimeout(() => {
-            supabase.removeChannel(channel);
-        }, 1000);
-
-        return { success: true };
+        console.log('Answer saved to DB:', data);
+        return { success: true, data };
     } catch (error) {
-        console.error('Error broadcasting answer:', error);
+        console.error('Error submitting answer:', error);
         return { success: false, error: error.message };
     }
 }

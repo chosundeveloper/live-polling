@@ -849,34 +849,32 @@
             const question = QUESTIONS[currentQuestionIndex];
             if (!question) return;
 
-            // Subscribe to broadcast messages (no DB, direct messaging)
+            // Subscribe to DB changes (Realtime)
             realtimeChannel = supabase
-                .channel('answers-broadcast', {
-                    config: {
-                        broadcast: { self: true }
-                    }
-                })
-                .on('broadcast', { event: 'new-answer' }, (payload) => {
-                    console.log('🔥 New answer received via broadcast:', payload);
+                .channel(`answers-q${question.id}`)
+                .on('postgres_changes', {
+                    event: 'INSERT',
+                    schema: 'public',
+                    table: 'answers',
+                    filter: `question_id=eq.${question.id}`
+                }, (payload) => {
+                    console.log('🔥 New answer from DB:', payload);
 
-                    // Filter for current question
-                    if (payload.payload.question_id === question.id) {
-                        const newAnswer = {
-                            id: `broadcast-${Date.now()}-${Math.random()}`,
-                            question_id: payload.payload.question_id,
-                            answer: payload.payload.answer_text,
-                            answer_text: payload.payload.answer_text,
-                            created_at: payload.payload.created_at
-                        };
+                    const newAnswer = {
+                        id: payload.new.id,
+                        question_id: payload.new.question_id,
+                        answer: payload.new.answer_text,
+                        answer_text: payload.new.answer_text,
+                        created_at: payload.new.created_at
+                    };
 
-                        mockAnswers.unshift(newAnswer);
-                        const frequencyMap = extractWordInstances(mockAnswers);
-                        renderWords(frequencyMap);
-                        conceptTotal.textContent = mockAnswers.length;
-                    }
+                    mockAnswers.unshift(newAnswer);
+                    const frequencyMap = extractWordInstances(mockAnswers);
+                    renderWords(frequencyMap);
+                    conceptTotal.textContent = mockAnswers.length;
                 })
                 .subscribe((status) => {
-                    console.log('Broadcast subscription status:', status);
+                    console.log('Realtime subscription status:', status);
                     if (status === 'SUBSCRIBED') {
                         console.log('✅ Ready to receive answers!');
                     }
