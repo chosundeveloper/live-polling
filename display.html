@@ -53,9 +53,9 @@
 
         // --- Temporarily define QUESTIONS array for debugging ---
         const QUESTIONS = [
-            { id: 1, question: "가장 좋아하는 계절은?", color: "#4CAF50" },
-            { id: 2, question: "오늘의 기분은?", color: "#2196F3" },
-            { id: 3, question: "가장 좋아하는 음식은?", color: "#FFC107" }
+            { id: 1, question: "가장 좋아하는 계절은?", color: "#4CAF50", type: "wordcloud" },
+            { id: 2, question: "오늘의 기분은?", color: "#2196F3", type: "text" },
+            { id: 3, question: "가장 좋아하는 음식은?", color: "#FFC107", type: "wordcloud" }
         ];
 
         // --- DOM Elements ---
@@ -88,6 +88,23 @@
         const KEYWORDS = ['연결', '성장', '도전', '몰입', '설렘', '공감', '협업', '집중', '영감', '감동', '시너지', '에너지', '환대', '몰두', '발견', '혁신', '팀워크', '지원', '아이디어', '탐험', '성찰', '축제', '유연함', '치열함', '여유', '흥미', '모험', '발표', '피드백', '브레인스토밍', 'collaboration', 'momentum', 'breakthrough', 'catalyst', 'insight', 'iteration', 'community', 'confidence', 'empathy', 'curiosity'];
         const PREFIXES = ['따뜻한', '깊은', '새로운', '반짝이는', '집중의', '장난기 있는', '강렬한', '잔잔한', '선명한'];
         const SUFFIXES = ['무드', '아이디어', '영감', '에너지', '발견', '시간', '순간', '대화', '시선'];
+        const TEXT_ANSWERS = [
+            '오늘 정말 좋은 발표를 들어서 기분이 좋아요!',
+            '새로운 아이디어가 떠올라서 설레네요',
+            '팀원들과의 협업이 즐거웠습니다',
+            '지금까지 배운 내용이 정말 유익했어요',
+            '앞으로의 프로젝트가 기대됩니다',
+            '오늘 세션이 매우 인상 깊었어요',
+            '동료들의 열정에 자극받았습니다',
+            '실무에 바로 적용할 수 있을 것 같아요',
+            '강사님의 설명이 명확해서 이해하기 쉬웠어요',
+            '질의응답 시간이 도움이 많이 됐습니다',
+            '네트워킹 시간이 좋았어요',
+            '새로운 관점을 얻게 되었습니다',
+            '실습 과정이 재미있었어요',
+            '다음 세션도 기대가 크네요',
+            '오늘 하루가 뜻깊었습니다'
+        ];
         const MAX_WORDS = 150;
         const MIN_FONT_SIZE = 18;
         const MAX_FONT_SIZE = 32;
@@ -564,8 +581,70 @@
             animationFrameId = requestAnimationFrame(simulationLoop);
         }
 
+        function renderTextAnswers(answers) {
+            console.log('renderTextAnswers called with answers:', answers);
+
+            // Clear word cloud particles
+            if (animationFrameId) {
+                cancelAnimationFrame(animationFrameId);
+                animationFrameId = null;
+            }
+            wordParticles = [];
+
+            if (answers.length === 0) {
+                wordsLayer.innerHTML = '<div class="concept-empty">첫 번째 답변을 기다리고 있어요</div>';
+                return;
+            }
+
+            // Create list view for text answers
+            const existingAnswers = new Set(
+                Array.from(wordsLayer.querySelectorAll('.text-answer')).map(el => el.dataset.answerId)
+            );
+
+            answers.forEach((answer, index) => {
+                if (existingAnswers.has(answer.id.toString())) return;
+
+                const answerEl = document.createElement('div');
+                answerEl.className = 'text-answer';
+                answerEl.dataset.answerId = answer.id;
+                answerEl.textContent = answer.answer;
+                answerEl.style.color = selectWordColor(0, index);
+
+                // Insert at top (newest first)
+                if (wordsLayer.firstChild && wordsLayer.firstChild.classList && !wordsLayer.firstChild.classList.contains('concept-empty')) {
+                    wordsLayer.insertBefore(answerEl, wordsLayer.firstChild);
+                } else {
+                    if (wordsLayer.querySelector('.concept-empty')) {
+                        wordsLayer.innerHTML = '';
+                    }
+                    wordsLayer.appendChild(answerEl);
+                }
+
+                // Animate entry
+                requestAnimationFrame(() => {
+                    answerEl.classList.add('text-answer-visible');
+                });
+            });
+
+            // Limit to 50 answers
+            const allAnswers = wordsLayer.querySelectorAll('.text-answer');
+            if (allAnswers.length > 50) {
+                for (let i = 50; i < allAnswers.length; i++) {
+                    allAnswers[i].remove();
+                }
+            }
+        }
+
         function renderWords(frequencyMap) {
             console.log('renderWords called with frequencyMap:', frequencyMap);
+
+            // Check question type
+            const question = QUESTIONS[currentQuestionIndex];
+            if (question && question.type === 'text') {
+                renderTextAnswers(mockAnswers);
+                return;
+            }
+
             const existingParticles = new Map();
             const now = performance.now();
             wordParticles.forEach(p => {
@@ -778,11 +857,20 @@
             startTimer();
 
             function generateSingleMockAnswer(questionId, index) {
-                const word = KEYWORDS[Math.floor(Math.random() * KEYWORDS.length)] || KEYWORDS[index % KEYWORDS.length];
+                const currentQuestion = QUESTIONS.find(q => q.id === questionId);
+                let answer;
+
+                if (currentQuestion && currentQuestion.type === 'text') {
+                    answer = TEXT_ANSWERS[Math.floor(Math.random() * TEXT_ANSWERS.length)];
+                } else {
+                    answer = KEYWORDS[Math.floor(Math.random() * KEYWORDS.length)] || KEYWORDS[index % KEYWORDS.length];
+                }
+
                 return {
                     id: `${questionId}-${index}-${Date.now()}`,
                     question_id: questionId,
-                    answer_text: word,
+                    answer: answer,
+                    answer_text: answer,
                     created_at: new Date().toISOString()
                 };
             }
