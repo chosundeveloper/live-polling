@@ -86,7 +86,7 @@
                 this.charCount = document.getElementById('charCount');
 
                 // 타이머
-                this.timeLeft = 100; // 100초
+                this.timeLeft = 600; // 600초 (10분)
                 this.timerInterval = null;
                 this.timerProgress = document.getElementById('timerProgress');
                 this.timerText = document.getElementById('timerText');
@@ -130,11 +130,11 @@
                 if (startTime) {
                     const now = Date.now();
                     const elapsed = Math.floor((now - startTime) / 1000);
-                    this.timeLeft = Math.max(0, 100 - elapsed);
+                    this.timeLeft = Math.max(0, 600 - elapsed);
                     console.log('Timer synced from URL:', { startTime, elapsed, timeLeft: this.timeLeft });
                 } else {
-                    console.warn('No timer start time in URL, using default 100 seconds');
-                    this.timeLeft = 100;
+                    console.warn('No timer start time in URL, using default 600 seconds');
+                    this.timeLeft = 600;
                 }
 
                 const circumference = 2 * Math.PI * 45; // r=45
@@ -164,7 +164,7 @@
                 this.timerText.textContent = this.timeLeft;
 
                 const circumference = 2 * Math.PI * 45;
-                const offset = circumference * (1 - this.timeLeft / 100);
+                const offset = circumference * (1 - this.timeLeft / 600);
                 this.timerProgress.style.strokeDashoffset = offset;
 
                 // 색상 변경
