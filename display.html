@@ -29,7 +29,6 @@
             <div class="concept-overlay concept-overlay-bottom-left">
                 <div class="concept-qr-card">
                     <div class="concept-qr-box" id="conceptQrCode"></div>
-                    <div id="qrUrl" style="font-size: 10px; color: #666; text-align: center; margin-top: 8px; word-break: break-all; padding: 0 8px;"></div>
                     <div class="concept-qr-meta">
                         <div>
                             <p class="concept-label">누적 답변</p>
@@ -394,12 +393,6 @@
             const urlString = `${PUBLIC_URL}/answer.html?q=${question.id}&startTime=${questionStartTime}`;
 
             console.log('📱 QR Code URL:', urlString);
-
-            // Display URL below QR code
-            const qrUrlDisplay = document.getElementById('qrUrl');
-            if (qrUrlDisplay) {
-                qrUrlDisplay.textContent = urlString;
-            }
 
             // Clear and regenerate QR code
             if (qrCodeContainer) {
