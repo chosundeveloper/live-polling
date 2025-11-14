@@ -117,8 +117,8 @@
         const PUSH_THRESHOLD_RATIO = 0.10; // Start pushing outward very early
 
         function selectWordColor(weightRatio, index) {
-            // Randomize color selection for variety
-            const seed = index * 7 + Math.floor(weightRatio * 13);
+            // Better color distribution with larger primes for more variety
+            const seed = (index * 37 + Math.floor(weightRatio * 97) + (index % 3) * 41 + (index % 5) * 53);
             return COLOR_PALETTE[seed % COLOR_PALETTE.length];
         }
         window.selectWordColor = selectWordColor;
@@ -707,22 +707,15 @@
                     };
                     assignParticleTarget(particle, centerW, centerH, geometry, spiralIndex);
 
-                    // Start near target position to avoid initial overlap
-                    const targetAngle = Math.atan2(particle.targetY - centerH, particle.targetX - centerW);
-                    const targetDist = Math.hypot(particle.targetX - centerW, particle.targetY - centerH);
-                    const startDist = Math.max(targetDist * 0.7, 50); // Start 70% of the way there
-
-                    const startX = centerW + Math.cos(targetAngle) * startDist;
-                    const startY = centerH + Math.sin(targetAngle) * startDist;
-
-                    particle.originX = startX;
-                    particle.originY = startY;
-                    particle.x = startX;
-                    particle.y = startY;
-                    particle.prevX = startX;
-                    particle.prevY = startY;
-                    wordEl.style.left = `${startX}px`;
-                    wordEl.style.top = `${startY}px`;
+                    // Start at center and move to target position
+                    particle.originX = centerW;
+                    particle.originY = centerH;
+                    particle.x = centerW;
+                    particle.y = centerH;
+                    particle.prevX = centerW;
+                    particle.prevY = centerH;
+                    wordEl.style.left = `${centerW}px`;
+                    wordEl.style.top = `${centerH}px`;
                     wordParticles.push(particle);
                     const introParticles = wordParticles.filter(p => p.phase === 'intro');
 
