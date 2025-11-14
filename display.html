@@ -83,6 +83,7 @@
         let timerInterval = null;
         let timerDeadline = null;
         let d3Simulation = null;
+        let sessionStartTime = null; // 페이지 로드 시점
 
         // --- Constants ---
         const KEYWORDS = ['연결', '성장', '도전', '몰입', '설렘', '공감', '협업', '집중', '영감', '감동', '시너지', '에너지', '환대', '몰두', '발견', '혁신', '팀워크', '지원', '아이디어', '탐험', '성찰', '축제', '유연함', '치열함', '여유', '흥미', '모험', '발표', '피드백', '브레인스토밍', 'collaboration', 'momentum', 'breakthrough', 'catalyst', 'insight', 'iteration', 'community', 'confidence', 'empathy', 'curiosity'];
@@ -849,11 +850,11 @@
             const question = QUESTIONS[currentQuestionIndex];
             if (!question) return;
 
-            // DB 초기화 - 테이블 전체 삭제
-            console.log('🗑️ Resetting entire answers table');
-            await resetAllAnswers();
+            // 세션 시작 시간 기록 (이 시점 이후 데이터만 표시)
+            sessionStartTime = new Date().toISOString();
+            console.log('📍 Session started at:', sessionStartTime);
 
-            // Subscribe to DB changes (Realtime)
+            // Subscribe to DB changes (Realtime) - 이 시점 이후 INSERT만 받음
             realtimeChannel = supabase
                 .channel(`answers-q${question.id}`)
                 .on('postgres_changes', {
@@ -864,18 +865,23 @@
                 }, (payload) => {
                     console.log('🔥 New answer from DB:', payload);
 
-                    const newAnswer = {
-                        id: payload.new.id,
-                        question_id: payload.new.question_id,
-                        answer: payload.new.answer_text,
-                        answer_text: payload.new.answer_text,
-                        created_at: payload.new.created_at
-                    };
+                    // 세션 시작 이후 데이터만 처리
+                    if (payload.new.created_at >= sessionStartTime) {
+                        const newAnswer = {
+                            id: payload.new.id,
+                            question_id: payload.new.question_id,
+                            answer: payload.new.answer_text,
+                            answer_text: payload.new.answer_text,
+                            created_at: payload.new.created_at
+                        };
 
-                    mockAnswers.unshift(newAnswer);
-                    const frequencyMap = extractWordInstances(mockAnswers);
-                    renderWords(frequencyMap);
-                    conceptTotal.textContent = mockAnswers.length;
+                        mockAnswers.unshift(newAnswer);
+                        const frequencyMap = extractWordInstances(mockAnswers);
+                        renderWords(frequencyMap);
+                        conceptTotal.textContent = mockAnswers.length;
+                    } else {
+                        console.log('⏭️ Skipped old answer:', payload.new.created_at);
+                    }
                 })
                 .subscribe((status) => {
                     console.log('Realtime subscription status:', status);
