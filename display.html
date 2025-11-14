@@ -850,11 +850,11 @@
             const question = QUESTIONS[currentQuestionIndex];
             if (!question) return;
 
-            // 세션 시작 시간 기록 (이 시점 이후 데이터만 표시)
-            sessionStartTime = new Date().toISOString();
-            console.log('📍 Session started at:', sessionStartTime);
+            // DB 초기화 - 전체 테이블 삭제
+            console.log('🗑️ Deleting all existing answers from DB...');
+            await resetAllAnswers();
 
-            // Subscribe to DB changes (Realtime) - 이 시점 이후 INSERT만 받음
+            // Subscribe to DB changes (Realtime)
             realtimeChannel = supabase
                 .channel(`answers-q${question.id}`)
                 .on('postgres_changes', {
@@ -865,23 +865,18 @@
                 }, (payload) => {
                     console.log('🔥 New answer from DB:', payload);
 
-                    // 세션 시작 이후 데이터만 처리
-                    if (payload.new.created_at >= sessionStartTime) {
-                        const newAnswer = {
-                            id: payload.new.id,
-                            question_id: payload.new.question_id,
-                            answer: payload.new.answer_text,
-                            answer_text: payload.new.answer_text,
-                            created_at: payload.new.created_at
-                        };
+                    const newAnswer = {
+                        id: payload.new.id,
+                        question_id: payload.new.question_id,
+                        answer: payload.new.answer_text,
+                        answer_text: payload.new.answer_text,
+                        created_at: payload.new.created_at
+                    };
 
-                        mockAnswers.unshift(newAnswer);
-                        const frequencyMap = extractWordInstances(mockAnswers);
-                        renderWords(frequencyMap);
-                        conceptTotal.textContent = mockAnswers.length;
-                    } else {
-                        console.log('⏭️ Skipped old answer:', payload.new.created_at);
-                    }
+                    mockAnswers.unshift(newAnswer);
+                    const frequencyMap = extractWordInstances(mockAnswers);
+                    renderWords(frequencyMap);
+                    conceptTotal.textContent = mockAnswers.length;
                 })
                 .subscribe((status) => {
                     console.log('Realtime subscription status:', status);
