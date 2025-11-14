@@ -95,7 +95,7 @@ async function getAnswers(questionId, limit = 50) {
 }
 
 // 답변 초기화 - answers 테이블 전체 삭제
-async function resetAllAnswers() {
+window.resetAllAnswers = async function resetAllAnswers() {
     try {
         const { data, error } = await supabase
             .from('answers')
