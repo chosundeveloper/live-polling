@@ -6,8 +6,7 @@
     <title>Live Polling - Mutalisk</title>
     <link rel="stylesheet" href="style.css">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <!-- Temporarily removed supabase-config.js to isolate issues -->
-    <!-- <script src="supabase-config.js"></script> -->
+    <script src="supabase-config.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/motion@11.11.13/dist/motion.min.js"></script>
     <script src="https://d3js.org/d3.v7.min.js"></script>
@@ -51,12 +50,7 @@
     <script>
         console.log('Script started executing'); // Very early log
 
-        // --- Temporarily define QUESTIONS array for debugging ---
-        const QUESTIONS = [
-            { id: 1, question: "가장 좋아하는 계절은?", color: "#4CAF50", type: "wordcloud" },
-            { id: 2, question: "오늘의 기분은?", color: "#2196F3", type: "text" },
-            { id: 3, question: "가장 좋아하는 음식은?", color: "#FFC107", type: "wordcloud" }
-        ];
+        // QUESTIONS is loaded from supabase-config.js
 
         // --- DOM Elements ---
         const conceptQuestion = document.getElementById('conceptQuestion');
@@ -386,7 +380,7 @@
             document.documentElement.style.setProperty('--concept-accent', question.color || '#7c3aed');
             const answerUrl = new URL(window.location.href);
             answerUrl.pathname = answerUrl.pathname.replace(/[^/]+$/, 'answer.html');
-            answerUrl.search = `?question=${question.id}`;
+            answerUrl.search = `?q=${question.id}`;
             answerUrl.hash = '';
             const urlString = answerUrl.toString();
 
@@ -581,69 +575,8 @@
             animationFrameId = requestAnimationFrame(simulationLoop);
         }
 
-        function renderTextAnswers(answers) {
-            console.log('renderTextAnswers called with answers:', answers);
-
-            // Clear word cloud particles
-            if (animationFrameId) {
-                cancelAnimationFrame(animationFrameId);
-                animationFrameId = null;
-            }
-            wordParticles = [];
-
-            if (answers.length === 0) {
-                wordsLayer.innerHTML = '<div class="concept-empty">첫 번째 답변을 기다리고 있어요</div>';
-                return;
-            }
-
-            // Create list view for text answers
-            const existingAnswers = new Set(
-                Array.from(wordsLayer.querySelectorAll('.text-answer')).map(el => el.dataset.answerId)
-            );
-
-            answers.forEach((answer, index) => {
-                if (existingAnswers.has(answer.id.toString())) return;
-
-                const answerEl = document.createElement('div');
-                answerEl.className = 'text-answer';
-                answerEl.dataset.answerId = answer.id;
-                answerEl.textContent = answer.answer;
-                answerEl.style.color = selectWordColor(0, index);
-
-                // Insert at top (newest first)
-                if (wordsLayer.firstChild && wordsLayer.firstChild.classList && !wordsLayer.firstChild.classList.contains('concept-empty')) {
-                    wordsLayer.insertBefore(answerEl, wordsLayer.firstChild);
-                } else {
-                    if (wordsLayer.querySelector('.concept-empty')) {
-                        wordsLayer.innerHTML = '';
-                    }
-                    wordsLayer.appendChild(answerEl);
-                }
-
-                // Animate entry
-                requestAnimationFrame(() => {
-                    answerEl.classList.add('text-answer-visible');
-                });
-            });
-
-            // Limit to 50 answers
-            const allAnswers = wordsLayer.querySelectorAll('.text-answer');
-            if (allAnswers.length > 50) {
-                for (let i = 50; i < allAnswers.length; i++) {
-                    allAnswers[i].remove();
-                }
-            }
-        }
-
         function renderWords(frequencyMap) {
             console.log('renderWords called with frequencyMap:', frequencyMap);
-
-            // Check question type
-            const question = QUESTIONS[currentQuestionIndex];
-            if (question && question.type === 'text') {
-                renderTextAnswers(mockAnswers);
-                return;
-            }
 
             const existingParticles = new Map();
             const now = performance.now();
@@ -823,8 +756,26 @@
         }
 
         // --- Data Fetching & Control ---
-        // Removed fetchRealAnswers as supabase-config.js is temporarily removed
-        // async function fetchRealAnswers() { ... }
+        async function fetchRealAnswers() {
+            console.log('fetchRealAnswers called');
+            const question = QUESTIONS[currentQuestionIndex];
+            if (!question) return;
+
+            const result = await getAnswers(question.id, 300);
+            if (result.success && result.data) {
+                mockAnswers = result.data.map(item => ({
+                    id: item.id,
+                    question_id: item.question_id,
+                    answer: item.answer_text,
+                    answer_text: item.answer_text,
+                    created_at: item.created_at
+                }));
+
+                const frequencyMap = extractWordInstances(mockAnswers);
+                renderWords(frequencyMap);
+                conceptTotal.textContent = mockAnswers.length;
+            }
+        }
 
         function stopAllIntervals() {
             if (pollingInterval) clearInterval(pollingInterval);
@@ -893,11 +844,11 @@
         }
 
         function startRealDataPolling() {
-            console.log('startRealDataPolling called - currently disabled');
+            console.log('startRealDataPolling called');
             resetDisplay();
             startTimer();
-            // fetchRealAnswers(); // Initial fetch - disabled
-            // pollingInterval = setInterval(fetchRealAnswers, 2000); // disabled
+            fetchRealAnswers(); // Initial fetch
+            pollingInterval = setInterval(fetchRealAnswers, 2000); // Poll every 2 seconds
         }
 
         // --- Event Listeners ---
