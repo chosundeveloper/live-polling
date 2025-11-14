@@ -844,16 +844,46 @@
 
         async function startRealtimeSubscription() {
             console.log('startRealtimeSubscription called');
-            resetDisplay();
-            startTimer();
+            stopAllIntervals();
+            mockAnswers = [];
+            wordParticles = [];
+            hiddenWords = [];
+            wordsLayer.innerHTML = '';
+            conceptTotal.textContent = '0';
+            stopTimer();
+            conceptUpdated.textContent = '10:00';
 
             const question = QUESTIONS[currentQuestionIndex];
             if (!question) return;
 
-            // DB 초기화 - 전체 테이블 삭제
-            console.log('🗑️ Deleting all existing answers from DB...');
-            const resetResult = await resetAllAnswers();
-            console.log('Reset result:', resetResult);
+            startTimer();
+
+            // Load existing answers first
+            console.log('📥 Loading existing answers from DB...');
+            const { data: existingAnswers, error } = await supabase
+                .from('answers')
+                .select('*')
+                .eq('question_id', question.id)
+                .order('created_at', { ascending: false });
+
+            if (error) {
+                console.error('Error loading existing answers:', error);
+            } else if (existingAnswers && existingAnswers.length > 0) {
+                console.log(`✅ Loaded ${existingAnswers.length} existing answers`);
+                mockAnswers = existingAnswers.map(a => ({
+                    id: a.id,
+                    question_id: a.question_id,
+                    answer: a.answer_text,
+                    answer_text: a.answer_text,
+                    created_at: a.created_at
+                }));
+
+                const frequencyMap = extractWordInstances(mockAnswers);
+                renderWords(frequencyMap);
+                conceptTotal.textContent = mockAnswers.length;
+            } else {
+                console.log('ℹ️ No existing answers found');
+            }
 
             // Subscribe to DB changes (Realtime)
             console.log('🔌 Subscribing to channel:', `answers-q${question.id}`);
