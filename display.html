@@ -117,9 +117,8 @@
         const PUSH_THRESHOLD_RATIO = 0.10; // Start pushing outward very early
 
         function selectWordColor(weightRatio, index) {
-            // Better color distribution with larger primes for more variety
-            const seed = (index * 37 + Math.floor(weightRatio * 97) + (index % 3) * 41 + (index % 5) * 53);
-            return COLOR_PALETTE[seed % COLOR_PALETTE.length];
+            // Truly random color selection - no pattern
+            return COLOR_PALETTE[Math.floor(Math.random() * COLOR_PALETTE.length)];
         }
         window.selectWordColor = selectWordColor;
 
