@@ -867,74 +867,55 @@
 
             startTimer();
 
-            // Load existing answers first
-            console.log('📥 Loading existing answers from DB...');
-            const { data: existingAnswers, error } = await supabase
-                .from('answers')
-                .select('*')
-                .eq('question_id', question.id)
-                .order('created_at', { ascending: false });
+            // Track session start time - only show answers submitted after this point
+            sessionStartTime = Date.now();
+            console.log('📍 Session started at:', new Date(sessionStartTime).toISOString());
 
-            if (error) {
-                console.error('Error loading existing answers:', error);
-            } else if (existingAnswers && existingAnswers.length > 0) {
-                console.log(`✅ Loaded ${existingAnswers.length} existing answers`);
-                mockAnswers = existingAnswers.map(a => ({
-                    id: a.id,
-                    question_id: a.question_id,
-                    answer: a.answer_text,
-                    answer_text: a.answer_text,
-                    created_at: a.created_at
-                }));
+            // Poll for new answers every 2 seconds
+            console.log('🔄 Starting polling for new answers...');
+            simulationInterval = setInterval(async () => {
+                try {
+                    const { data: newAnswers, error } = await supabase
+                        .from('answers')
+                        .select('*')
+                        .eq('question_id', question.id)
+                        .gte('created_at', new Date(sessionStartTime).toISOString())
+                        .order('created_at', { ascending: false });
 
-                const frequencyMap = extractWordInstances(mockAnswers);
-                renderWords(frequencyMap);
-                conceptTotal.textContent = mockAnswers.length;
-            } else {
-                console.log('ℹ️ No existing answers found');
-            }
-
-            // Subscribe to DB changes (Realtime)
-            console.log('🔌 Subscribing to channel:', `answers-q${question.id}`);
-            realtimeChannel = supabase
-                .channel(`answers-q${question.id}`)
-                .on('postgres_changes', {
-                    event: 'INSERT',
-                    schema: 'public',
-                    table: 'answers',
-                    filter: `question_id=eq.${question.id}`
-                }, (payload) => {
-                    console.log('🔥 New answer from DB:', payload);
-                    console.log('Payload details:', {
-                        id: payload.new.id,
-                        question_id: payload.new.question_id,
-                        answer_text: payload.new.answer_text,
-                        created_at: payload.new.created_at
-                    });
-
-                    const newAnswer = {
-                        id: payload.new.id,
-                        question_id: payload.new.question_id,
-                        answer: payload.new.answer_text,
-                        answer_text: payload.new.answer_text,
-                        created_at: payload.new.created_at
-                    };
-
-                    mockAnswers.unshift(newAnswer);
-                    console.log('Total answers now:', mockAnswers.length);
-
-                    const frequencyMap = extractWordInstances(mockAnswers);
-                    console.log('Frequency map:', frequencyMap);
-
-                    renderWords(frequencyMap);
-                    conceptTotal.textContent = mockAnswers.length;
-                })
-                .subscribe((status) => {
-                    console.log('Realtime subscription status:', status);
-                    if (status === 'SUBSCRIBED') {
-                        console.log('✅ Ready to receive answers!');
+                    if (error) {
+                        console.error('Polling error:', error);
+                        return;
                     }
-                });
+
+                    if (newAnswers && newAnswers.length > 0) {
+                        console.log(`🔄 Polled ${newAnswers.length} answers`);
+
+                        // Check for new answers
+                        const existingIds = new Set(mockAnswers.map(a => a.id));
+                        const trulyNew = newAnswers.filter(a => !existingIds.has(a.id));
+
+                        if (trulyNew.length > 0) {
+                            console.log(`✨ Found ${trulyNew.length} new answers`);
+                            trulyNew.forEach(a => {
+                                const newAnswer = {
+                                    id: a.id,
+                                    question_id: a.question_id,
+                                    answer: a.answer_text,
+                                    answer_text: a.answer_text,
+                                    created_at: a.created_at
+                                };
+                                mockAnswers.unshift(newAnswer);
+                            });
+
+                            const frequencyMap = extractWordInstances(mockAnswers);
+                            renderWords(frequencyMap);
+                            conceptTotal.textContent = mockAnswers.length;
+                        }
+                    }
+                } catch (err) {
+                    console.error('Polling exception:', err);
+                }
+            }, 2000); // Poll every 2 seconds
         }
 
         // --- Event Listeners ---
