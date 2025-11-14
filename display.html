@@ -167,14 +167,17 @@
             const envelopeSpring = spring({ stiffness: 120, damping: 22, mass: 1.0 });
             const letterSpring = spring({ stiffness: 85, damping: 26, mass: 1.0 });
 
+            // Set initial large size
+            wordEl.style.fontSize = `${FIXED_FONT_SIZE * 2.5}px`;
+
             animate(wordEl, { opacity: [0, 0.96] }, {
                 duration: 0.65,
                 easing: [0.25, 0.1, 0.25, 1.0]
             });
 
-            // Start big (2.5x) and bounce down to normal size (1.0x)
+            // Animate font size from 2.5x down to normal
             animate(wordEl, {
-                scale: [2.5, 1]
+                fontSize: [`${FIXED_FONT_SIZE * 2.5}px`, `${FIXED_FONT_SIZE}px`]
             }, {
                 easing: envelopeSpring,
                 duration: 1.4
