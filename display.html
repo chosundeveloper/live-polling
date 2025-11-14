@@ -164,8 +164,6 @@
             const isVertical = wordEl.classList.contains('concept-word-vertical');
             const { animate, stagger, spring } = window.motion;
 
-            wordEl.style.setProperty('--concept-scale', '1.8');
-
             const envelopeSpring = spring({ stiffness: 120, damping: 22, mass: 1.0 });
             const letterSpring = spring({ stiffness: 85, damping: 26, mass: 1.0 });
 
@@ -174,8 +172,10 @@
                 easing: [0.25, 0.1, 0.25, 1.0]
             });
 
-            // Start big (1.8x) and bounce down to normal size (1.0x)
-            animate(wordEl, { '--concept-scale': ['1.8', '1'] }, {
+            // Start big (2.5x) and bounce down to normal size (1.0x)
+            animate(wordEl, {
+                scale: [2.5, 1]
+            }, {
                 easing: envelopeSpring,
                 duration: 1.4
             });
