@@ -159,50 +159,51 @@
 
         function animateWordEntry(wordEl) {
             console.log('🎬 animateWordEntry called for:', wordEl.textContent);
-            if (!window.motion || !wordEl) {
-                console.log('❌ No motion library or wordEl');
+            if (!wordEl) {
+                console.log('❌ No wordEl');
                 return;
             }
-            const chars = splitWordIntoCharacters(wordEl);
-            if (!chars || chars.length === 0) return;
-            const isVertical = wordEl.classList.contains('concept-word-vertical');
-            const { animate, stagger, spring } = window.motion;
-
-            const envelopeSpring = spring({ stiffness: 120, damping: 22, mass: 1.0 });
-            const letterSpring = spring({ stiffness: 85, damping: 26, mass: 1.0 });
 
             const initialSize = FIXED_FONT_SIZE * 2.5;
             const finalSize = FIXED_FONT_SIZE;
-            console.log(`📏 Animating fontSize from ${initialSize}px to ${finalSize}px`);
+            console.log(`📏 Setting up fontSize animation from ${initialSize}px to ${finalSize}px`);
 
-            // Set initial large size
+            // Set initial large size with CSS
             wordEl.style.fontSize = `${initialSize}px`;
+            wordEl.style.transition = 'none';
             console.log('✅ Initial fontSize set:', wordEl.style.fontSize);
 
-            animate(wordEl, { opacity: [0, 0.96] }, {
-                duration: 0.65,
-                easing: [0.25, 0.1, 0.25, 1.0]
+            // Force reflow
+            wordEl.offsetHeight;
+
+            // Start animation after a small delay
+            requestAnimationFrame(() => {
+                wordEl.style.transition = 'font-size 1.2s cubic-bezier(0.34, 1.56, 0.64, 1)';
+                wordEl.style.fontSize = `${finalSize}px`;
+                console.log('🎬 Animation started');
             });
 
-            // Animate font size from 2.5x down to normal
-            animate(wordEl, {
-                fontSize: [`${initialSize}px`, `${finalSize}px`]
-            }, {
-                easing: envelopeSpring,
-                duration: 1.4
-            });
+            // Try motion.js if available
+            if (window.motion) {
+                const chars = splitWordIntoCharacters(wordEl);
+                if (chars && chars.length > 0) {
+                    const isVertical = wordEl.classList.contains('concept-word-vertical');
+                    const { animate, stagger, spring } = window.motion;
+                    const letterSpring = spring({ stiffness: 85, damping: 26, mass: 1.0 });
 
-            animate(chars, {
-                opacity: [0, 1],
-                y: [isVertical ? 18 : 32, 0],
-                x: [isVertical ? -12 : 0, 0],
-                rotateX: [isVertical ? 0 : -24, 0],
-                skewY: [isVertical ? -6 : 0, 0]
-            }, {
-                easing: letterSpring,
-                duration: 1.35,
-                delay: stagger(0.018)
-            });
+                    animate(chars, {
+                        opacity: [0, 1],
+                        y: [isVertical ? 18 : 32, 0],
+                        x: [isVertical ? -12 : 0, 0],
+                        rotateX: [isVertical ? 0 : -24, 0],
+                        skewY: [isVertical ? -6 : 0, 0]
+                    }, {
+                        easing: letterSpring,
+                        duration: 1.35,
+                        delay: stagger(0.018)
+                    });
+                }
+            }
         }
 
         function getCloudBounds() {
