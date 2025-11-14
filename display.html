@@ -849,9 +849,9 @@
             const question = QUESTIONS[currentQuestionIndex];
             if (!question) return;
 
-            // DB 초기화 - 이전 답변 모두 삭제
-            console.log('🗑️ Resetting DB for question:', question.id);
-            await resetAnswers(question.id);
+            // DB 초기화 - 테이블 전체 삭제
+            console.log('🗑️ Resetting entire answers table');
+            await resetAllAnswers();
 
             // Subscribe to DB changes (Realtime)
             realtimeChannel = supabase

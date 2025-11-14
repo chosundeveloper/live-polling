@@ -94,17 +94,17 @@ async function getAnswers(questionId, limit = 50) {
     }
 }
 
-// 답변 초기화 - 특정 질문의 모든 답변 삭제
-async function resetAnswers(questionId) {
+// 답변 초기화 - answers 테이블 전체 삭제
+async function resetAllAnswers() {
     try {
         const { data, error } = await supabase
             .from('answers')
             .delete()
-            .eq('question_id', questionId);
+            .neq('id', '00000000-0000-0000-0000-000000000000'); // 모든 행 삭제
 
         if (error) throw error;
 
-        console.log(`✅ Reset answers for question ${questionId}`);
+        console.log(`✅ Reset all answers in database`);
         return { success: true };
     } catch (error) {
         console.error('Error resetting answers:', error);
