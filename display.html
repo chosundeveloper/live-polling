@@ -29,6 +29,7 @@
             <div class="concept-overlay concept-overlay-bottom-left">
                 <div class="concept-qr-card">
                     <div class="concept-qr-box" id="conceptQrCode"></div>
+                    <div id="qrUrl" style="font-size: 10px; color: #666; text-align: center; margin-top: 8px; word-break: break-all; padding: 0 8px;"></div>
                     <div class="concept-qr-meta">
                         <div>
                             <p class="concept-label">누적 답변</p>
@@ -69,6 +70,7 @@
         let isMockMode = params.get('mock') === '1';
         let pollingInterval = null;
         let simulationInterval = null;
+        let realtimeSubscription = null;
         let mockAnswers = [];
         let wordParticles = [];
         let hiddenWords = [];
@@ -378,11 +380,21 @@
         function updateQuestionMeta(question) {
             conceptQuestion.textContent = question.question;
             document.documentElement.style.setProperty('--concept-accent', question.color || '#7c3aed');
+
+            // Use current host for QR code
             const answerUrl = new URL(window.location.href);
             answerUrl.pathname = answerUrl.pathname.replace(/[^/]+$/, 'answer.html');
             answerUrl.search = `?q=${question.id}`;
             answerUrl.hash = '';
             const urlString = answerUrl.toString();
+
+            console.log('📱 QR Code URL:', urlString);
+
+            // Display URL below QR code
+            const qrUrlDisplay = document.getElementById('qrUrl');
+            if (qrUrlDisplay) {
+                qrUrlDisplay.textContent = urlString;
+            }
 
             if (qrCodeInstance) {
                 qrCodeInstance.clear();
@@ -782,6 +794,10 @@
             if (simulationInterval) clearInterval(simulationInterval);
             if (animationFrameId) cancelAnimationFrame(animationFrameId);
             if (d3Simulation) d3Simulation.stop();
+            if (realtimeSubscription) {
+                supabase.removeChannel(realtimeSubscription);
+                realtimeSubscription = null;
+            }
             pollingInterval = null;
             simulationInterval = null;
             animationFrameId = null;
@@ -849,6 +865,33 @@
             startTimer();
             fetchRealAnswers(); // Initial fetch
             pollingInterval = setInterval(fetchRealAnswers, 2000); // Poll every 2 seconds
+
+            // Supabase Realtime 구독 시작
+            const question = QUESTIONS[currentQuestionIndex];
+            console.log('Starting realtime subscription for question:', question.id);
+
+            realtimeSubscription = subscribeToAnswers(question.id, (payload) => {
+                console.log('Realtime update received:', payload);
+
+                // 새로운 답변 추가
+                if (payload.new && payload.new.answer_text) {
+                    const newAnswer = {
+                        id: payload.new.id,
+                        question_id: payload.new.question_id,
+                        answer: payload.new.answer_text,
+                        answer_text: payload.new.answer_text,
+                        created_at: payload.new.created_at
+                    };
+
+                    // 중복 체크 후 추가
+                    if (!mockAnswers.find(a => a.id === newAnswer.id)) {
+                        mockAnswers.unshift(newAnswer);
+                        const frequencyMap = extractWordInstances(mockAnswers);
+                        renderWords(frequencyMap);
+                        conceptTotal.textContent = mockAnswers.length;
+                    }
+                }
+            });
         }
 
         // --- Event Listeners ---
@@ -870,7 +913,8 @@
         // --- Initial Load ---
         const initialQuestionIndex = Number(params.get('question')) ? QUESTIONS.findIndex(q => q.id === Number(params.get('question'))) : 0;
         navigateToQuestion(initialQuestionIndex !== -1 ? initialQuestionIndex : 0, { force: true });
-        
+
+        // 초기 버튼 상태 설정
         if (isMockMode) {
             toggleMockBtn.classList.add('active');
         }
