@@ -431,7 +431,7 @@
                 qrCodeInstance.clear();
                 qrCodeInstance.makeCode(urlString);
             } else {
-                qrCodeInstance = new QRCode(qrCodeContainer, { text: urlString, width: 96, height: 96, colorDark: "#0f172a", colorLight: "#ffffff", correctLevel: QRCode.CorrectLevel.H });
+                qrCodeInstance = new QRCode(qrCodeContainer, { text: urlString, width: 128, height: 128, colorDark: "#0f172a", colorLight: "#ffffff", correctLevel: QRCode.CorrectLevel.H });
             }
         }
         
