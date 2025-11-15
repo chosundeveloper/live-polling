@@ -37,12 +37,11 @@
                     id="answerInput"
                     class="answer-input"
                     rows="5"
-                    placeholder="여기에 답변을 입력하세요..."
+                    placeholder="여기에 답변을 입력하세요... (띄어쓰기 제외 최대 8글자)"
                     required
-                    maxlength="500"
                 ></textarea>
                 <div class="char-count">
-                    <span id="charCount">0</span> / 500
+                    <span id="charCount">0</span> / 8 (띄어쓰기 제외)
                 </div>
             </div>
 
@@ -186,13 +185,23 @@
             }
 
             updateCharCount() {
-                const length = this.input.value.length;
+                // Count without spaces
+                const textWithoutSpaces = this.input.value.replace(/\s+/g, '');
+                const length = textWithoutSpaces.length;
                 this.charCount.textContent = length;
 
-                if (length > 450) {
+                if (length > 8) {
                     this.charCount.style.color = '#dc3545';
+                } else if (length > 6) {
+                    this.charCount.style.color = '#ffc107';
                 } else {
                     this.charCount.style.color = '#6c757d';
+                }
+
+                // Prevent input if exceeds 8 characters (without spaces)
+                if (length > 8) {
+                    this.input.value = this.input.value.slice(0, -1);
+                    this.updateCharCount();
                 }
             }
 
@@ -200,14 +209,20 @@
                 e.preventDefault();
 
                 const answerText = this.input.value.trim();
+                const textWithoutSpaces = answerText.replace(/\s+/g, '');
 
                 if (!answerText) {
                     this.showError('답변을 입력해주세요.');
                     return;
                 }
 
-                if (answerText.length < 2) {
-                    this.showError('최소 2자 이상 입력해주세요.');
+                if (textWithoutSpaces.length < 1) {
+                    this.showError('최소 1글자 이상 입력해주세요.');
+                    return;
+                }
+
+                if (textWithoutSpaces.length > 8) {
+                    this.showError('띄어쓰기 제외 최대 8글자까지 입력 가능합니다.');
                     return;
                 }
 
