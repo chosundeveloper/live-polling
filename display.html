@@ -152,22 +152,12 @@
             const fragment = document.createDocumentFragment();
 
             if (isVertical) {
-                // For vertical text: split by words (spaces), keep each word together
-                const words = text.split(' ').filter(w => w.length > 0);
-                words.forEach((word, idx) => {
-                    const wordSpan = document.createElement('span');
-                    wordSpan.className = 'concept-char concept-word-block';
-                    wordSpan.textContent = word;
-                    fragment.appendChild(wordSpan);
-
-                    // Add space between words (except last word)
-                    if (idx < words.length - 1) {
-                        const spaceSpan = document.createElement('span');
-                        spaceSpan.className = 'concept-char';
-                        spaceSpan.textContent = '\u00A0';
-                        fragment.appendChild(spaceSpan);
-                    }
-                });
+                // For vertical text: keep entire text as one block, remove spaces
+                const textWithoutSpaces = text.replace(/\s+/g, '');
+                const textSpan = document.createElement('span');
+                textSpan.className = 'concept-char concept-word-block';
+                textSpan.textContent = textWithoutSpaces;
+                fragment.appendChild(textSpan);
             } else {
                 // For horizontal text: keep entire text as one block, don't split
                 const textSpan = document.createElement('span');
