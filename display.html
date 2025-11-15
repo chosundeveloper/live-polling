@@ -169,13 +169,11 @@
                     }
                 });
             } else {
-                // For horizontal text: split into individual characters
-                for (const char of text) {
-                    const span = document.createElement('span');
-                    span.className = 'concept-char';
-                    span.textContent = char === ' ' ? '\u00A0' : char;
-                    fragment.appendChild(span);
-                }
+                // For horizontal text: keep entire text as one block, don't split
+                const textSpan = document.createElement('span');
+                textSpan.className = 'concept-char concept-word-block';
+                textSpan.textContent = text;
+                fragment.appendChild(textSpan);
             }
 
             wordEl.appendChild(fragment);
