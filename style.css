@@ -1430,13 +1430,17 @@ footer a:hover {
 
 #conceptQrCode {
     padding: 0;
+    width: 96px;
+    height: 96px;
+    overflow: hidden;
 }
 
 #conceptQrCode img,
 #conceptQrCode canvas {
     display: block;
-    width: 96px !important;
-    height: 96px !important;
+    width: 120px !important;
+    height: 120px !important;
+    margin: -12px;
 }
 
 .concept-qr-meta {
