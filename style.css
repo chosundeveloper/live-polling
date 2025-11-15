@@ -1518,8 +1518,8 @@ footer a:hover {
     writing-mode: vertical-rl;
     text-orientation: upright;
     white-space: nowrap;
-    letter-spacing: 0.08em;
-    line-height: 1.1;
+    letter-spacing: 0;
+    line-height: 1;
     max-height: 80vh;
     overflow: hidden;
     text-overflow: ellipsis;
