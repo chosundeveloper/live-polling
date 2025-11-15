@@ -1366,11 +1366,26 @@ footer a:hover {
     left: 26px;
 }
 
+.concept-overlay-bottom-right {
+    bottom: 26px;
+    right: 26px;
+}
+
 
 .concept-qr-card {
+    background: rgba(255, 255, 255, 0.85);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(226, 232, 240, 0.7);
+    border-radius: 20px;
+    padding: 16px;
+    box-shadow: 0 10px 30px rgba(15, 23, 42, 0.05);
+    color: var(--ink-secondary);
+}
+
+.concept-stats-card {
     display: flex;
-    align-items: center;
-    gap: 16px;
+    flex-direction: column;
+    gap: 12px;
     background: rgba(255, 255, 255, 0.85);
     backdrop-filter: blur(10px);
     border: 1px solid rgba(226, 232, 240, 0.7);
@@ -1389,19 +1404,22 @@ footer a:hover {
     align-items: center;
 }
 
-.concept-qr-card .concept-label {
+.concept-qr-card .concept-label,
+.concept-stats-card .concept-label {
     font-size: 0.55rem;
     color: rgba(15, 23, 42, 0.6);
     font-weight: 300;
 }
 
-.concept-qr-card .concept-value {
+.concept-qr-card .concept-value,
+.concept-stats-card .concept-value {
     font-size: 0.8rem;
     color: var(--ink-primary);
     font-weight: 300;
 }
 
-.concept-qr-card .concept-action-ghost {
+.concept-qr-card .concept-action-ghost,
+.concept-stats-card .concept-action-ghost {
     border-color: rgba(15, 23, 42, 0.2);
     color: var(--ink-secondary);
     padding: 6px 12px;
