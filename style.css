@@ -1494,12 +1494,17 @@ footer a:hover {
 
 .concept-word-vertical .concept-char {
     display: block;
-    line-height: 1;
+    line-height: 0.8;
+    margin: 0;
+    padding: 0;
 }
 
 .concept-word-vertical .concept-word-block {
-    display: inline;
+    display: inline-block;
     white-space: nowrap;
+    line-height: 0.8;
+    margin: 0;
+    padding: 0;
 }
 
 .concept-word-vertical .concept-char:not(.concept-word-block) {
