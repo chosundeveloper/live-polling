@@ -82,25 +82,45 @@
         let sessionStartTime = null; // 페이지 로드 시점
 
         // --- Constants ---
-        const KEYWORDS = ['연결', '성장', '도전', '몰입', '설렘', '공감', '협업', '집중', '영감', '감동', '시너지', '에너지', '환대', '몰두', '발견', '혁신', '팀워크', '지원', '아이디어', '탐험', '성찰', '축제', '유연함', '치열함', '여유', '흥미', '모험', '발표', '피드백', '브레인스토밍', 'collaboration', 'momentum', 'breakthrough', 'catalyst', 'insight', 'iteration', 'community', 'confidence', 'empathy', 'curiosity'];
-        const PREFIXES = ['따뜻한', '깊은', '새로운', '반짝이는', '집중의', '장난기 있는', '강렬한', '잔잔한', '선명한'];
-        const SUFFIXES = ['무드', '아이디어', '영감', '에너지', '발견', '시간', '순간', '대화', '시선'];
+        const KEYWORDS = ['감사', '기쁨', '평안', '은혜', '회개', '찬양', '경배', '사랑', '소망', '믿음', '겸손', '순종', '감격', '기대', '축복', '회복', '치유', '새힘', '감동', '기도', '간절함', '뜨거움', '충만', '평온', '기다림', '갈망', '간구', '고백', '헌신'];
+        const PREFIXES = ['따뜻한', '깊은', '새로운', '뜨거운', '간절한', '겸손한', '진실한', '잔잔한', '충만한'];
+        const SUFFIXES = ['마음', '감사', '은혜', '기쁨', '평안', '소망', '믿음', '사랑', '찬양'];
         const TEXT_ANSWERS = [
-            '오늘 정말 좋은 발표를 들어서 기분이 좋아요!',
-            '새로운 아이디어가 떠올라서 설레네요',
-            '팀원들과의 협업이 즐거웠습니다',
-            '지금까지 배운 내용이 정말 유익했어요',
-            '앞으로의 프로젝트가 기대됩니다',
-            '오늘 세션이 매우 인상 깊었어요',
-            '동료들의 열정에 자극받았습니다',
-            '실무에 바로 적용할 수 있을 것 같아요',
-            '강사님의 설명이 명확해서 이해하기 쉬웠어요',
-            '질의응답 시간이 도움이 많이 됐습니다',
-            '네트워킹 시간이 좋았어요',
-            '새로운 관점을 얻게 되었습니다',
-            '실습 과정이 재미있었어요',
-            '다음 세션도 기대가 크네요',
-            '오늘 하루가 뜻깊었습니다'
+            '감사',
+            '기쁨',
+            '평안',
+            '은혜',
+            '회개',
+            '찬양',
+            '경배',
+            '사랑',
+            '소망',
+            '믿음',
+            '겸손',
+            '순종',
+            '감격',
+            '기대',
+            '축복',
+            '회복',
+            '치유',
+            '새힘',
+            '감동',
+            '기도',
+            '간절함',
+            '뜨거움',
+            '충만',
+            '평온',
+            '기다림',
+            '갈망',
+            '간구',
+            '고백',
+            '헌신',
+            '감사한마음',
+            '기쁜마음',
+            '평안함',
+            '은혜로움',
+            '감사와기쁨',
+            '사랑과평안'
         ];
         const MAX_WORDS = 150;
         const FIXED_FONT_SIZE = 24; // Fixed font size for all words
@@ -832,6 +852,22 @@
                     answer = TEXT_ANSWERS[Math.floor(Math.random() * TEXT_ANSWERS.length)];
                 } else {
                     answer = KEYWORDS[Math.floor(Math.random() * KEYWORDS.length)] || KEYWORDS[index % KEYWORDS.length];
+                }
+
+                // Apply 8 character limit (excluding spaces)
+                const textWithoutSpaces = answer.replace(/\s+/g, '');
+                if (textWithoutSpaces.length > 8) {
+                    // Find the position in original string that gives us 8 non-space characters
+                    let count = 0;
+                    let cutIndex = 0;
+                    for (let i = 0; i < answer.length; i++) {
+                        if (answer[i] !== ' ') count++;
+                        if (count === 8) {
+                            cutIndex = i + 1;
+                            break;
+                        }
+                    }
+                    answer = answer.substring(0, cutIndex);
                 }
 
                 return {
