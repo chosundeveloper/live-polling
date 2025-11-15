@@ -1431,17 +1431,18 @@ footer a:hover {
 
 #conceptQrCode {
     padding: 0;
-    width: 96px;
-    height: 96px;
+    width: 80px;
+    height: 80px;
     overflow: hidden;
 }
 
 #conceptQrCode img,
 #conceptQrCode canvas {
     display: block;
-    width: 120px !important;
-    height: 120px !important;
-    margin: -12px;
+    width: 96px !important;
+    height: 96px !important;
+    margin: -8px;
+    transform: scale(1.2);
 }
 
 .concept-qr-meta {
