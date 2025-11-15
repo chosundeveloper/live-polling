@@ -1507,7 +1507,9 @@ footer a:hover {
     white-space: nowrap;
     letter-spacing: 0.08em;
     line-height: 1.1;
-    max-height: none;
+    max-height: 80vh;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 .concept-word:hover {
