@@ -1482,11 +1482,16 @@ footer a:hover {
 
 .concept-word-vertical .concept-char {
     display: block;
+    line-height: 0.8;
 }
 
 .concept-word-vertical .concept-word-block {
     display: inline;
     white-space: nowrap;
+}
+
+.concept-word-vertical .concept-char:not(.concept-word-block) {
+    margin: 0.15em 0;
 }
 
 .concept-word-visible {
