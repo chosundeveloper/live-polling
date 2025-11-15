@@ -823,8 +823,8 @@ body.display-body {
 
 .timer-circle {
     position: relative;
-    width: 100px;
-    height: 100px;
+    width: 120px;
+    height: 120px;
 }
 
 .timer-svg {
@@ -852,7 +852,7 @@ body.display-body {
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
-    font-size: 1.1em;
+    font-size: 1em;
     font-weight: 500;
     color: #667eea;
     transition: color 0.3s ease;
