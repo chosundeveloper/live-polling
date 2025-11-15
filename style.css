@@ -453,6 +453,7 @@ body.display-body {
     box-shadow: inset 0 0 0 1px rgba(100, 141, 163, 0.25), 0 15px 35px rgba(100, 141, 163, 0.25);
     display: inline-block;
     margin: 0 auto;
+    border: 2px solid white;
 }
 
 .qr-frame .qrcode,
@@ -851,10 +852,11 @@ body.display-body {
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
-    font-size: 1.8em;
-    font-weight: 400;
+    font-size: 1.1em;
+    font-weight: 500;
     color: #667eea;
     transition: color 0.3s ease;
+    white-space: nowrap;
 }
 
 .timer-label {
