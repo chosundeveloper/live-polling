@@ -1518,7 +1518,7 @@ footer a:hover {
     white-space: pre;
     letter-spacing: 0;
     line-height: 1;
-    word-spacing: -0.7em;
+    word-spacing: -0.85em;
     max-height: 80vh;
     overflow: hidden;
     text-overflow: ellipsis;
