@@ -454,10 +454,12 @@
                     return;
                 }
                 console.log('answer_text:', answer.answer_text);
-                // Include Korean jamo (ㄱ-ㅎ, ㅏ-ㅣ) in addition to complete Hangul (가-힣)
-                const tokens = answer.answer_text.split(/[\s,.;!?"'()\[\]{}]+/).map(token => token.replace(/^[^0-9a-zA-Zㄱ-ㅎㅏ-ㅣ가-힣]+|[^0-9a-zA-Zㄱ-ㅎㅏ-ㅣ가-힣]+$/g, '').trim()).filter(token => token.length > 0);
-                console.log('Extracted tokens:', tokens);
-                tokens.forEach(token => frequency.set(token, (frequency.get(token) || 0) + 1));
+                // Use entire answer as a single token (preserve spaces)
+                const token = answer.answer_text.trim();
+                if (token.length > 0) {
+                    frequency.set(token, (frequency.get(token) || 0) + 1);
+                }
+                console.log('Extracted token:', token);
             });
             console.log('Final frequency map:', frequency);
             return frequency;
