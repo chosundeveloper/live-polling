@@ -15,12 +15,9 @@
     <div class="concept-wrapper">
         <header class="concept-top">
             <div class="concept-title-nav">
-                <button class="concept-nav-btn" id="prevQuestionBtn" aria-label="이전 질문">‹</button>
                 <div class="concept-question-display">
                     <h2 id="conceptQuestion">질문 로딩 중...</h2>
-                    <p class="concept-question-desc" id="questionCounter"></p>
                 </div>
-                <button class="concept-nav-btn concept-nav-btn-next" id="nextQuestionBtn" aria-label="다음 질문">›</button>
             </div>
         </header>
 
@@ -62,14 +59,11 @@
 
         // --- DOM Elements ---
         const conceptQuestion = document.getElementById('conceptQuestion');
-        const questionCounter = document.getElementById('questionCounter');
         const wordsLayer = document.getElementById('conceptWords');
         const conceptTotal = document.getElementById('conceptTotal');
         const conceptUpdated = document.getElementById('conceptUpdated');
         const qrCodeContainer = document.getElementById('conceptQrCode');
         const toggleMockBtn = document.getElementById('toggleMock');
-        const prevQuestionBtn = document.getElementById('prevQuestionBtn');
-        const nextQuestionBtn = document.getElementById('nextQuestionBtn');
 
         // --- State ---
         const params = new URLSearchParams(window.location.search);
@@ -437,7 +431,7 @@
         function navigateToQuestion(index, options = {}) {
             const { force = false } = options;
             console.log('navigateToQuestion called with index:', index);
-            const newIndex = Math.max(0, Math.min(QUESTIONS.length - 1, index));
+            const newIndex = 0; // Always use first question
             if (!force && newIndex === currentQuestionIndex && wordParticles.length > 0) {
                 console.log('navigateToQuestion: Same question, particles exist, returning.');
                 return;
@@ -447,10 +441,6 @@
             const question = QUESTIONS[currentQuestionIndex];
 
             updateQuestionMeta(question);
-            questionCounter.textContent = `${currentQuestionIndex + 1} / ${QUESTIONS.length}`;
-
-            prevQuestionBtn.disabled = currentQuestionIndex === 0;
-            nextQuestionBtn.disabled = currentQuestionIndex === QUESTIONS.length - 1;
 
             resetDisplay();
             if (isMockMode) startRealtimeSimulation();
@@ -938,9 +928,6 @@
         }
 
         // --- Event Listeners ---
-        prevQuestionBtn.addEventListener('click', () => navigateToQuestion(currentQuestionIndex - 1));
-        nextQuestionBtn.addEventListener('click', () => navigateToQuestion(currentQuestionIndex + 1));
-
         toggleMockBtn.addEventListener('click', () => {
             console.log('toggleMockBtn clicked. isMockMode before:', isMockMode);
             isMockMode = !isMockMode;
@@ -954,8 +941,7 @@
         });
 
         // --- Initial Load ---
-        const initialQuestionIndex = Number(params.get('question')) ? QUESTIONS.findIndex(q => q.id === Number(params.get('question'))) : 0;
-        navigateToQuestion(initialQuestionIndex !== -1 ? initialQuestionIndex : 0, { force: true });
+        navigateToQuestion(0, { force: true });
 
         // 초기 버튼 상태 설정
         if (isMockMode) {
