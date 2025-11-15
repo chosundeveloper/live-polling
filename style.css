@@ -1484,7 +1484,7 @@ footer a:hover {
 
 .concept-word-vertical .concept-char {
     display: block;
-    line-height: 0.5;
+    line-height: 1;
 }
 
 .concept-word-vertical .concept-word-block {
@@ -1493,7 +1493,8 @@ footer a:hover {
 }
 
 .concept-word-vertical .concept-char:not(.concept-word-block) {
-    margin: 0.05em 0;
+    height: 1em;
+    line-height: 1;
 }
 
 .concept-word-visible {
