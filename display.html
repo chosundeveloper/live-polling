@@ -678,13 +678,23 @@
                 } else {
                     const wordEl = document.createElement('span');
                     wordEl.className = 'concept-word';
-                    wordEl.textContent = text;
+
+                    // Determine if vertical BEFORE setting text
+                    const isVertical = Math.random() < 0.35;
+                    if (isVertical) {
+                        wordEl.classList.add('concept-word-vertical');
+                        // Remove all spaces for vertical text
+                        wordEl.textContent = text.replace(/\s+/g, '');
+                    } else {
+                        wordEl.textContent = text;
+                    }
+
                     const assignedColor = selectWordColor(weight / Math.max(...limited.map(item => item[1])), index);
                     wordEl.style.color = assignedColor;
 
                     // Use fixed font size for all words
                     wordEl.style.fontSize = `${FIXED_FONT_SIZE}px`;
-                    
+
                     // Click to delete
                     wordEl.addEventListener('click', () => {
                         hiddenWords.push(text);
@@ -726,11 +736,6 @@
                     });
 
                     wordsLayer.appendChild(wordEl);
-                    
-                    const isVertical = Math.random() < 0.35; // Boosted chance for vertical words
-                    if (isVertical) {
-                        wordEl.classList.add('concept-word-vertical');
-                    }
 
                     const rect = wordEl.getBoundingClientRect();
                     particle = {
