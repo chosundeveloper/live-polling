@@ -1466,6 +1466,11 @@ footer a:hover {
     display: block;
 }
 
+.concept-word-vertical .concept-word-block {
+    display: inline;
+    white-space: nowrap;
+}
+
 .concept-word-visible {
     opacity: 0.96;
     --concept-scale: 1;

@@ -144,14 +144,38 @@
                 return wordEl?.querySelectorAll('.concept-char');
             }
             const text = wordEl.textContent;
+            const isVertical = wordEl.classList.contains('concept-word-vertical');
+
             wordEl.textContent = '';
             const fragment = document.createDocumentFragment();
-            for (const char of text) {
-                const span = document.createElement('span');
-                span.className = 'concept-char';
-                span.textContent = char === ' ' ? '\u00A0' : char;
-                fragment.appendChild(span);
+
+            if (isVertical) {
+                // For vertical text: split by words (spaces), keep each word together
+                const words = text.split(' ').filter(w => w.length > 0);
+                words.forEach((word, idx) => {
+                    const wordSpan = document.createElement('span');
+                    wordSpan.className = 'concept-char concept-word-block';
+                    wordSpan.textContent = word;
+                    fragment.appendChild(wordSpan);
+
+                    // Add space between words (except last word)
+                    if (idx < words.length - 1) {
+                        const spaceSpan = document.createElement('span');
+                        spaceSpan.className = 'concept-char';
+                        spaceSpan.textContent = '\u00A0';
+                        fragment.appendChild(spaceSpan);
+                    }
+                });
+            } else {
+                // For horizontal text: split into individual characters
+                for (const char of text) {
+                    const span = document.createElement('span');
+                    span.className = 'concept-char';
+                    span.textContent = char === ' ' ? '\u00A0' : char;
+                    fragment.appendChild(span);
+                }
             }
+
             wordEl.appendChild(fragment);
             wordEl.dataset.charsSplit = '1';
             return wordEl.querySelectorAll('.concept-char');
