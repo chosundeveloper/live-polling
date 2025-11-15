@@ -152,11 +152,10 @@
             const fragment = document.createDocumentFragment();
 
             if (isVertical) {
-                // For vertical text: keep entire text as one block, remove spaces
-                const textWithoutSpaces = text.replace(/\s+/g, '');
+                // For vertical text: keep entire text as one block with spaces
                 const textSpan = document.createElement('span');
                 textSpan.className = 'concept-char concept-word-block';
-                textSpan.textContent = textWithoutSpaces;
+                textSpan.textContent = text;
                 fragment.appendChild(textSpan);
             } else {
                 // For horizontal text: keep entire text as one block, don't split
@@ -683,10 +682,8 @@
                     const isVertical = Math.random() < 0.35;
                     if (isVertical) {
                         wordEl.classList.add('concept-word-vertical');
-                        // Remove all spaces for vertical text
-                        const textWithoutSpaces = text.replace(/\s+/g, '');
-                        wordEl.textContent = textWithoutSpaces;
-                        console.log('세로 텍스트:', text, '→', textWithoutSpaces);
+                        // Keep text as is for vertical (with spaces)
+                        wordEl.textContent = text;
                     } else {
                         wordEl.textContent = text;
                     }
