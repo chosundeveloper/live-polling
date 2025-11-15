@@ -1433,8 +1433,8 @@ footer a:hover {
 
 #conceptQrCode {
     padding: 0;
-    width: 100px;
-    height: 100px;
+    width: 90px;
+    height: 90px;
     overflow: hidden;
 }
 
@@ -1443,7 +1443,7 @@ footer a:hover {
     display: block;
     width: 128px !important;
     height: 128px !important;
-    margin: -14px;
+    margin: -19px;
 }
 
 .concept-qr-meta {
