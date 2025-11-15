@@ -684,7 +684,9 @@
                     if (isVertical) {
                         wordEl.classList.add('concept-word-vertical');
                         // Remove all spaces for vertical text
-                        wordEl.textContent = text.replace(/\s+/g, '');
+                        const textWithoutSpaces = text.replace(/\s+/g, '');
+                        wordEl.textContent = textWithoutSpaces;
+                        console.log('세로 텍스트:', text, '→', textWithoutSpaces);
                     } else {
                         wordEl.textContent = text;
                     }
