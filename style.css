@@ -1329,8 +1329,8 @@ footer a:hover {
     margin-top: 16px;
     border-radius: 18px;
     overflow: visible; /* Changed from hidden to visible to show overlays */
-    background: linear-gradient(135deg, #1e293b 0%, #0f172a 50%, #1e293b 100%);
-    border: 1px solid rgba(148, 163, 184, 0.15);
+    background: linear-gradient(135deg, #1a2332 0%, #0d1520 50%, #1a2332 100%);
+    border: 1px solid rgba(148, 163, 184, 0.2);
     z-index: 0;
     padding: 32px 32px 36px;
     min-height: 700px;
@@ -1341,12 +1341,12 @@ footer a:hover {
     position: absolute;
     inset: 0;
     background:
-        radial-gradient(circle at 15% 25%, rgba(56, 189, 248, 0.15), transparent 50%),
-        radial-gradient(circle at 85% 65%, rgba(59, 130, 246, 0.12), transparent 50%),
-        radial-gradient(circle at 50% 50%, rgba(96, 165, 250, 0.08), transparent 40%);
+        radial-gradient(circle at 15% 25%, rgba(56, 189, 248, 0.1), transparent 50%),
+        radial-gradient(circle at 85% 65%, rgba(139, 92, 246, 0.08), transparent 50%),
+        radial-gradient(circle at 50% 50%, rgba(59, 130, 246, 0.06), transparent 40%);
     background-size: 200% 200%;
     animation: subtleBackgroundPan 25s ease-in-out infinite alternate;
-    opacity: 1;
+    opacity: 0.7;
     z-index: 0;
 }
 
@@ -1358,10 +1358,10 @@ footer a:hover {
     background-size: cover;
     background-position: center;
     background-repeat: no-repeat;
-    opacity: 0.5;
+    opacity: 0.35;
     pointer-events: none;
     z-index: 1;
-    filter: brightness(2.5) contrast(1.2) saturate(0.8) invert(0.1);
+    filter: brightness(1.8) contrast(1.1) saturate(0.75);
     mix-blend-mode: screen;
 }
 
