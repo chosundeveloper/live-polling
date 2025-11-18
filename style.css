@@ -1358,11 +1358,11 @@ footer a:hover {
     background-size: cover;
     background-position: center;
     background-repeat: no-repeat;
-    opacity: 0.18;
+    opacity: 0.35;
     pointer-events: none;
     z-index: 1;
-    filter: brightness(1.2) contrast(0.85) saturate(0.6) blur(0.5px);
-    mix-blend-mode: soft-light;
+    filter: brightness(1.4) contrast(1.0) saturate(0.7);
+    mix-blend-mode: lighten;
 }
 
 @keyframes subtleBackgroundPan {
