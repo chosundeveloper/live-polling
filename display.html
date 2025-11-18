@@ -153,6 +153,11 @@
 
         function selectWordColor(weightRatio, index) {
             // Select random color, excluding poorly visible ones
+            // 50% chance for blue (#3288bd index 1), 50% for other allowed colors
+            if (Math.random() < 0.5) {
+                return COLOR_PALETTE[1]; // Blue
+            }
+
             let colorIndex;
             do {
                 colorIndex = Math.floor(Math.random() * COLOR_PALETTE.length);
