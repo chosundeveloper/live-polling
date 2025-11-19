@@ -1359,35 +1359,17 @@ footer a:hover {
 }
 
 .concept-display .concept-cloud {
-    background: rgba(15, 23, 42, 0.2);
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    box-shadow: 0 25px 80px rgba(15, 23, 42, 0.35);
+    background: rgba(15, 23, 42, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    box-shadow: 0 20px 60px rgba(15, 23, 42, 0.25);
     border-radius: 32px;
-    backdrop-filter: blur(22px);
+    backdrop-filter: blur(16px);
 }
 
 .concept-display .concept-cloud::before {
-    background: rgba(15, 23, 42, 0.3);
+    background: rgba(15, 23, 42, 0.12);
     border-radius: inherit;
     z-index: 0;
-}
-
-.concept-display .concept-cloud::after {
-    content: '';
-    position: absolute;
-    inset: 0;
-    background-color: #ffffff;
-    -webkit-mask-image: url('background.png');
-    mask-image: url('background.png');
-    -webkit-mask-repeat: no-repeat;
-    mask-repeat: no-repeat;
-    -webkit-mask-position: center;
-    mask-position: center;
-    -webkit-mask-size: 64%;
-    mask-size: 64%;
-    opacity: 0.98;
-    filter: drop-shadow(0 25px 45px rgba(15, 23, 42, 0.25));
-    z-index: 1;
 }
 
 @keyframes floatingBubbles {
