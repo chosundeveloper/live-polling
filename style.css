@@ -1379,6 +1379,12 @@ footer a:hover {
     pointer-events: none;
     z-index: 1;
     overflow: hidden;
+    background-image: url('배경.png');
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    border-radius: 12px;
+    opacity: 0.95;
 }
 
 .concept-decoration {
@@ -1493,12 +1499,6 @@ footer a:hover {
     overflow: visible;
     z-index: 2;
     min-height: 640px;
-    background-image: url('배경.png');
-    background-size: cover;
-    background-position: center;
-    background-repeat: no-repeat;
-    border-radius: 12px;
-    opacity: 0.95;
 }
 
 .concept-overlay {
