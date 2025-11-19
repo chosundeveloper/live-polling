@@ -1356,15 +1356,16 @@ footer a:hover {
 }
 
 .concept-display .concept-cloud {
-    background: rgba(15, 23, 42, 0.08);
-    border: 1px solid rgba(255, 255, 255, 0.15);
-    box-shadow: 0 20px 60px rgba(15, 23, 42, 0.25);
+    background: linear-gradient(rgba(0, 0, 0, 0.08), rgba(0, 0, 0, 0.08)),
+        #000 url('jihyun.png') center center / cover no-repeat fixed;
+    border: none;
+    box-shadow: none;
     border-radius: 32px;
-    backdrop-filter: blur(16px);
+    backdrop-filter: none;
 }
 
 .concept-display .concept-cloud::before {
-    background: rgba(15, 23, 42, 0.12);
+    background: transparent;
     border-radius: inherit;
     z-index: 0;
 }
