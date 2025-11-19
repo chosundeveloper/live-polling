@@ -166,7 +166,10 @@
         const FALL_START_OFFSET = 120; // start drop slightly above the viewport
         const BUBBLE_MARGIN_X = 20;
         const BUBBLE_MARGIN_Y = 12;
+        const DROP_DELAY_MIN = 400;
+        const DROP_DELAY_MAX = 900;
         let columnHeights = new Array(COLUMN_COUNT).fill(0);
+        let dropTimeoutId = null;
 
         function createWord() {
             wordCount++;
@@ -190,7 +193,8 @@
                     existingWord.element.style.transform = 'scale(1)';
                     existingWord.element.style.boxShadow = '0 4px 12px rgba(0, 0, 0, 0.15)';
                 }, 200);
-                return;
+                scheduleNextDrop(400);
+                return 0;
             }
 
             const word = document.createElement('div');
@@ -241,10 +245,20 @@
 
             stackedWords.push(wordData);
 
-            // Click to remove
             word.addEventListener('click', () => {
                 removeWord(word, wordText);
             });
+
+            scheduleNextDrop(duration * 1000);
+            return duration * 1000;
+        }
+
+        function scheduleNextDrop(previousDuration = 0) {
+            if (dropTimeoutId) {
+                clearTimeout(dropTimeoutId);
+            }
+            const delay = Math.max(DROP_DELAY_MIN, previousDuration) + Math.random() * (DROP_DELAY_MAX - DROP_DELAY_MIN);
+            dropTimeoutId = setTimeout(createWord, delay);
         }
 
         function removeWord(wordElement, wordText) {
@@ -334,8 +348,8 @@
             });
         }
 
-        // Start dropping words
-        setInterval(createWord, 800);
+        // Start dropping words sequentially
+        createWord();
 
         // Handle window resize
         window.addEventListener('resize', () => {
