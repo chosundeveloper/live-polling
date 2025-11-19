@@ -171,8 +171,8 @@
         const TETRIS_SPEED_VARIANCE = 60;
         const TETRIS_CELL_WIDTH_MIN = 140;
         const TETRIS_CELL_WIDTH_MAX = 220;
-        const TETRIS_CELL_HEIGHT_MIN = 80;
-        const TETRIS_CELL_HEIGHT_MAX = 120;
+        const TETRIS_CELL_HEIGHT_MIN = 110;
+        const TETRIS_CELL_HEIGHT_MAX = 150;
         const MOCK_WORD_POOL = buildMockWordPool();
         let mockWordQueue = shuffleArray([...MOCK_WORD_POOL]);
         let mockWordIndex = 0;
@@ -518,12 +518,10 @@
             let cellHeight = height / gridMetrics.rows;
             if (cellHeight >= TETRIS_CELL_HEIGHT_MIN) {
                 cellHeight = Math.min(TETRIS_CELL_HEIGHT_MAX, Math.max(TETRIS_CELL_HEIGHT_MIN, cellHeight));
+            } else {
+                cellHeight = TETRIS_CELL_HEIGHT_MIN;
             }
-            const totalGridHeight = cellHeight * gridMetrics.rows;
-            if (totalGridHeight > height) {
-                cellHeight = height / gridMetrics.rows;
-            }
-            gridMetrics.cellHeight = Math.max(24, cellHeight);
+            gridMetrics.cellHeight = cellHeight;
             gridMetrics.offsetY = gridMetrics.cellHeight / 2;
         }
 
