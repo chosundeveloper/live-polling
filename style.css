@@ -1333,8 +1333,8 @@ footer a:hover {
     flex: 1;
     border-radius: 18px;
     overflow: visible; /* Changed from hidden to visible to show overlays */
-    background: rgba(255, 255, 255, 0.4);
-    backdrop-filter: blur(10px);
+    background: rgba(255, 255, 255, 0.15);
+    backdrop-filter: blur(5px);
     border: 1px solid rgba(148, 163, 184, 0.15);
     z-index: 0;
     padding: 32px 32px 36px;
