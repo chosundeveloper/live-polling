@@ -1233,7 +1233,7 @@ footer a:hover {
     height: 100vh;
     width: 100vw;
     background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #334155 100%);
-    background-image: url('배경.png');
+    background-image: url('배경.jpeg');
     background-size: cover;
     background-position: center;
     background-repeat: no-repeat;
@@ -1380,7 +1380,7 @@ footer a:hover {
     pointer-events: none;
     z-index: 1;
     overflow: hidden;
-    background-image: url('배경.png');
+    background-image: url('배경.jpeg');
     background-size: cover;
     background-position: center;
     background-repeat: no-repeat;
