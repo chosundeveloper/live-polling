@@ -11,50 +11,52 @@
     <script src="https://cdn.jsdelivr.net/npm/motion@11.11.13/dist/motion.min.js"></script>
     <script src="https://d3js.org/d3.v7.min.js"></script>
 </head>
-<body class="concept-body concept-wrapper" style="background-image: url('background2.png');">
-    <header class="concept-top">
-        <div class="concept-title-nav">
-            <div class="concept-question-display">
-                <h2 id="conceptQuestion">질문 로딩 중...</h2>
+<body class="concept-body concept-display">
+    <div class="concept-wrapper">
+        <header class="concept-top">
+            <div class="concept-title-nav">
+                <div class="concept-question-display">
+                    <h2 id="conceptQuestion">질문 로딩 중...</h2>
+                </div>
             </div>
-        </div>
-    </header>
+        </header>
 
-    <main class="concept-cloud">
-        <div class="concept-decorations">
-            <div class="concept-decoration star" style="top: 10%; left: 15%; animation-delay: 0s;"></div>
-            <div class="concept-decoration circle" style="top: 20%; left: 80%; animation-delay: 2s;"></div>
-            <div class="concept-decoration bubble" style="top: 70%; left: 25%; animation-delay: 1s;"></div>
-            <div class="concept-decoration star" style="top: 85%; left: 70%; animation-delay: 3s;"></div>
-            <div class="concept-decoration circle" style="top: 40%; left: 10%; animation-delay: 1.5s;"></div>
-            <div class="concept-decoration bubble" style="top: 60%; left: 90%; animation-delay: 2.5s;"></div>
-            <div class="concept-decoration star" style="top: 30%; left: 50%; animation-delay: 0.5s;"></div>
-            <div class="concept-decoration circle" style="top: 15%; left: 60%; animation-delay: 3.5s;"></div>
-            <div class="concept-decoration bubble" style="top: 80%; left: 40%; animation-delay: 1.8s;"></div>
-            <div class="concept-decoration star" style="top: 50%; left: 85%; animation-delay: 2.2s;"></div>
-        </div>
-        <div class="concept-words" id="conceptWords"></div>
-        <div class="concept-overlay concept-overlay-bottom-left">
-            <div class="concept-qr-card">
-                <div class="concept-qr-box" id="conceptQrCode"></div>
+        <main class="concept-cloud">
+            <div class="concept-decorations">
+                <div class="concept-decoration star" style="top: 10%; left: 15%; animation-delay: 0s;"></div>
+                <div class="concept-decoration circle" style="top: 20%; left: 80%; animation-delay: 2s;"></div>
+                <div class="concept-decoration bubble" style="top: 70%; left: 25%; animation-delay: 1s;"></div>
+                <div class="concept-decoration star" style="top: 85%; left: 70%; animation-delay: 3s;"></div>
+                <div class="concept-decoration circle" style="top: 40%; left: 10%; animation-delay: 1.5s;"></div>
+                <div class="concept-decoration bubble" style="top: 60%; left: 90%; animation-delay: 2.5s;"></div>
+                <div class="concept-decoration star" style="top: 30%; left: 50%; animation-delay: 0.5s;"></div>
+                <div class="concept-decoration circle" style="top: 15%; left: 60%; animation-delay: 3.5s;"></div>
+                <div class="concept-decoration bubble" style="top: 80%; left: 40%; animation-delay: 1.8s;"></div>
+                <div class="concept-decoration star" style="top: 50%; left: 85%; animation-delay: 2.2s;"></div>
             </div>
-        </div>
-        <div class="concept-overlay concept-overlay-bottom-right">
-            <div class="concept-stats-card">
-                <div>
-                    <p class="concept-label">누적 답변</p>
-                    <p class="concept-value" id="conceptTotal">0</p>
+            <div class="concept-words" id="conceptWords"></div>
+            <div class="concept-overlay concept-overlay-bottom-left">
+                <div class="concept-qr-card">
+                    <div class="concept-qr-box" id="conceptQrCode"></div>
                 </div>
-                <div class="concept-timer-row">
+            </div>
+            <div class="concept-overlay concept-overlay-bottom-right">
+                <div class="concept-stats-card">
                     <div>
-                        <p class="concept-label">타이머</p>
-                        <p class="concept-value" id="conceptUpdated">10:00</p>
+                        <p class="concept-label">누적 답변</p>
+                        <p class="concept-value" id="conceptTotal">0</p>
                     </div>
-                    <button class="concept-action concept-action-ghost" id="toggleMock">모의</button>
+                    <div class="concept-timer-row">
+                        <div>
+                            <p class="concept-label">타이머</p>
+                            <p class="concept-value" id="conceptUpdated">10:00</p>
+                        </div>
+                        <button class="concept-action concept-action-ghost" id="toggleMock">모의</button>
+                    </div>
                 </div>
             </div>
-        </div>
-    </main>
+        </main>
+    </div>
 
     <script>
         console.log('Script started executing'); // Very early log
