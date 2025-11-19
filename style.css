@@ -1333,7 +1333,7 @@ footer a:hover {
     flex: 1;
     border-radius: 18px;
     overflow: visible; /* Changed from hidden to visible to show overlays */
-    background: rgba(26, 35, 50, 0.6);
+    background: rgba(255, 255, 255, 0.4);
     backdrop-filter: blur(10px);
     border: 1px solid rgba(148, 163, 184, 0.15);
     z-index: 0;
@@ -1475,11 +1475,11 @@ footer a:hover {
     background-size: cover;
     background-position: center;
     background-repeat: no-repeat;
-    opacity: 0.35;
+    opacity: 1;
     pointer-events: none;
     z-index: 1;
-    filter: brightness(1.8) contrast(1.1) saturate(0.75);
-    mix-blend-mode: screen;
+    filter: brightness(100) saturate(0);
+    mix-blend-mode: normal;
 }
 
 @keyframes subtleBackgroundPan {
