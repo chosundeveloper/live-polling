@@ -1,0 +1,1055 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Live Polling - Mutalisk (No Overlap Demo)</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="supabase-config.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/motion@11.11.13/dist/motion.min.js"></script>
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+</head>
+<body class="concept-body concept-display">
+    <div class="concept-wrapper">
+        <header class="concept-top">
+            <div class="concept-title-nav">
+                <div class="concept-question-display">
+                    <h2 id="conceptQuestion">질문 로딩 중...</h2>
+                </div>
+            </div>
+        </header>
+
+        <main class="concept-cloud">
+            <div class="concept-decorations">
+                <div class="concept-decoration star" style="top: 10%; left: 15%; animation-delay: 0s;"></div>
+                <div class="concept-decoration circle" style="top: 20%; left: 80%; animation-delay: 2s;"></div>
+                <div class="concept-decoration bubble" style="top: 70%; left: 25%; animation-delay: 1s;"></div>
+                <div class="concept-decoration star" style="top: 85%; left: 70%; animation-delay: 3s;"></div>
+                <div class="concept-decoration circle" style="top: 40%; left: 10%; animation-delay: 1.5s;"></div>
+                <div class="concept-decoration bubble" style="top: 60%; left: 90%; animation-delay: 2.5s;"></div>
+                <div class="concept-decoration star" style="top: 30%; left: 50%; animation-delay: 0.5s;"></div>
+                <div class="concept-decoration circle" style="top: 15%; left: 60%; animation-delay: 3.5s;"></div>
+                <div class="concept-decoration bubble" style="top: 80%; left: 40%; animation-delay: 1.8s;"></div>
+                <div class="concept-decoration star" style="top: 50%; left: 85%; animation-delay: 2.2s;"></div>
+            </div>
+            <div class="concept-words" id="conceptWords"></div>
+            <div class="concept-overlay concept-overlay-bottom-left">
+                <div class="concept-qr-card">
+                    <div class="concept-qr-box" id="conceptQrCode"></div>
+                </div>
+            </div>
+            <div class="concept-overlay concept-overlay-bottom-right">
+                <div class="concept-stats-card">
+                    <div>
+                        <p class="concept-label">누적 답변</p>
+                        <p class="concept-value" id="conceptTotal">0</p>
+                    </div>
+                    <div class="concept-timer-row">
+                        <div>
+                            <p class="concept-label">타이머</p>
+                            <p class="concept-value" id="conceptUpdated">10:00</p>
+                        </div>
+                        <button class="concept-action concept-action-ghost" id="toggleMock">모의</button>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        console.log('Script started executing'); // Very early log
+
+        // Questions loaded from supabase-config.js
+
+        // Public URL for QR code (GitHub Pages)
+        const PUBLIC_URL = 'https://chosundeveloper.github.io/live-polling';
+
+        // Timer state
+        let questionStartTime = null;
+
+        // --- DOM Elements ---
+        const conceptQuestion = document.getElementById('conceptQuestion');
+        const wordsLayer = document.getElementById('conceptWords');
+        const conceptTotal = document.getElementById('conceptTotal');
+        const conceptUpdated = document.getElementById('conceptUpdated');
+        const qrCodeContainer = document.getElementById('conceptQrCode');
+        const toggleMockBtn = document.getElementById('toggleMock');
+
+        // --- State ---
+        const params = new URLSearchParams(window.location.search);
+        let currentQuestionIndex = 0;
+        let isMockMode = params.get('mock') === '1';
+        let realtimeChannel = null;
+        let simulationInterval = null;
+        let mockAnswers = [];
+        let wordParticles = [];
+        let hiddenWords = [];
+        let qrCodeInstance = null;
+        let animationFrameId = null;
+        let timerInterval = null;
+        let timerDeadline = null;
+        let d3Simulation = null;
+        let sessionStartTime = null; // 페이지 로드 시점
+
+        // --- Constants ---
+        const KEYWORDS = ['감사', '기쁨', '평안', '은혜', '회개', '찬양', '경배', '사랑', '소망', '믿음', '겸손', '순종', '감격', '기대', '축복', '회복', '치유', '새힘', '감동', '기도', '간절함', '뜨거움', '충만', '평온', '기다림', '갈망', '간구', '고백', '헌신'];
+        const PREFIXES = ['따뜻한', '깊은', '새로운', '뜨거운', '간절한', '겸손한', '진실한', '잔잔한', '충만한'];
+        const SUFFIXES = ['마음', '감사', '은혜', '기쁨', '평안', '소망', '믿음', '사랑', '찬양'];
+        const TEXT_ANSWERS = [
+            '감사',
+            '기쁨',
+            '평안',
+            '은혜',
+            '회개',
+            '찬양',
+            '경배',
+            '사랑',
+            '소망',
+            '믿음',
+            '겸손',
+            '순종',
+            '감격',
+            '기대',
+            '축복',
+            '회복',
+            '치유',
+            '새힘',
+            '감동',
+            '기도',
+            '간절함',
+            '뜨거움',
+            '충만',
+            '평온',
+            '기다림',
+            '갈망',
+            '간구',
+            '고백',
+            '헌신',
+            '감사한마음',
+            '기쁜마음',
+            '평안함',
+            '은혜로움',
+            '감사와기쁨',
+            '사랑과평안'
+        ];
+        const MAX_WORDS = 150;
+        const FIXED_FONT_SIZE = 25; // Fixed font size for all words
+        const MAX_PARTICLE_SPEED = 0.001;
+        const MIN_SEPARATION = 50; // Minimum pixel gap between words
+        const DEFAULT_PARTICLE_WIDTH = 48;
+        const DEFAULT_PARTICLE_HEIGHT = 22;
+        const INTRO_DURATION_BASE = 180000; // extremely slow duration (3 minutes)
+        const INTRO_DURATION_VARIANCE = 20000;
+        const INTRO_BLOOM_JITTER = 0; // No bloom
+        const INTRO_SPIRAL_TWIST = 0; // No spiral
+        const INTRO_SWAY_AMPLITUDE = 0; // No sway
+        const INTRO_SWAY_FREQUENCY = 1.1;
+        const INTRO_STAGE_MIN_RADIUS = 10;
+        const INTRO_STAGE_MAX_RADIUS = 40;
+        const INTRO_CLUSTER_RATIO = 0.3; // 30% for gathering, 70% for spreading (slower spread)
+        const INTRO_CLUSTER_SWAY = 0;
+        const INTRO_CLUSTER_PADDING = 120;
+        const OUTWARD_DRIFT_FORCE = 0.000002;
+        const TARGET_ATTRACTION_FORCE = 0.000001;
+        const RADIAL_FORCE = 0.000004;
+        const MIN_WORD_LIFETIME = 7000;
+        const TIMER_DURATION_MS = 600 * 1000; // 600 seconds (10 minutes)
+        const COLOR_PALETTE = ['#5e4fa2', '#3288bd', '#66c2a5', '#abdda4', '#e6f598', '#fee08b', '#fdae61', '#f46d43', '#d53e4f', '#9e0142'];
+        // Exclude yellow (#e6f598 index 4), lime green (#abdda4 index 3), light orange (#fee08b index 5), orange (#fdae61 index 6), and dark red (#9e0142 index 9)
+        const EXCLUDED_COLOR_INDICES = [3, 4, 5, 6, 9];
+        const MAX_CELL_SPREAD_RATIO = 0.38; // Expanded for much more space
+        const INNER_CORE_RATIO = 0.06; // Inner core that stays stable (very small)
+        const PUSH_THRESHOLD_RATIO = 0.10; // Start pushing outward very early
+
+        function selectWordColor(weightRatio, index) {
+            // Select random color, excluding poorly visible ones
+            // 50% chance for blue (#3288bd index 1), 50% for other allowed colors
+            if (Math.random() < 0.5) {
+                return COLOR_PALETTE[1]; // Blue
+            }
+
+            let colorIndex;
+            do {
+                colorIndex = Math.floor(Math.random() * COLOR_PALETTE.length);
+            } while (EXCLUDED_COLOR_INDICES.includes(colorIndex));
+            return COLOR_PALETTE[colorIndex];
+        }
+        window.selectWordColor = selectWordColor;
+
+        function splitWordIntoCharacters(wordEl) {
+            if (!wordEl || wordEl.dataset.charsSplit === '1') {
+                return wordEl?.querySelectorAll('.concept-char');
+            }
+            const text = wordEl.textContent;
+            const isVertical = wordEl.classList.contains('concept-word-vertical');
+
+            wordEl.textContent = '';
+            const fragment = document.createDocumentFragment();
+
+            if (isVertical) {
+                // For vertical text: keep entire text as one block with spaces
+                const textSpan = document.createElement('span');
+                textSpan.className = 'concept-char concept-word-block';
+                textSpan.textContent = text;
+                fragment.appendChild(textSpan);
+            } else {
+                // For horizontal text: keep entire text as one block, don't split
+                const textSpan = document.createElement('span');
+                textSpan.className = 'concept-char concept-word-block';
+                textSpan.textContent = text;
+                fragment.appendChild(textSpan);
+            }
+
+            wordEl.appendChild(fragment);
+            wordEl.dataset.charsSplit = '1';
+            return wordEl.querySelectorAll('.concept-char');
+        }
+
+        function animateWordEntry(wordEl) {
+            console.log('🎬 animateWordEntry called for:', wordEl.textContent);
+            if (!wordEl) {
+                console.log('❌ No wordEl');
+                return;
+            }
+
+            const initialSize = FIXED_FONT_SIZE * 2.5;
+            const finalSize = FIXED_FONT_SIZE;
+            console.log(`📏 Setting up fontSize animation from ${initialSize}px to ${finalSize}px`);
+
+            // Set initial large size with CSS
+            wordEl.style.fontSize = `${initialSize}px`;
+            wordEl.style.transition = 'none';
+            console.log('✅ Initial fontSize set:', wordEl.style.fontSize);
+
+            // Force reflow
+            wordEl.offsetHeight;
+
+            // Start animation after a small delay
+            requestAnimationFrame(() => {
+                wordEl.style.transition = 'font-size 1.2s cubic-bezier(0.34, 1.56, 0.64, 1)';
+                wordEl.style.fontSize = `${finalSize}px`;
+                console.log('🎬 Animation started');
+            });
+
+            // Try motion.js if available
+            if (window.motion) {
+                const chars = splitWordIntoCharacters(wordEl);
+                if (chars && chars.length > 0) {
+                    const isVertical = wordEl.classList.contains('concept-word-vertical');
+                    const { animate, stagger, spring } = window.motion;
+                    const letterSpring = spring({ stiffness: 85, damping: 26, mass: 1.0 });
+
+                    animate(chars, {
+                        opacity: [0, 1],
+                        y: [isVertical ? 18 : 32, 0],
+                        x: [isVertical ? -12 : 0, 0],
+                        rotateX: [isVertical ? 0 : -24, 0],
+                        skewY: [isVertical ? -6 : 0, 0]
+                    }, {
+                        easing: letterSpring,
+                        duration: 1.35,
+                        delay: stagger(0.018)
+                    });
+                }
+            }
+        }
+
+        function getCloudBounds() {
+            const rect = wordsLayer.getBoundingClientRect();
+            let width = rect.width;
+            let height = rect.height;
+            if (width > 10 && height > 10) {
+                return { width, height };
+            }
+            const parentRect = wordsLayer.parentElement?.getBoundingClientRect();
+            width = parentRect?.width || window.innerWidth;
+            height = parentRect?.height || window.innerHeight;
+            return { width, height };
+        }
+
+        const GOLDEN_ANGLE = Math.PI * (3 - Math.sqrt(5));
+
+
+
+        function findClusterPosition(existing, centerW, centerH, baseRadius, baseAngle) {
+            if (!existing.length) {
+                const x = centerW + Math.cos(baseAngle) * baseRadius;
+                const y = centerH + Math.sin(baseAngle) * baseRadius;
+                return { x, y };
+            }
+
+            let best = null;
+            let bestScore = -Infinity;
+            for (let attempt = 0; attempt < 500; attempt++) {
+                const angle = baseAngle + attempt * (GOLDEN_ANGLE * 0.25) + (Math.random() - 0.5) * 0.25;
+                const radius = baseRadius + attempt * 1;
+                const x = centerW + Math.cos(angle) * radius;
+                const y = centerH + Math.sin(angle) * radius;
+                let minDist = Infinity;
+                for (const p of existing) {
+                    const dx = x - p.x;
+                    const dy = y - p.y;
+                    const dist = Math.hypot(dx, dy);
+                    const needed = ((p.width || DEFAULT_PARTICLE_WIDTH) / 2) + INTRO_CLUSTER_PADDING;
+                    if (dist < needed) {
+                        minDist = dist - needed;
+                        break;
+                    }
+                    minDist = Math.min(minDist, dist - needed);
+                }
+                if (minDist >= INTRO_CLUSTER_PADDING) {
+                    return { x, y };
+                }
+                if (minDist > bestScore) {
+                    bestScore = minDist;
+                    best = { x, y };
+                }
+            }
+            return best || { x: centerW + Math.cos(baseAngle) * baseRadius, y: centerH + Math.sin(baseAngle) * baseRadius };
+        }
+
+        function getSpiralGeometry(width, height, wordCount = MAX_WORDS) {
+            const usableRadius = Math.min(width, height) * MAX_CELL_SPREAD_RATIO;
+            const maxRadius = usableRadius * 0.95; // Slightly smaller to stay within bounds
+            const minRadius = Math.max(25, maxRadius * 0.12);
+            const count = Math.max(1, wordCount);
+            const ringCount = Math.min(10, Math.max(3, Math.ceil(count / 25)));
+            const ringSpan = (maxRadius - minRadius) / Math.max(1, ringCount - 1);
+            const rings = [];
+            let startIndex = 0;
+            // Fill from outside to inside: start with maxRadius
+            for (let i = 0; i < ringCount; i++) {
+                const radius = maxRadius - ringSpan * i;
+                const circumference = 2 * Math.PI * Math.max(40, radius);
+                const capacity = Math.max(8, Math.round(circumference / 70));
+                rings.push({ radius, start: startIndex, end: startIndex + capacity });
+                startIndex += capacity;
+            }
+            // Ensure total coverage
+            if (startIndex < count) {
+                const extra = count - startIndex;
+                rings[rings.length - 1].end += extra;
+            }
+            return { rings, count };
+        }
+
+        function assignParticleTarget(particle, centerW, centerH, geometry, spiralIndex = 0) {
+            const clampedIndex = Math.max(0, Math.min(spiralIndex, geometry.count - 1));
+            const ring = geometry.rings.find(r => clampedIndex < r.end) || geometry.rings[geometry.rings.length - 1];
+            const radius = ring.radius;
+            const angle = clampedIndex * GOLDEN_ANGLE;
+            const jitterAngle = angle + (Math.random() - 0.5) * 0.04;
+            const jitterRadius = radius + (Math.random() - 0.5) * Math.max(6, radius * 0.02);
+            particle.targetX = centerW + Math.cos(jitterAngle) * jitterRadius;
+            particle.targetY = centerH + Math.sin(jitterAngle) * jitterRadius;
+            particle.spiralIndex = clampedIndex;
+            particle.ringRadius = radius;
+            particle.ringAngle = jitterAngle;
+        }
+
+        function getParticleDimensions(particle) {
+            // Always get fresh dimensions from DOM
+            const rect = particle.el.getBoundingClientRect();
+            const width = rect.width || DEFAULT_PARTICLE_WIDTH;
+            const height = rect.height || DEFAULT_PARTICLE_HEIGHT;
+            particle.width = width;
+            particle.height = height;
+            return { width, height };
+        }
+
+        // Check if two rectangles overlap using actual bounding boxes
+        function checkRectOverlap(rect1, rect2, padding = 0) {
+            return !(rect1.right + padding < rect2.left ||
+                     rect1.left - padding > rect2.right ||
+                     rect1.bottom + padding < rect2.top ||
+                     rect1.top - padding > rect2.bottom);
+        }
+
+        function stopTimer() {
+            if (timerInterval) {
+                clearInterval(timerInterval);
+                timerInterval = null;
+            }
+        }
+
+        function updateTimerDisplay() {
+            if (!timerDeadline) {
+                conceptUpdated.textContent = '10:00';
+                return;
+            }
+            const remaining = Math.max(0, timerDeadline - Date.now());
+            const minutes = Math.floor(remaining / 60000);
+            const seconds = String(Math.floor((remaining % 60000) / 1000)).padStart(2, '0');
+            conceptUpdated.textContent = `${minutes}:${seconds}`;
+            if (remaining <= 0) {
+                stopTimer();
+            }
+        }
+
+        function startTimer() {
+            stopTimer();
+            timerDeadline = Date.now() + TIMER_DURATION_MS;
+            updateTimerDisplay();
+            timerInterval = setInterval(updateTimerDisplay, 1000);
+        }
+
+        function updateIntroMotion(particle, centerW, centerH, timestamp) {
+            if (particle.phase !== 'intro') return false;
+            if (!particle.introStart) {
+                particle.introStart = timestamp;
+            }
+            const duration = particle.introDuration || INTRO_DURATION_BASE;
+            const rawProgress = duration <= 0 ? 1 : Math.min(1, (timestamp - particle.introStart) / duration);
+
+            let targetX, targetY;
+
+            // Move from center toward target position (outward)
+            targetX = particle.originX + (particle.targetX - particle.originX) * rawProgress;
+            targetY = particle.originY + (particle.targetY - particle.originY) * rawProgress;
+
+            // Calculate force to move towards targetX, targetY at MAX_PARTICLE_SPEED
+            const dx = targetX - particle.x;
+            const dy = targetY - particle.y;
+            const dist = Math.hypot(dx, dy);
+
+            if (dist > 0.000001) { // Apply force if not already at target
+                const forceMagnitude = dist * 0.005; // A small force to guide it
+                particle.forceX += (dx / dist) * forceMagnitude;
+                particle.forceY += (dy / dist) * forceMagnitude;
+            }
+
+            if (rawProgress >= 1) {
+                particle.x = particle.targetX;
+                particle.y = particle.targetY;
+                particle.vx = 0;
+                particle.vy = 0;
+                particle.prevX = particle.targetX;
+                particle.prevY = particle.targetY;
+                particle.phase = 'idle';
+                particle.introStart = null;
+                particle.introDuration = null;
+                return false;
+            }
+            return true;
+        }
+
+        function updateParticleTargets() {
+            if (!wordParticles.length) return;
+            const { width, height } = getCloudBounds();
+            const centerW = width / 2;
+            const centerH = height / 2;
+            const geometry = getSpiralGeometry(width, height, wordParticles.length);
+            wordParticles.forEach(p => assignParticleTarget(p, centerW, centerH, geometry, p.spiralIndex || 0));
+
+            // Reinitialize D3 simulation with updated targets
+            if (d3Simulation) {
+                initD3Simulation();
+            }
+        }
+
+        // --- Core Functions ---
+        function updateQuestionMeta(question) {
+            conceptQuestion.textContent = question.question;
+            document.documentElement.style.setProperty('--concept-accent', question.color || '#7c3aed');
+
+            // Set question start time for timer sync
+            questionStartTime = Date.now();
+            timerDeadline = questionStartTime + TIMER_DURATION_MS;
+
+            // Pass START TIME (not deadline) so timer syncs correctly
+            const urlString = `${PUBLIC_URL}/answer.html?q=${question.id}&startTime=${questionStartTime}`;
+
+            console.log('📱 QR Code URL:', urlString);
+
+            // Clear and regenerate QR code
+            if (qrCodeContainer) {
+                qrCodeContainer.innerHTML = '';
+            }
+
+            if (qrCodeInstance) {
+                qrCodeInstance.clear();
+                qrCodeInstance.makeCode(urlString);
+            } else {
+                qrCodeInstance = new QRCode(qrCodeContainer, { text: urlString, width: 192, height: 192, colorDark: "#0f172a", colorLight: "#ffffff", correctLevel: QRCode.CorrectLevel.H });
+            }
+        }
+
+        function navigateToQuestion(index, options = {}) {
+            const { force = false } = options;
+            console.log('navigateToQuestion called with index:', index);
+            const newIndex = 0; // Always use first question
+            if (!force && newIndex === currentQuestionIndex && wordParticles.length > 0) {
+                console.log('navigateToQuestion: Same question, particles exist, returning.');
+                return;
+            }
+
+            currentQuestionIndex = newIndex;
+            const question = QUESTIONS[currentQuestionIndex];
+
+            updateQuestionMeta(question);
+
+            resetDisplay();
+            if (isMockMode) startRealtimeSimulation();
+            else startRealtimeSubscription();
+        }
+
+        function extractWordInstances(answers) {
+            console.log('extractWordInstances called with answers:', answers);
+            const frequency = new Map();
+            answers.forEach(answer => {
+                console.log('Processing answer:', answer);
+                if (!answer.answer_text) {
+                    console.log('No answer_text found, skipping');
+                    return;
+                }
+                console.log('answer_text:', answer.answer_text);
+                // Use entire answer as a single token (preserve spaces)
+                const token = answer.answer_text.trim();
+                if (token.length > 0) {
+                    frequency.set(token, (frequency.get(token) || 0) + 1);
+                }
+                console.log('Extracted token:', token);
+            });
+            console.log('Final frequency map:', frequency);
+            return frequency;
+        }
+
+        // --- D3 Force Simulation Setup with STRONGER collision detection ---
+        function initD3Simulation() {
+            const { width: containerWidth, height: containerHeight } = getCloudBounds();
+            const centerW = containerWidth / 2;
+            const centerH = containerHeight / 2;
+
+            if (d3Simulation) {
+                d3Simulation.stop();
+            }
+
+            d3Simulation = d3.forceSimulation(wordParticles)
+                .alphaDecay(0.0001) // Very slow decay
+                .velocityDecay(0.92) // More movement
+                .alphaMin(0.005) // Keep running longer
+                // Rectangle-based collision using actual bounding boxes
+                .force('box-collide', () => {
+                    // Check ACTUAL DOM bounding boxes for overlap
+                    for (let i = 0; i < wordParticles.length; i++) {
+                        const p1 = wordParticles[i];
+                        if (!p1.el) continue;
+
+                        // Get actual bounding box
+                        const rect1 = p1.el.getBoundingClientRect();
+                        const containerRect = wordsLayer.getBoundingClientRect();
+
+                        // Convert to local coordinates
+                        const box1 = {
+                            left: p1.x - p1.width / 2,
+                            right: p1.x + p1.width / 2,
+                            top: p1.y - p1.height / 2,
+                            bottom: p1.y + p1.height / 2
+                        };
+
+                        for (let j = i + 1; j < wordParticles.length; j++) {
+                            const p2 = wordParticles[j];
+                            if (!p2.el) continue;
+
+                            const box2 = {
+                                left: p2.x - p2.width / 2,
+                                right: p2.x + p2.width / 2,
+                                top: p2.y - p2.height / 2,
+                                bottom: p2.y + p2.height / 2
+                            };
+
+                            // Check if boxes overlap (with MIN_SEPARATION padding)
+                            const overlapX = Math.max(0, Math.min(box1.right, box2.right) - Math.max(box1.left, box2.left));
+                            const overlapY = Math.max(0, Math.min(box1.bottom, box2.bottom) - Math.max(box1.top, box2.top));
+
+                            if (overlapX > 0 && overlapY > 0) {
+                                // Boxes are overlapping! Push apart
+                                const dx = p2.x - p1.x;
+                                const dy = p2.y - p1.y;
+                                const distance = Math.hypot(dx, dy);
+
+                                if (distance < 1) {
+                                    // Too close - push in random direction
+                                    const angle = Math.random() * Math.PI * 2;
+                                    p1.vx -= Math.cos(angle) * 10;
+                                    p1.vy -= Math.sin(angle) * 10;
+                                    p2.vx += Math.cos(angle) * 10;
+                                    p2.vy += Math.sin(angle) * 10;
+                                    continue;
+                                }
+
+                                // Calculate required separation
+                                const requiredDistX = (p1.width + p2.width) / 2 + MIN_SEPARATION;
+                                const requiredDistY = (p1.height + p2.height) / 2 + MIN_SEPARATION;
+
+                                // Determine primary overlap direction
+                                const overlapRatioX = overlapX / requiredDistX;
+                                const overlapRatioY = overlapY / requiredDistY;
+
+                                // Push along the direction of least overlap
+                                let pushX = 0, pushY = 0;
+
+                                if (overlapRatioX > overlapRatioY) {
+                                    // Push vertically
+                                    pushY = (dy > 0 ? 1 : -1) * overlapY * 0.5;
+                                } else {
+                                    // Push horizontally
+                                    pushX = (dx > 0 ? 1 : -1) * overlapX * 0.5;
+                                }
+
+                                // Also push in general direction
+                                const nx = dx / distance;
+                                const ny = dy / distance;
+                                const pushStrength = Math.max(overlapX, overlapY) * 2;
+
+                                p1.vx -= nx * pushStrength + pushX;
+                                p1.vy -= ny * pushStrength + pushY;
+                                p2.vx += nx * pushStrength + pushX;
+                                p2.vy += ny * pushStrength + pushY;
+
+                                // Immediate position adjustment
+                                p1.x -= pushX * 0.5;
+                                p1.y -= pushY * 0.5;
+                                p2.x += pushX * 0.5;
+                                p2.y += pushY * 0.5;
+                            }
+                        }
+                    }
+                })
+                .force('radial', d3.forceRadial(d => d.ringRadius || 100, centerW, centerH).strength(0.002))
+                .force('x', d3.forceX(d => d.targetX || centerW).strength(0.001))
+                .force('y', d3.forceY(d => d.targetY || centerH).strength(0.001))
+                .on('tick', () => {
+                    const timestamp = performance.now();
+                    const currentAlpha = d3Simulation.alpha();
+
+                    wordParticles.forEach(p => {
+                        // Apply intro motion override
+                        if (p.phase === 'intro') {
+                            updateIntroMotion(p, centerW, centerH, timestamp);
+                            p.vx = (p.x - (p.prevX || p.x)) * 0.5;
+                            p.vy = (p.y - (p.prevY || p.y)) * 0.5;
+                        }
+
+                        // Gradually reduce velocity as simulation stabilizes
+                        if (currentAlpha < 0.1 && p.phase !== 'intro') {
+                            p.vx *= 0.5;
+                            p.vy *= 0.5;
+                        }
+
+                        // Hard limit on velocity to prevent spinning
+                        const speed = Math.hypot(p.vx || 0, p.vy || 0);
+                        if (speed > MAX_PARTICLE_SPEED) {
+                            const ratio = MAX_PARTICLE_SPEED / speed;
+                            p.vx *= ratio;
+                            p.vy *= ratio;
+                        }
+
+                        // Strict boundary handling to keep within cell image
+                        const maxRadius = Math.min(containerWidth, containerHeight) * MAX_CELL_SPREAD_RATIO;
+                        const dx = p.x - centerW;
+                        const dy = p.y - centerH;
+                        const distFromCenter = Math.hypot(dx, dy);
+
+                        // Soft boundary: slow down as approaching edge
+                        if (distFromCenter > maxRadius * 0.9) {
+                            const overRatio = (distFromCenter - maxRadius * 0.9) / (maxRadius * 0.1);
+                            p.vx *= (1 - overRatio * 0.5);
+                            p.vy *= (1 - overRatio * 0.5);
+                        }
+
+                        // Hard boundary: cannot exceed
+                        if (distFromCenter > maxRadius) {
+                            const angle = Math.atan2(dy, dx);
+                            p.x = centerW + Math.cos(angle) * maxRadius;
+                            p.y = centerH + Math.sin(angle) * maxRadius;
+                            p.vx = 0;
+                            p.vy = 0;
+                        }
+
+                        // Font size is fixed - no animation needed
+
+                        // Update DOM position
+                        p.el.style.left = `${p.x}px`;
+                        p.el.style.top = `${p.y}px`;
+
+                        p.prevX = p.x;
+                        p.prevY = p.y;
+                    });
+                });
+
+            return d3Simulation;
+        }
+
+        // --- Legacy Simulation Loop (now simplified) ---
+        function simulationLoop(timestamp = performance.now()) {
+            if (!d3Simulation || wordParticles.length === 0) {
+                if (wordParticles.length > 0) {
+                    initD3Simulation();
+                }
+                animationFrameId = requestAnimationFrame(simulationLoop);
+                return;
+            }
+
+            // D3 simulation handles everything via 'tick' event
+            animationFrameId = requestAnimationFrame(simulationLoop);
+        }
+
+        function renderWords(frequencyMap) {
+            console.log('renderWords called with frequencyMap:', frequencyMap);
+
+            const existingParticles = new Map();
+            const now = performance.now();
+            wordParticles.forEach(p => {
+                if (!p.bornAt) p.bornAt = now;
+                existingParticles.set(p.el.textContent, p);
+            });
+
+            if (frequencyMap.size === 0 && wordParticles.length === 0) {
+                wordsLayer.innerHTML = '<div class="concept-empty">첫 번째 단어를 기다리고 있어요</div>';
+                if (animationFrameId) {
+                    cancelAnimationFrame(animationFrameId);
+                    animationFrameId = null;
+                }
+                return;
+            } else if (frequencyMap.size > 0 && wordsLayer.querySelector('.concept-empty')) {
+                wordsLayer.innerHTML = '';
+            }
+
+            const sortedWords = [...frequencyMap.entries()].sort((a, b) => b[1] - a[1]);
+            const limited = sortedWords.slice(0, MAX_WORDS).filter(([text]) => !hiddenWords.includes(text));
+            const newWordTexts = new Set(limited.map(item => item[0]));
+
+            wordParticles = wordParticles.filter(p => {
+                if (!newWordTexts.has(p.el.textContent)) {
+                    if (now - (p.bornAt || now) < MIN_WORD_LIFETIME) {
+                        return true;
+                    }
+                    p.el.classList.remove('concept-word-visible');
+                    p.el.classList.add('concept-word-hidden');
+                    setTimeout(() => p.el.remove(), 700);
+                    return false;
+                }
+                return true;
+            });
+
+            const { width: containerWidth, height: containerHeight } = getCloudBounds();
+            const centerW = containerWidth / 2;
+            const centerH = containerHeight / 2;
+            const geometry = getSpiralGeometry(containerWidth, containerHeight, limited.length);
+
+            limited.forEach(([text, weight], index) => {
+                // Keep normal order: outer rings fill first, then move inward
+                const spiralIndex = index;
+
+                let particle = existingParticles.get(text);
+                if (particle) {
+                    // Existing particle - keep fixed font size, no changes
+                    if (particle.phase !== 'intro') {
+                        assignParticleTarget(particle, centerW, centerH, geometry, spiralIndex);
+                    }
+                    particle.el.style.color = particle.color;
+                } else {
+                    const wordEl = document.createElement('span');
+                    wordEl.className = 'concept-word';
+
+                    // Determine if vertical BEFORE setting text
+                    const isVertical = Math.random() < 0.35;
+                    if (isVertical) {
+                        wordEl.classList.add('concept-word-vertical');
+                        // Keep text as is for vertical (with spaces)
+                        wordEl.textContent = text;
+                    } else {
+                        wordEl.textContent = text;
+                    }
+
+                    const assignedColor = selectWordColor(weight / Math.max(...limited.map(item => item[1])), index);
+                    wordEl.style.color = assignedColor;
+
+                    // Use fixed font size for all words
+                    wordEl.style.fontSize = `${FIXED_FONT_SIZE}px`;
+
+                    // Click to delete
+                    wordEl.addEventListener('click', () => {
+                        hiddenWords.push(text);
+
+                        // D3 transition for smooth fade out
+                        if (window.d3) {
+                            d3.select(wordEl)
+                                .transition()
+                                .duration(600)
+                                .ease(d3.easeCubicOut)
+                                .style('opacity', 0)
+                                .style('transform', 'scale(0.7)')
+                                .on('end', () => {
+                                    wordEl.remove();
+                                    wordParticles = wordParticles.filter(p => p.el !== wordEl);
+                                    if (wordParticles.length > 0) {
+                                        updateParticleTargets();
+                                        if (!animationFrameId) simulationLoop(performance.now());
+                                    } else {
+                                        wordsLayer.innerHTML = '<div class="concept-empty">첫 번째 단어를 기다리고 있어요</div>';
+                                        if (animationFrameId) { cancelAnimationFrame(animationFrameId); animationFrameId = null; }
+                                    }
+                                });
+                        } else {
+                            wordEl.classList.remove('concept-word-visible');
+                            wordEl.classList.add('concept-word-hidden');
+                            setTimeout(() => {
+                                wordEl.remove();
+                                wordParticles = wordParticles.filter(p => p.el !== wordEl);
+                                if (wordParticles.length > 0) {
+                                    updateParticleTargets();
+                                    if (!animationFrameId) simulationLoop(performance.now());
+                                } else {
+                                    wordsLayer.innerHTML = '<div class="concept-empty">첫 번째 단어를 기다리고 있어요</div>';
+                                    if (animationFrameId) { cancelAnimationFrame(animationFrameId); animationFrameId = null; }
+                                }
+                            }, 700);
+                        }
+                    });
+
+                    wordsLayer.appendChild(wordEl);
+
+                    const rect = wordEl.getBoundingClientRect();
+                    particle = {
+                        el: wordEl,
+                        x: centerW,
+                        y: centerH,
+                        prevX: centerW,
+                        prevY: centerH,
+                        originX: centerW,
+                        originY: centerH,
+                        vx: 0,
+                        vy: 0,
+                        width: rect.width,
+                        height: rect.height,
+                        currentFontSize: FIXED_FONT_SIZE,
+                        targetFontSize: FIXED_FONT_SIZE,
+                        isVertical,
+                        spiralIndex,
+                        phase: 'intro',
+                        spiralProgress: 0,
+                        introDuration: INTRO_DURATION_BASE + Math.random() * INTRO_DURATION_VARIANCE,
+                        introStart: null,
+                        bornAt: now,
+                        color: assignedColor
+                    };
+                    assignParticleTarget(particle, centerW, centerH, geometry, spiralIndex);
+
+                    // Start at center and move to target position
+                    particle.originX = centerW;
+                    particle.originY = centerH;
+                    particle.x = centerW;
+                    particle.y = centerH;
+                    particle.prevX = centerW;
+                    particle.prevY = centerH;
+                    wordEl.style.left = `${centerW}px`;
+                    wordEl.style.top = `${centerH}px`;
+                    wordParticles.push(particle);
+                    const introParticles = wordParticles.filter(p => p.phase === 'intro');
+
+
+                    requestAnimationFrame(() => {
+                        wordEl.classList.add('concept-word-visible');
+                        animateWordEntry(wordEl);
+                    });
+                }
+
+                const weightRatio = weight / Math.max(...limited.map(item => item[1]));
+                const isHero = weightRatio > 0.7;
+                const isAccent = !isHero && weightRatio > 0.4;
+                particle.el.classList.toggle('concept-word-hero', isHero);
+                particle.el.classList.toggle('concept-word-accent', isAccent);
+            });
+
+            if (!animationFrameId && wordParticles.length > 0) {
+                simulationLoop(performance.now());
+            }
+
+            // Update D3 simulation with new particles
+            if (d3Simulation && wordParticles.length > 0) {
+                d3Simulation.nodes(wordParticles);
+                d3Simulation.alpha(0.15).restart();
+            }
+        }
+
+        // --- Data Fetching & Control ---
+        // No longer needed - using broadcast only
+
+        function stopAllIntervals() {
+            if (realtimeChannel) {
+                supabase.removeChannel(realtimeChannel);
+                realtimeChannel = null;
+            }
+            if (simulationInterval) clearInterval(simulationInterval);
+            if (animationFrameId) cancelAnimationFrame(animationFrameId);
+            if (d3Simulation) d3Simulation.stop();
+            simulationInterval = null;
+            animationFrameId = null;
+            d3Simulation = null;
+        }
+
+        function resetDisplay() {
+            console.log('resetDisplay called');
+            stopAllIntervals();
+            mockAnswers = [];
+            wordParticles = [];
+            hiddenWords = [];
+            wordsLayer.innerHTML = '';
+            conceptTotal.textContent = '0';
+            stopTimer();
+            conceptUpdated.textContent = '10:00';
+        }
+
+        function startRealtimeSimulation() {
+            console.log('startRealtimeSimulation called');
+            resetDisplay();
+            let count = 0;
+            const question = QUESTIONS[currentQuestionIndex];
+            startTimer();
+
+            function generateSingleMockAnswer(questionId, index) {
+                const currentQuestion = QUESTIONS.find(q => q.id === questionId);
+                let answer;
+
+                if (currentQuestion && currentQuestion.type === 'text') {
+                    answer = TEXT_ANSWERS[Math.floor(Math.random() * TEXT_ANSWERS.length)];
+                } else {
+                    answer = KEYWORDS[Math.floor(Math.random() * KEYWORDS.length)] || KEYWORDS[index % KEYWORDS.length];
+                }
+
+                // Apply 8 character limit (excluding spaces)
+                const textWithoutSpaces = answer.replace(/\s+/g, '');
+                if (textWithoutSpaces.length > 8) {
+                    // Find the position in original string that gives us 8 non-space characters
+                    let count = 0;
+                    let cutIndex = 0;
+                    for (let i = 0; i < answer.length; i++) {
+                        if (answer[i] !== ' ') count++;
+                        if (count === 8) {
+                            cutIndex = i + 1;
+                            break;
+                        }
+                    }
+                    answer = answer.substring(0, cutIndex);
+                }
+
+                return {
+                    id: `${questionId}-${index}-${Date.now()}`,
+                    question_id: questionId,
+                    answer: answer,
+                    answer_text: answer,
+                    created_at: new Date().toISOString()
+                };
+            }
+
+            simulationInterval = setInterval(() => {
+                if (count >= 300) {
+                    clearInterval(simulationInterval);
+                    simulationInterval = null;
+                    return;
+                }
+                const newAnswer = generateSingleMockAnswer(question.id, count);
+                mockAnswers.unshift(newAnswer);
+                const frequencyMap = extractWordInstances(mockAnswers);
+                renderWords(frequencyMap);
+                conceptTotal.textContent = mockAnswers.length;
+                count++;
+            }, 500);
+
+            // Simulation loop is started by renderWords if words exist
+        }
+
+        async function startRealtimeSubscription() {
+            console.log('startRealtimeSubscription called');
+            stopAllIntervals();
+            mockAnswers = [];
+            wordParticles = [];
+            hiddenWords = [];
+            wordsLayer.innerHTML = '';
+            conceptTotal.textContent = '0';
+            stopTimer();
+            conceptUpdated.textContent = '10:00';
+
+            const question = QUESTIONS[currentQuestionIndex];
+            if (!question) return;
+
+            startTimer();
+
+            // Track session start time - only show answers submitted after this point
+            sessionStartTime = Date.now();
+            console.log('📍 Session started at:', new Date(sessionStartTime).toISOString());
+
+            // Poll for new answers every 2 seconds
+            console.log('🔄 Starting polling for new answers...');
+            simulationInterval = setInterval(async () => {
+                try {
+                    const { data: newAnswers, error } = await supabase
+                        .from('answers')
+                        .select('*')
+                        .eq('question_id', question.id)
+                        .gte('created_at', new Date(sessionStartTime).toISOString())
+                        .order('created_at', { ascending: false });
+
+                    if (error) {
+                        console.error('Polling error:', error);
+                        return;
+                    }
+
+                    if (newAnswers && newAnswers.length > 0) {
+                        console.log(`🔄 Polled ${newAnswers.length} answers`);
+
+                        // Check for new answers
+                        const existingIds = new Set(mockAnswers.map(a => a.id));
+                        const trulyNew = newAnswers.filter(a => !existingIds.has(a.id));
+
+                        if (trulyNew.length > 0) {
+                            console.log(`✨ Found ${trulyNew.length} new answers`);
+                            trulyNew.forEach(a => {
+                                const newAnswer = {
+                                    id: a.id,
+                                    question_id: a.question_id,
+                                    answer: a.answer_text,
+                                    answer_text: a.answer_text,
+                                    created_at: a.created_at
+                                };
+                                mockAnswers.unshift(newAnswer);
+                            });
+
+                            const frequencyMap = extractWordInstances(mockAnswers);
+                            renderWords(frequencyMap);
+                            conceptTotal.textContent = mockAnswers.length;
+                        }
+                    }
+                } catch (err) {
+                    console.error('Polling exception:', err);
+                }
+            }, 2000); // Poll every 2 seconds
+        }
+
+        // --- Event Listeners ---
+        toggleMockBtn.addEventListener('click', () => {
+            console.log('toggleMockBtn clicked. isMockMode before:', isMockMode);
+            isMockMode = !isMockMode;
+            toggleMockBtn.classList.toggle('active', isMockMode);
+            console.log('toggleMockBtn clicked. isMockMode after:', isMockMode);
+            navigateToQuestion(currentQuestionIndex, { force: true });
+        });
+
+        window.addEventListener('resize', () => {
+            updateParticleTargets();
+        });
+
+        // --- Initial Load ---
+        navigateToQuestion(0, { force: true });
+
+        // 초기 버튼 상태 설정
+        if (isMockMode) {
+            toggleMockBtn.classList.add('active');
+        }
+    </script>
+</body>
+</html>
