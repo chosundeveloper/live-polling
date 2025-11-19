@@ -1232,7 +1232,7 @@ footer a:hover {
     min-height: 100vh;
     height: 100vh;
     width: 100vw;
-    background-image: url('background2.jpeg');
+    background-image: url('jihyun.png');
     background-size: cover;
     background-position: center;
     background-repeat: no-repeat;
@@ -1247,7 +1247,7 @@ footer a:hover {
 }
 
 .concept-body.concept-display {
-    background-image: url('background2.png');
+    background-image: url('jihyun.png');
 }
 
 .concept-wrapper {
