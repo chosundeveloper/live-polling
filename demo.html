@@ -670,21 +670,23 @@
 
             const spawnCol = pickSpawnColumn();
             const spawnY = gridMetrics.offsetY - gridMetrics.cellHeight * 2;
-            const { x } = getCellCenter(spawnCol, 0);
+            const { x: targetX } = getCellCenter(spawnCol, 0);
+            const middleColumnX = getCellCenter(Math.floor(gridMetrics.cols / 2), 0).x;
 
             const particleData = {
                 key,
                 el: wordEl,
                 col: spawnCol,
                 row: null,
-                x,
+                x: middleColumnX,
                 y: spawnY,
                 state: 'falling',
                 fallSpeed: TETRIS_BASE_FALL_SPEED + (Math.random() - 0.5) * TETRIS_SPEED_VARIANCE,
                 answerRef: data.answerRef,
                 weight,
                 color: assignedColor,
-                bornAt: performance.now()
+                bornAt: performance.now(),
+                targetX
             };
 
             updateWordDimensions(particleData);
@@ -715,6 +717,16 @@
             if (!particle || particle.state !== 'falling') return;
             const speed = particle.fallSpeed || TETRIS_BASE_FALL_SPEED;
             const newY = particle.y + speed * delta;
+            const horizontalTarget = particle.targetX ?? particle.x;
+            const deltaX = horizontalTarget - particle.x;
+            if (Math.abs(deltaX) > 0.5) {
+                const horizontalSpeed = gridMetrics.cellWidth * 2.2;
+                const maxStep = horizontalSpeed * delta;
+                const step = Math.sign(deltaX) * Math.min(Math.abs(deltaX), maxStep);
+                particle.x += step;
+            } else {
+                particle.x = horizontalTarget;
+            }
             const bottomEdge = newY + gridMetrics.cellHeight / 2;
             const relative = bottomEdge - gridMetrics.offsetY;
             let targetRow = Math.floor(relative / gridMetrics.cellHeight);
