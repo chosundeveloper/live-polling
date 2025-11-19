@@ -162,6 +162,50 @@
         const MAX_CELL_SPREAD_RATIO = 0.38; // Expanded for much more space
         const INNER_CORE_RATIO = 0.06; // Inner core that stays stable (very small)
         const PUSH_THRESHOLD_RATIO = 0.10; // Start pushing outward very early
+        const MOCK_WORD_POOL = buildMockWordPool();
+        let mockWordQueue = shuffleArray([...MOCK_WORD_POOL]);
+        let mockWordIndex = 0;
+
+        function buildMockWordPool() {
+            const uniqueWords = new Set();
+            TEXT_ANSWERS.forEach(word => uniqueWords.add(word));
+            KEYWORDS.forEach(word => uniqueWords.add(word));
+
+            KEYWORDS.forEach(keyword => {
+                PREFIXES.forEach(prefix => {
+                    uniqueWords.add(`${prefix} ${keyword}`);
+                    SUFFIXES.forEach(suffix => {
+                        uniqueWords.add(`${prefix} ${keyword} ${suffix}`);
+                    });
+                });
+                SUFFIXES.forEach(suffix => {
+                    uniqueWords.add(`${keyword} ${suffix}`);
+                });
+            });
+
+            return Array.from(uniqueWords);
+        }
+
+        function shuffleArray(array) {
+            const result = [...array];
+            for (let i = result.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [result[i], result[j]] = [result[j], result[i]];
+            }
+            return result;
+        }
+
+        function getNextMockWord() {
+            if (!mockWordQueue.length) {
+                mockWordQueue = shuffleArray([...MOCK_WORD_POOL]);
+                mockWordIndex = 0;
+            }
+            if (mockWordIndex >= mockWordQueue.length) {
+                mockWordQueue = shuffleArray([...MOCK_WORD_POOL]);
+                mockWordIndex = 0;
+            }
+            return mockWordQueue[mockWordIndex++];
+        }
 
         function selectWordColor(weightRatio, index) {
             // Select random color, excluding poorly visible ones
@@ -902,6 +946,8 @@
             conceptTotal.textContent = '0';
             stopTimer();
             conceptUpdated.textContent = '10:00';
+            mockWordQueue = shuffleArray([...MOCK_WORD_POOL]);
+            mockWordIndex = 0;
         }
 
         function startRealtimeSimulation() {
@@ -916,7 +962,7 @@
                 let answer;
 
                 if (currentQuestion && currentQuestion.type === 'text') {
-                    answer = TEXT_ANSWERS[Math.floor(Math.random() * TEXT_ANSWERS.length)];
+                    answer = getNextMockWord();
                 } else {
                     answer = KEYWORDS[Math.floor(Math.random() * KEYWORDS.length)] || KEYWORDS[index % KEYWORDS.length];
                 }
