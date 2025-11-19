@@ -1232,7 +1232,7 @@ footer a:hover {
     min-height: 100vh;
     height: 100vh;
     width: 100vw;
-    background-image: url('배경.jpeg');
+    background-image: url('background.jpeg');
     background-size: cover;
     background-position: center;
     background-repeat: no-repeat;
