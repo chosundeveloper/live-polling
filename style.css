@@ -1232,7 +1232,7 @@ footer a:hover {
     min-height: 100vh;
     height: 100vh;
     width: 100vw;
-    background: #000 url('jihyun.webp') center center / cover no-repeat fixed;
+    background: #000 url('jihyun.webp') center center / cover no-repeat;
     color: var(--ink-primary);
     font-family: 'KOTRA_Bold', 'Space Grotesk', 'Outfit', 'Apple SD Gothic Neo', 'Spoqa Han Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
     overflow: hidden;
@@ -1244,7 +1244,7 @@ footer a:hover {
 }
 
 .concept-body.concept-display {
-    background: #000 url('jihyun.webp') center center / cover no-repeat fixed;
+    background: #000 url('jihyun.webp') center center / cover no-repeat;
 }
 
 .concept-wrapper {
