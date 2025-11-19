@@ -87,11 +87,14 @@
         let displayAnswers = [];
         let wordParticles = [];
         let hiddenWords = [];
+        let pendingParticleQueue = [];
+        let pendingParticleKeys = new Set();
         let qrCodeInstance = null;
         let animationFrameId = null;
         let timerInterval = null;
         let timerDeadline = null;
         let sessionStartTime = null; // 페이지 로드 시점
+        let spawnTimeoutId = null;
 
         // --- Constants ---
         const KEYWORDS = ['감사', '기쁨', '평안', '은혜', '회개', '찬양', '경배', '사랑', '소망', '믿음', '겸손', '순종', '감격', '기대', '축복', '회복', '치유', '새힘', '감동', '기도', '간절함', '뜨거움', '충만', '평온', '기다림', '갈망', '간구', '고백', '헌신'];
@@ -137,7 +140,7 @@
         const MAX_WORDS = 150;
         const FIXED_FONT_SIZE = 25; // Fixed font size for all words
         const MAX_PARTICLE_SPEED = 0.001;
-        const MIN_SEPARATION = 50; // Minimum pixel gap between words
+        const MIN_SEPARATION = 80; // Minimum pixel gap between words
         const DEFAULT_PARTICLE_WIDTH = 48;
         const DEFAULT_PARTICLE_HEIGHT = 22;
         const INTRO_DURATION_BASE = 180000; // extremely slow duration (3 minutes)
@@ -162,14 +165,14 @@
         const MAX_CELL_SPREAD_RATIO = 0.38; // Expanded for much more space
         const INNER_CORE_RATIO = 0.06; // Inner core that stays stable (very small)
         const PUSH_THRESHOLD_RATIO = 0.10; // Start pushing outward very early
-        const TETRIS_COLS = 10;
-        const TETRIS_ROWS = 20;
+        const TETRIS_COLS = 6;
+        const TETRIS_ROWS = 24;
         const TETRIS_BASE_FALL_SPEED = 180;
         const TETRIS_SPEED_VARIANCE = 60;
-        const TETRIS_CELL_WIDTH_MIN = 90;
-        const TETRIS_CELL_WIDTH_MAX = 180;
-        const TETRIS_CELL_HEIGHT_MIN = 40;
-        const TETRIS_CELL_HEIGHT_MAX = 80;
+        const TETRIS_CELL_WIDTH_MIN = 140;
+        const TETRIS_CELL_WIDTH_MAX = 220;
+        const TETRIS_CELL_HEIGHT_MIN = 80;
+        const TETRIS_CELL_HEIGHT_MAX = 120;
         const MOCK_WORD_POOL = buildMockWordPool();
         let mockWordQueue = shuffleArray([...MOCK_WORD_POOL]);
         let mockWordIndex = 0;
@@ -185,6 +188,8 @@
         };
         let tetrisGrid = createEmptyGrid();
         let lastFrameTime = null;
+        const DROP_QUEUE_DELAY_BASE = 450;
+        const DROP_QUEUE_DELAY_VARIANCE = 350;
 
         function buildMockWordPool() {
             const uniqueWords = new Set();
@@ -427,6 +432,75 @@
             return Array.from({ length: TETRIS_ROWS }, () => Array(TETRIS_COLS).fill(null));
         }
 
+        function resetDropQueue() {
+            pendingParticleQueue = [];
+            pendingParticleKeys.clear();
+            if (spawnTimeoutId) {
+                clearTimeout(spawnTimeoutId);
+                spawnTimeoutId = null;
+            }
+        }
+
+        function prunePendingQueue(validKeys = null) {
+            if (!pendingParticleQueue.length) return;
+            pendingParticleQueue = pendingParticleQueue.filter(entry => {
+                const keep = !validKeys || validKeys.has(entry.key);
+                if (!keep) {
+                    pendingParticleKeys.delete(entry.key);
+                }
+                return keep;
+            });
+            if (!pendingParticleQueue.length && spawnTimeoutId) {
+                clearTimeout(spawnTimeoutId);
+                spawnTimeoutId = null;
+            }
+        }
+
+        function enqueueParticleCreation(entry) {
+            if (!entry || pendingParticleKeys.has(entry.key)) return;
+            pendingParticleQueue.push(entry);
+            pendingParticleKeys.add(entry.key);
+            processPendingParticles();
+        }
+
+        function processPendingParticles() {
+            if (!pendingParticleQueue.length) return;
+            if (wordParticles.some(p => p.state === 'falling')) return;
+            if (spawnTimeoutId) return;
+            const delay = DROP_QUEUE_DELAY_BASE + Math.random() * DROP_QUEUE_DELAY_VARIANCE;
+            spawnTimeoutId = setTimeout(() => {
+                spawnTimeoutId = null;
+                if (!pendingParticleQueue.length) {
+                    processPendingParticles();
+                    return;
+                }
+                const next = pendingParticleQueue.shift();
+                if (!next) {
+                    processPendingParticles();
+                    return;
+                }
+                pendingParticleKeys.delete(next.key);
+                const newParticle = createTetrisParticle(next.key, next.data, next.maxWeightSnapshot, next.index);
+                wordParticles.push(newParticle);
+                ensureAnimationLoop();
+            }, delay);
+        }
+
+        function removePendingByText(text) {
+            if (!text || !pendingParticleQueue.length) return;
+            pendingParticleQueue = pendingParticleQueue.filter(entry => {
+                if (entry.data?.text === text) {
+                    pendingParticleKeys.delete(entry.key);
+                    return false;
+                }
+                return true;
+            });
+            if (!pendingParticleQueue.length && spawnTimeoutId) {
+                clearTimeout(spawnTimeoutId);
+                spawnTimeoutId = null;
+            }
+        }
+
         function updateGridMetrics(wordCount = MAX_WORDS) {
             const { width, height } = getCloudBounds();
             gridMetrics.width = width;
@@ -481,9 +555,11 @@
 
         function updateWordDimensions(particle) {
             if (!particle || !particle.el) return;
-            particle.el.style.maxWidth = `${Math.max(60, gridMetrics.cellWidth - 12)}px`;
+            const horizontalPadding = 48;
+            particle.el.style.maxWidth = `${Math.max(60, gridMetrics.cellWidth - horizontalPadding)}px`;
             particle.el.style.whiteSpace = 'nowrap';
             particle.el.style.textAlign = 'center';
+            particle.el.style.padding = '14px 26px';
         }
 
         function updateDomPosition(particle) {
@@ -511,6 +587,7 @@
             if (released) {
                 releaseUnsupportedWords();
                 ensureAnimationLoop();
+                processPendingParticles();
             }
         }
 
@@ -531,6 +608,9 @@
                 }
             }, 200);
             checkCompletedRows();
+            setTimeout(() => {
+                processPendingParticles();
+            }, 120);
         }
 
         function removeAnswerFromDisplay(answerRef) {
@@ -568,21 +648,8 @@
         }
 
         function checkCompletedRows() {
-            const filledRows = [];
-            for (let row = gridMetrics.rows - 1; row >= 0; row--) {
-                let filled = true;
-                for (let col = 0; col < gridMetrics.cols; col++) {
-                    if (!tetrisGrid[row][col]) {
-                        filled = false;
-                        break;
-                    }
-                }
-                if (filled) filledRows.push(row);
-            }
-            if (!filledRows.length) return;
-            filledRows.forEach(row => clearRow(row));
-            releaseUnsupportedWords();
-            ensureAnimationLoop();
+            // 줄이 가득 차도 제거하지 않고 계속 쌓이도록 유지
+            return;
         }
 
         function createTetrisParticle(key, data, maxWeight, index) {
@@ -625,6 +692,7 @@
 
             wordEl.addEventListener('click', () => {
                 hiddenWords.push(text);
+                removePendingByText(text);
                 removeParticle(particleData);
                 wordParticles = wordParticles.filter(p => p !== particleData);
             });
@@ -854,6 +922,7 @@
                     animationFrameId = null;
                 }
                 tetrisGrid = createEmptyGrid();
+                resetDropQueue();
                 return;
             } else if (frequencyMap.size > 0 && wordsLayer.querySelector('.concept-empty')) {
                 wordsLayer.innerHTML = '';
@@ -874,6 +943,8 @@
             const liveKeys = new Set(limited.map(item => item[0]));
             const maxWeight = limited.length ? Math.max(...limited.map(([, data]) => data.weight || 1)) : 1;
 
+            prunePendingQueue(liveKeys);
+
             wordParticles = wordParticles.filter(p => {
                 if (!liveKeys.has(p.key)) {
                     removeParticle(p, { immediate: true });
@@ -882,6 +953,7 @@
                 updateWordDimensions(p);
                 return true;
             });
+            const pendingEntries = [];
 
             limited.forEach(([key, data], index) => {
                 const particle = existingParticles.get(key);
@@ -904,10 +976,21 @@
                     return;
                 }
 
-                const newParticle = createTetrisParticle(key, data, maxWeight, index);
-                wordParticles.push(newParticle);
+                if (!pendingParticleKeys.has(key)) {
+                    pendingEntries.push({ key, data, index });
+                }
             });
 
+            pendingEntries.forEach(entry => {
+                enqueueParticleCreation({
+                    key: entry.key,
+                    data: entry.data,
+                    index: entry.index,
+                    maxWeightSnapshot: maxWeight
+                });
+            });
+
+            processPendingParticles();
             ensureAnimationLoop();
         }
 
@@ -933,6 +1016,7 @@
             displayAnswers = [];
             wordParticles = [];
             hiddenWords = [];
+            resetDropQueue();
             wordsLayer.innerHTML = '';
             conceptTotal.textContent = '0';
             stopTimer();
@@ -1007,6 +1091,7 @@
         async function startRealtimeSubscription() {
             console.log('startRealtimeSubscription called');
             stopAllIntervals();
+            resetDropQueue();
             mockAnswers = [];
             wordParticles = [];
             hiddenWords = [];
