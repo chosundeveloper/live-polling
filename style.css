@@ -1356,8 +1356,7 @@ footer a:hover {
 }
 
 .concept-display .concept-cloud {
-    background: linear-gradient(rgba(0, 0, 0, 0.08), rgba(0, 0, 0, 0.08)),
-        #000 url('jihyun.png') center center / cover no-repeat fixed;
+    background: transparent;
     border: none;
     box-shadow: none;
     border-radius: 32px;
