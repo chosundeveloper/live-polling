@@ -1493,6 +1493,12 @@ footer a:hover {
     overflow: visible;
     z-index: 2;
     min-height: 640px;
+    background-image: url('background.png');
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    border-radius: 12px;
+    opacity: 0.95;
 }
 
 .concept-overlay {
