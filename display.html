@@ -11,40 +11,38 @@
     <script src="https://cdn.jsdelivr.net/npm/motion@11.11.13/dist/motion.min.js"></script>
     <script src="https://d3js.org/d3.v7.min.js"></script>
 </head>
-<body class="concept-body">
-    <div class="concept-wrapper">
-        <header class="concept-top">
-            <div class="concept-title-nav">
-                <div class="concept-question-display">
-                    <h2 id="conceptQuestion">질문 로딩 중...</h2>
-                </div>
+<body class="concept-body concept-wrapper">
+    <header class="concept-top">
+        <div class="concept-title-nav">
+            <div class="concept-question-display">
+                <h2 id="conceptQuestion">질문 로딩 중...</h2>
             </div>
-        </header>
+        </div>
+    </header>
 
-        <main class="concept-cloud">
-            <div class="concept-words" id="conceptWords"></div>
-            <div class="concept-overlay concept-overlay-bottom-left">
-                <div class="concept-qr-card">
-                    <div class="concept-qr-box" id="conceptQrCode"></div>
-                </div>
+    <main class="concept-cloud">
+        <div class="concept-words" id="conceptWords"></div>
+        <div class="concept-overlay concept-overlay-bottom-left">
+            <div class="concept-qr-card">
+                <div class="concept-qr-box" id="conceptQrCode"></div>
             </div>
-            <div class="concept-overlay concept-overlay-bottom-right">
-                <div class="concept-stats-card">
+        </div>
+        <div class="concept-overlay concept-overlay-bottom-right">
+            <div class="concept-stats-card">
+                <div>
+                    <p class="concept-label">누적 답변</p>
+                    <p class="concept-value" id="conceptTotal">0</p>
+                </div>
+                <div class="concept-timer-row">
                     <div>
-                        <p class="concept-label">누적 답변</p>
-                        <p class="concept-value" id="conceptTotal">0</p>
+                        <p class="concept-label">타이머</p>
+                        <p class="concept-value" id="conceptUpdated">10:00</p>
                     </div>
-                    <div class="concept-timer-row">
-                        <div>
-                            <p class="concept-label">타이머</p>
-                            <p class="concept-value" id="conceptUpdated">10:00</p>
-                        </div>
-                        <button class="concept-action concept-action-ghost" id="toggleMock">모의</button>
-                    </div>
+                    <button class="concept-action concept-action-ghost" id="toggleMock">모의</button>
                 </div>
             </div>
-        </main>
-    </div>
+        </div>
+    </main>
 
     <script>
         console.log('Script started executing'); // Very early log
