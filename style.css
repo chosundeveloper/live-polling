@@ -1343,11 +1343,77 @@ footer a:hover {
     background:
         radial-gradient(circle at 15% 25%, rgba(56, 189, 248, 0.1), transparent 50%),
         radial-gradient(circle at 85% 65%, rgba(139, 92, 246, 0.08), transparent 50%),
-        radial-gradient(circle at 50% 50%, rgba(59, 130, 246, 0.06), transparent 40%);
+        radial-gradient(circle at 50% 50%, rgba(59, 130, 246, 0.06), transparent 40%),
+        radial-gradient(circle 3px at 20% 15%, rgba(255, 255, 255, 0.4), transparent),
+        radial-gradient(circle 5px at 75% 20%, rgba(255, 255, 255, 0.3), transparent),
+        radial-gradient(circle 4px at 30% 70%, rgba(255, 255, 255, 0.35), transparent),
+        radial-gradient(circle 3px at 85% 45%, rgba(255, 255, 255, 0.4), transparent),
+        radial-gradient(circle 6px at 50% 85%, rgba(255, 255, 255, 0.25), transparent),
+        radial-gradient(circle 4px at 10% 50%, rgba(255, 255, 255, 0.3), transparent),
+        radial-gradient(circle 5px at 90% 75%, rgba(255, 255, 255, 0.35), transparent),
+        radial-gradient(circle 3px at 40% 35%, rgba(255, 255, 255, 0.4), transparent),
+        radial-gradient(circle 4px at 65% 60%, rgba(255, 255, 255, 0.3), transparent);
     background-size: 200% 200%;
-    animation: subtleBackgroundPan 25s ease-in-out infinite alternate;
+    animation: subtleBackgroundPan 25s ease-in-out infinite alternate, floatingBubbles 30s ease-in-out infinite;
     opacity: 0.7;
     z-index: 0;
+}
+
+@keyframes floatingBubbles {
+    0%, 100% {
+        background-position: 0% 0%, 100% 100%, 50% 50%, 20% 15%, 75% 20%, 30% 70%, 85% 45%, 50% 85%, 10% 50%, 90% 75%, 40% 35%, 65% 60%;
+    }
+    50% {
+        background-position: 100% 100%, 0% 0%, 50% 50%, 25% 20%, 70% 25%, 35% 65%, 80% 50%, 55% 80%, 15% 55%, 85% 70%, 45% 40%, 60% 55%;
+    }
+}
+
+/* Floating decorative shapes */
+.concept-decorations {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    z-index: 1;
+    overflow: hidden;
+}
+
+.concept-decoration {
+    position: absolute;
+    opacity: 0.3;
+    animation: floatShape 15s ease-in-out infinite;
+}
+
+.concept-decoration.star {
+    width: 12px;
+    height: 12px;
+    clip-path: polygon(50% 0%, 61% 35%, 98% 35%, 68% 57%, 79% 91%, 50% 70%, 21% 91%, 32% 57%, 2% 35%, 39% 35%);
+    background: white;
+}
+
+.concept-decoration.circle {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.5);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+.concept-decoration.bubble {
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    background: radial-gradient(circle at 30% 30%, rgba(255, 255, 255, 0.4), rgba(255, 255, 255, 0.1));
+    border: 2px solid rgba(255, 255, 255, 0.2);
+    box-shadow: inset 0 0 4px rgba(255, 255, 255, 0.3);
+}
+
+@keyframes floatShape {
+    0%, 100% {
+        transform: translateY(0) rotate(0deg);
+    }
+    50% {
+        transform: translateY(-20px) rotate(180deg);
+    }
 }
 
 .concept-cloud::after {
