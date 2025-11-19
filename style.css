@@ -1263,10 +1263,10 @@ footer a:hover {
 }
 
 .concept-display .concept-wrapper {
-    background: rgba(255, 255, 255, 0.22);
-    border-radius: 36px;
-    box-shadow: 0 30px 120px rgba(15, 23, 42, 0.4);
-    backdrop-filter: blur(18px);
+    background: transparent;
+    border-radius: 0;
+    box-shadow: none;
+    backdrop-filter: none;
 }
 
 .concept-top {
@@ -1359,22 +1359,35 @@ footer a:hover {
 }
 
 .concept-display .concept-cloud {
-    background: rgba(255, 255, 255, 0.78);
+    background: rgba(15, 23, 42, 0.2);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    box-shadow: 0 25px 80px rgba(15, 23, 42, 0.35);
     border-radius: 32px;
-    border: 1px solid rgba(255, 255, 255, 0.4);
-    box-shadow: 0 25px 80px rgba(15, 23, 42, 0.25);
-    backdrop-filter: blur(8px);
+    backdrop-filter: blur(22px);
 }
 
 .concept-display .concept-cloud::before {
-    background-image: url('background.png');
-    background-size: 65%;
-    background-position: center;
-    background-repeat: no-repeat;
-    opacity: 0.55;
-    filter: brightness(1.35) saturate(0);
-    mix-blend-mode: screen;
+    background: rgba(15, 23, 42, 0.3);
     border-radius: inherit;
+    z-index: 0;
+}
+
+.concept-display .concept-cloud::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background-color: #ffffff;
+    -webkit-mask-image: url('background.png');
+    mask-image: url('background.png');
+    -webkit-mask-repeat: no-repeat;
+    mask-repeat: no-repeat;
+    -webkit-mask-position: center;
+    mask-position: center;
+    -webkit-mask-size: 64%;
+    mask-size: 64%;
+    opacity: 0.98;
+    filter: drop-shadow(0 25px 45px rgba(15, 23, 42, 0.25));
+    z-index: 1;
 }
 
 @keyframes floatingBubbles {
@@ -1399,6 +1412,8 @@ footer a:hover {
     position: absolute;
     opacity: 0.4;
 }
+
+/* No extra background on decorations for display view */
 
 .concept-decoration.star {
     width: 14px;
