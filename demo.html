@@ -166,12 +166,14 @@
         const INNER_CORE_RATIO = 0.06; // Inner core that stays stable (very small)
         const PUSH_THRESHOLD_RATIO = 0.10; // Start pushing outward very early
         const TETRIS_COLS = 6;
-        const TETRIS_ROWS = 24;
+        const TETRIS_ROWS = 24; // Maximum rows supported
+        const MIN_TETRIS_ROWS = 6;
+        const DESIRED_ROW_HEIGHT = 140;
         const TETRIS_BASE_FALL_SPEED = 180;
         const TETRIS_SPEED_VARIANCE = 60;
         const TETRIS_CELL_WIDTH_MIN = 140;
         const TETRIS_CELL_WIDTH_MAX = 220;
-        const TETRIS_CELL_HEIGHT_MIN = 110;
+        const TETRIS_CELL_HEIGHT_MIN = 90;
         const TETRIS_CELL_HEIGHT_MAX = 150;
         const MOCK_WORD_POOL = buildMockWordPool();
         let mockWordQueue = shuffleArray([...MOCK_WORD_POOL]);
@@ -501,12 +503,31 @@
             }
         }
 
+        function rebuildGridFromParticles() {
+            tetrisGrid = createEmptyGrid();
+            wordParticles.forEach(particle => {
+                if (!particle || particle.row === null || particle.state !== 'locked') {
+                    return;
+                }
+                const clampedRow = Math.max(0, Math.min(particle.row, gridMetrics.rows - 1));
+                particle.row = clampedRow;
+                if (!tetrisGrid[clampedRow]) {
+                    tetrisGrid[clampedRow] = Array(gridMetrics.cols).fill(null);
+                }
+                tetrisGrid[clampedRow][particle.col] = particle;
+            });
+        }
+
         function updateGridMetrics(wordCount = MAX_WORDS) {
             const { width, height } = getCloudBounds();
-            gridMetrics.width = width;
-            gridMetrics.height = height;
+            const safeWidth = Math.max(width, 300);
+            const bottomPadding = 80;
+            const safeHeight = Math.max(300, height - bottomPadding);
+            gridMetrics.width = safeWidth;
+            gridMetrics.height = safeHeight;
             gridMetrics.cols = TETRIS_COLS;
-            gridMetrics.rows = TETRIS_ROWS;
+            const desiredRows = Math.max(MIN_TETRIS_ROWS, Math.floor(safeHeight / DESIRED_ROW_HEIGHT));
+            gridMetrics.rows = Math.min(TETRIS_ROWS, desiredRows || MIN_TETRIS_ROWS);
             const tentativeWidth = width / gridMetrics.cols;
             if (tentativeWidth >= TETRIS_CELL_WIDTH_MIN) {
                 gridMetrics.cellWidth = Math.min(TETRIS_CELL_WIDTH_MAX, Math.max(TETRIS_CELL_WIDTH_MIN, tentativeWidth));
@@ -515,14 +536,15 @@
             }
             const totalGridWidth = gridMetrics.cellWidth * gridMetrics.cols;
             gridMetrics.offsetX = Math.max(gridMetrics.cellWidth / 2, (width - totalGridWidth) / 2 + gridMetrics.cellWidth / 2);
-            let cellHeight = height / gridMetrics.rows;
-            if (cellHeight >= TETRIS_CELL_HEIGHT_MIN) {
-                cellHeight = Math.min(TETRIS_CELL_HEIGHT_MAX, Math.max(TETRIS_CELL_HEIGHT_MIN, cellHeight));
-            } else {
-                cellHeight = TETRIS_CELL_HEIGHT_MIN;
+            let cellHeight = safeHeight / gridMetrics.rows;
+            cellHeight = Math.min(TETRIS_CELL_HEIGHT_MAX, Math.max(TETRIS_CELL_HEIGHT_MIN, cellHeight));
+            let totalGridHeight = cellHeight * gridMetrics.rows;
+            if (totalGridHeight > safeHeight) {
+                cellHeight = safeHeight / gridMetrics.rows;
+                totalGridHeight = cellHeight * gridMetrics.rows;
             }
             gridMetrics.cellHeight = cellHeight;
-            gridMetrics.offsetY = gridMetrics.cellHeight / 2;
+            gridMetrics.offsetY = safeHeight - totalGridHeight + cellHeight / 2;
         }
 
         function getCellCenter(col, row) {
@@ -924,6 +946,7 @@
             console.log('renderWords called with frequencyMap:', frequencyMap);
 
             updateGridMetrics(frequencyMap.size);
+            rebuildGridFromParticles();
 
             if (frequencyMap.size === 0 && wordParticles.length === 0) {
                 wordsLayer.innerHTML = '<div class="concept-empty">첫 번째 단어를 기다리고 있어요</div>';
@@ -978,7 +1001,9 @@
                     particle.el.classList.toggle('concept-word-accent', isAccent);
                     updateWordDimensions(particle);
                     if (particle.row !== null) {
-                        const { x, y } = getCellCenter(particle.col, particle.row);
+                        const clampedRow = Math.max(0, Math.min(particle.row, gridMetrics.rows - 1));
+                        particle.row = clampedRow;
+                        const { x, y } = getCellCenter(particle.col, clampedRow);
                         particle.x = x;
                         particle.y = y;
                         updateDomPosition(particle);
@@ -1181,14 +1206,16 @@
             updateGridMetrics(wordParticles.length);
             wordParticles.forEach(p => {
                 updateWordDimensions(p);
-                const baseRow = p.row !== null ? p.row : 0;
+                const baseRow = p.row !== null ? Math.max(0, Math.min(p.row, gridMetrics.rows - 1)) : 0;
                 const { x, y } = getCellCenter(p.col, baseRow);
                 p.x = x;
                 if (p.row !== null) {
+                    p.row = baseRow;
                     p.y = y;
                 }
                 updateDomPosition(p);
             });
+            rebuildGridFromParticles();
         });
 
         // --- Initial Load ---
