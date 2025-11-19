@@ -1454,15 +1454,9 @@ footer a:hover {
     content: '';
     position: absolute;
     inset: 0;
-    background-image: url('background.png');
-    background-size: cover;
-    background-position: center;
-    background-repeat: no-repeat;
-    opacity: 1;
+    background: transparent;
     pointer-events: none;
     z-index: 1;
-    filter: brightness(100) saturate(0);
-    mix-blend-mode: normal;
 }
 
 @keyframes subtleBackgroundPan {
