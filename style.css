@@ -1266,10 +1266,8 @@ footer a:hover {
     align-items: center;
     gap: 20px;
     padding: 20px 24px;
-    background: linear-gradient(135deg, #87CEEB 0%, #6B9FE8 25%, #5F7FE5 50%, #7B68EE 75%, #9370DB 100%);
-    border-radius: 16px;
+    background: transparent;
     margin-bottom: 16px;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
 }
 
 .concept-title-nav {
