@@ -1231,16 +1231,20 @@ footer a:hover {
 .concept-body {
     min-height: 100vh;
     height: 100vh;
+    width: 100vw;
     background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #334155 100%);
     color: var(--ink-primary);
     font-family: 'KOTRA_Bold', 'Space Grotesk', 'Outfit', 'Apple SD Gothic Neo', 'Spoqa Han Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
     overflow: hidden;
     margin: 0;
     padding: 0;
+    position: fixed;
+    top: 0;
+    left: 0;
 }
 
 .concept-wrapper {
-    width: 100%;
+    width: 100vw;
     height: 100vh;
     background: rgba(15, 23, 42, 0.95);
     padding: 28px;
@@ -1249,6 +1253,7 @@ footer a:hover {
     display: flex;
     flex-direction: column;
     backdrop-filter: blur(20px);
+    box-sizing: border-box;
 }
 
 .concept-top {
