@@ -1137,7 +1137,8 @@
                 }
                 return aTime - bTime;
             });
-            const limited = sortedWords.slice(0, MAX_WORDS).filter(([, data]) => !hiddenWords.includes(data.text));
+            // Don't limit - keep all words, board capacity will handle limits
+            const limited = sortedWords.filter(([, data]) => !hiddenWords.includes(data.text));
             const liveKeys = new Set(limited.map(item => item[0]));
             const maxWeight = limited.length ? Math.max(...limited.map(([, data]) => data.weight || 1)) : 1;
 
