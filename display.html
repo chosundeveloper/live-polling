@@ -515,27 +515,28 @@
             }
 
             d3Simulation = d3.forceSimulation(wordParticles)
-                .alphaDecay(0.1) // 더 빨리 멈추도록 증가 (기존 0.05)
-                .velocityDecay(0.4) // 마찰력 증가 (기존 0.2)
+                .alphaDecay(0.02) // 천천히 멈추도록 감소 (부드러운 움직임)
+                .velocityDecay(0.3) // 마찰력 적절히 유지
                 .alphaMin(0.001)
                 .force('collide', d3.forceCollide(d => {
                     const { width, height } = getParticleDimensions(d);
-                    return Math.max(width, height) / 2 + MIN_SEPARATION;
-                }).strength(0.7).iterations(3)) // 반복 횟수 증가, 강도 약간 감소
-                .force('x', d3.forceX(d => d.targetX || centerW).strength(0.08)) // 중심 인력 약간 증가
-                .force('y', d3.forceY(d => d.targetY || centerH).strength(0.08))
+                    // 충돌 반경을 넉넉하게 설정하여 겹침 방지
+                    return Math.max(width, height) / 1.8 + 5;
+                }).strength(0.9).iterations(4)) // 강도와 반복 횟수 증가로 겹침 강력 방지
+                .force('x', d3.forceX(d => d.targetX || centerW).strength(0.03)) // 인력 감소로 부드러운 이동
+                .force('y', d3.forceY(d => d.targetY || centerH).strength(0.03))
                 .on('tick', () => {
                     const timestamp = performance.now();
                     const currentAlpha = d3Simulation.alpha();
 
                     // Stop simulation when settled and freeze all particles
-                    if (currentAlpha < 0.05) { // 멈춤 임계값 완화
+                    if (currentAlpha < 0.01) { // 멈춤 임계값 더 낮춤
                         wordParticles.forEach(p => {
                             p.vx = 0;
                             p.vy = 0;
                             p.x = p.targetX || p.x;
                             p.y = p.targetY || p.y;
-                            p.fx = p.x; // 위치 고정
+                            p.fx = p.x;
                             p.fy = p.y;
                             p.el.style.left = `${p.x}px`;
                             p.el.style.top = `${p.y}px`;
@@ -545,7 +546,6 @@
                     }
 
                     wordParticles.forEach(p => {
-                        // 이미 고정된 입자는 건너뜀
                         if (p.fx !== null && p.fx !== undefined) return;
 
                         // Gradually freeze particles as they approach target
@@ -554,19 +554,19 @@
                         const distToTarget = Math.hypot(dx, dy);
 
                         // If very close to target, snap to position and stop
-                        if (distToTarget < 8) { // 거리 허용 오차 증가
+                        if (distToTarget < 2 && currentAlpha < 0.1) { // 조건 강화
                             p.x = p.targetX || p.x;
                             p.y = p.targetY || p.y;
                             p.vx = 0;
                             p.vy = 0;
-                            p.fx = p.x; // 위치 고정
+                            p.fx = p.x;
                             p.fy = p.y;
                         }
 
                         // Hard limit on velocity to prevent spinning
                         const speed = Math.hypot(p.vx || 0, p.vy || 0);
-                        if (speed > MAX_PARTICLE_SPEED) {
-                            const ratio = MAX_PARTICLE_SPEED / speed;
+                        if (speed > MAX_PARTICLE_SPEED * 2) { // 속도 제한 약간 완화
+                            const ratio = (MAX_PARTICLE_SPEED * 2) / speed;
                             p.vx *= ratio;
                             p.vy *= ratio;
                         }
