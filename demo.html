@@ -757,8 +757,8 @@
             const { text, weight } = data;
             const wordEl = document.createElement('span');
             wordEl.className = 'concept-word concept-word-tetris';
-            const allowVertical = false;
-            const isVertical = allowVertical && Math.random() < 0.2;
+            const allowVertical = true;
+            const isVertical = allowVertical && Math.random() < 0.3;
             if (isVertical) {
                 wordEl.classList.add('concept-word-vertical');
             }
@@ -771,9 +771,10 @@
             wordsLayer.appendChild(wordEl);
 
             const spawnCol = pickSpawnColumn();
-            const spawnY = gridMetrics.offsetY - gridMetrics.cellHeight * 2;
+            const spawnY = -gridMetrics.cellHeight * 2; // Spawn from top center
             const { x: targetX } = getCellCenter(spawnCol, 0);
-            const spawnX = targetX;
+            const { width } = getCloudBounds();
+            const spawnX = width / 2; // Start from horizontal center
 
             const particleData = {
                 key,
