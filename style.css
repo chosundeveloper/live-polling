@@ -1447,18 +1447,19 @@ footer a:hover {
     height: 60px;
     border-radius: 50%;
     background: radial-gradient(circle at 30% 30%,
-            rgba(255, 255, 255, 0.8) 0%,
-            rgba(255, 200, 255, 0.4) 20%,
-            rgba(200, 255, 255, 0.3) 40%,
-            rgba(255, 255, 200, 0.2) 60%,
-            rgba(200, 200, 255, 0.1) 80%,
-            transparent 100%);
-    border: 2px solid rgba(255, 255, 255, 0.4);
+            rgba(255, 255, 255, 0.95) 0%,
+            rgba(255, 200, 255, 0.7) 20%,
+            rgba(200, 255, 255, 0.6) 40%,
+            rgba(255, 255, 200, 0.5) 60%,
+            rgba(200, 200, 255, 0.4) 80%,
+            rgba(255, 255, 255, 0.2) 100%);
+    border: 3px solid rgba(255, 255, 255, 0.8);
     box-shadow:
-        inset 0 0 20px rgba(255, 255, 255, 0.6),
-        inset 10px 10px 20px rgba(255, 200, 255, 0.3),
-        inset -10px -10px 20px rgba(200, 255, 255, 0.3),
-        0 0 20px rgba(255, 255, 255, 0.3);
+        inset 0 0 25px rgba(255, 255, 255, 0.9),
+        inset 10px 10px 25px rgba(255, 200, 255, 0.6),
+        inset -10px -10px 25px rgba(200, 255, 255, 0.6),
+        0 0 30px rgba(255, 255, 255, 0.6),
+        0 0 50px rgba(200, 200, 255, 0.4);
     animation: risingBubble 8s ease-in infinite;
     opacity: 0;
 }
@@ -1470,16 +1471,16 @@ footer a:hover {
     }
 
     10% {
-        opacity: 0.7;
+        opacity: 0.9;
     }
 
     50% {
         transform: translateY(-50vh) translateX(20px) scale(1);
-        opacity: 0.8;
+        opacity: 1;
     }
 
     90% {
-        opacity: 0.5;
+        opacity: 0.7;
     }
 
     100% {
