@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Live Polling - Mutalisk</title>
+    <title>Live Polling - Mutalisk (No Overlap Demo)</title>
     <link rel="stylesheet" href="style.css">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="supabase-config.js"></script>
@@ -84,62 +84,65 @@
         let realtimeChannel = null;
         let simulationInterval = null;
         let mockAnswers = [];
+        let displayAnswers = [];
         let wordParticles = [];
         let hiddenWords = [];
+        let pendingParticleQueue = [];
+        let pendingParticleKeys = new Set();
         let qrCodeInstance = null;
         let animationFrameId = null;
         let timerInterval = null;
         let timerDeadline = null;
-        let d3Simulation = null;
         let sessionStartTime = null; // 페이지 로드 시점
+        let spawnTimeoutId = null;
 
         // --- Constants ---
-        const KEYWORDS = ['감사한 마음', '기쁨이 넘침', '평안과 은혜', '회개와 회복', '찬양과 경배', '사랑의 충만함', '소망과 믿음', '겸손한 순종', '감격스러운 감사', '간절한 기도', '뜨거운 헌신', '잔잔한 평온', '새로운 은혜', '깊은 갈망', '진실한 고백', '축복의 시간', '치유와 회복', '새 힘을 얻음', '감동의 순간', '충만한 기쁨', '따뜻한 사랑', '간구하는 마음', '경배와 찬양', '믿음의 고백', '소망을 품음'];
-        const PREFIXES = ['따뜻하고 깊은', '새롭고 뜨거운', '간절하고 겸손한', '진실하고 잔잔한', '충만하고 기쁜'];
-        const SUFFIXES = ['마음과 영혼', '감사와 은혜', '기쁨과 평안', '소망과 믿음', '사랑과 찬양'];
+        const KEYWORDS = ['감사', '기쁨', '평안', '은혜', '회개', '찬양', '경배', '사랑', '소망', '믿음', '겸손', '순종', '감격', '기대', '축복', '회복', '치유', '새힘', '감동', '기도', '간절함', '뜨거움', '충만', '평온', '기다림', '갈망', '간구', '고백', '헌신'];
+        const PREFIXES = ['따뜻한', '깊은', '새로운', '뜨거운', '간절한', '겸손한', '진실한', '잔잔한', '충만한'];
+        const SUFFIXES = ['마음', '감사', '은혜', '기쁨', '평안', '소망', '믿음', '사랑', '찬양'];
         const TEXT_ANSWERS = [
-            '감사한 마음으로',
-            '기쁨이 넘치는',
-            '평안과 은혜가',
-            '회개와 회복의',
-            '찬양과 경배를',
-            '사랑의 충만함',
-            '소망과 믿음으로',
-            '겸손한 순종의',
-            '감격스러운 감사',
-            '간절한 기도제목',
-            '뜨거운 헌신으로',
-            '잔잔한 평온함',
-            '새로운 은혜를',
-            '깊은 갈망으로',
-            '진실한 고백을',
-            '축복의 시간들',
-            '치유와 회복을',
-            '새 힘을 얻음',
-            '감동의 순간들',
-            '충만한 기쁨과',
-            '따뜻한 사랑으로',
-            '간구하는 마음',
-            '경배와 찬양을',
-            '믿음의 고백으로',
-            '소망을 품고서',
-            '은혜로운 주님',
-            '감사와 기쁨의',
-            '사랑과 평안이',
-            '믿음으로 나아감',
-            '소망 가운데서',
-            '주의 은혜 안에',
-            '찬양하는 삶으로',
-            '기도하는 마음',
-            '헌신의 다짐을',
-            '회개하는 심령'
+            '감사',
+            '기쁨',
+            '평안',
+            '은혜',
+            '회개',
+            '찬양',
+            '경배',
+            '사랑',
+            '소망',
+            '믿음',
+            '겸손',
+            '순종',
+            '감격',
+            '기대',
+            '축복',
+            '회복',
+            '치유',
+            '새힘',
+            '감동',
+            '기도',
+            '간절함',
+            '뜨거움',
+            '충만',
+            '평온',
+            '기다림',
+            '갈망',
+            '간구',
+            '고백',
+            '헌신',
+            '감사한마음',
+            '기쁜마음',
+            '평안함',
+            '은혜로움',
+            '감사와기쁨',
+            '사랑과평안'
         ];
         const MAX_WORDS = 150;
         const FIXED_FONT_SIZE = 25; // Fixed font size for all words
         const MAX_PARTICLE_SPEED = 0.001;
-        const MIN_SEPARATION = 500;
-        const DEFAULT_PARTICLE_WIDTH = 200;
-        const DEFAULT_PARTICLE_HEIGHT = 60;
+        const MIN_SEPARATION = 80; // Minimum pixel gap between words
+        const DEFAULT_PARTICLE_WIDTH = 48;
+        const DEFAULT_PARTICLE_HEIGHT = 22;
         const INTRO_DURATION_BASE = 180000; // extremely slow duration (3 minutes)
         const INTRO_DURATION_VARIANCE = 20000;
         const INTRO_BLOOM_JITTER = 0; // No bloom
@@ -150,7 +153,7 @@
         const INTRO_STAGE_MAX_RADIUS = 40;
         const INTRO_CLUSTER_RATIO = 0.3; // 30% for gathering, 70% for spreading (slower spread)
         const INTRO_CLUSTER_SWAY = 0;
-        const INTRO_CLUSTER_PADDING = 400;
+        const INTRO_CLUSTER_PADDING = 120;
         const OUTWARD_DRIFT_FORCE = 0.000002;
         const TARGET_ATTRACTION_FORCE = 0.000001;
         const RADIAL_FORCE = 0.000004;
@@ -162,10 +165,90 @@
         const MAX_CELL_SPREAD_RATIO = 0.38; // Expanded for much more space
         const INNER_CORE_RATIO = 0.06; // Inner core that stays stable (very small)
         const PUSH_THRESHOLD_RATIO = 0.10; // Start pushing outward very early
+        const TETRIS_COLS = 6;
+        const TETRIS_ROWS = 24; // Maximum rows supported
+        const MIN_TETRIS_ROWS = 6;
+        const DESIRED_ROW_HEIGHT = 60;
+        const MIN_COLUMN_WIDTH = 180;
+        const MIN_TETRIS_COLS = 1;
+        const TETRIS_BASE_FALL_SPEED = 180;
+        const TETRIS_SPEED_VARIANCE = 60;
+        const TETRIS_CELL_WIDTH_MIN = 140;
+        const TETRIS_CELL_WIDTH_MAX = 220;
+        const TETRIS_CELL_HEIGHT_MIN = 48;
+        const TETRIS_CELL_HEIGHT_MAX = 130;
+        const TETRIS_CELL_INSET = 0;
+        const MOCK_WORD_POOL = buildMockWordPool();
+        let mockWordQueue = shuffleArray([...MOCK_WORD_POOL]);
+        let mockWordIndex = 0;
+        let gridMetrics = {
+            cols: TETRIS_COLS,
+            rows: TETRIS_ROWS,
+            cellWidth: 120,
+            cellHeight: 52,
+            offsetX: 0,
+            offsetY: 0,
+            width: 0,
+            height: 0
+        };
+        let tetrisGrid = createEmptyGrid();
+        let lastFrameTime = null;
+        const DROP_QUEUE_DELAY_BASE = 450;
+        const DROP_QUEUE_DELAY_VARIANCE = 350;
+
+        function buildMockWordPool() {
+            const uniqueWords = new Set();
+            TEXT_ANSWERS.forEach(word => uniqueWords.add(word));
+            KEYWORDS.forEach(word => uniqueWords.add(word));
+
+            KEYWORDS.forEach(keyword => {
+                PREFIXES.forEach(prefix => {
+                    uniqueWords.add(`${prefix} ${keyword}`);
+                    SUFFIXES.forEach(suffix => {
+                        uniqueWords.add(`${prefix} ${keyword} ${suffix}`);
+                    });
+                });
+                SUFFIXES.forEach(suffix => {
+                    uniqueWords.add(`${keyword} ${suffix}`);
+                });
+            });
+
+            return Array.from(uniqueWords);
+        }
+
+        function shuffleArray(array) {
+            const result = [...array];
+            for (let i = result.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [result[i], result[j]] = [result[j], result[i]];
+            }
+            return result;
+        }
+
+        function getNextMockWord() {
+            if (!mockWordQueue.length) {
+                mockWordQueue = shuffleArray([...MOCK_WORD_POOL]);
+                mockWordIndex = 0;
+            }
+            if (mockWordIndex >= mockWordQueue.length) {
+                mockWordQueue = shuffleArray([...MOCK_WORD_POOL]);
+                mockWordIndex = 0;
+            }
+            return mockWordQueue[mockWordIndex++];
+        }
 
         function selectWordColor(weightRatio, index) {
-            // Always return white color
-            return '#ffffff';
+            // Select random color, excluding poorly visible ones
+            // 50% chance for blue (#3288bd index 1), 50% for other allowed colors
+            if (Math.random() < 0.5) {
+                return COLOR_PALETTE[1]; // Blue
+            }
+
+            let colorIndex;
+            do {
+                colorIndex = Math.floor(Math.random() * COLOR_PALETTE.length);
+            } while (EXCLUDED_COLOR_INDICES.includes(colorIndex));
+            return COLOR_PALETTE[colorIndex];
         }
         window.selectWordColor = selectWordColor;
 
@@ -341,17 +424,514 @@
         }
 
         function getParticleDimensions(particle) {
-            const width = particle.width || particle.el.offsetWidth || DEFAULT_PARTICLE_WIDTH;
-            const height = particle.height || particle.el.offsetHeight || DEFAULT_PARTICLE_HEIGHT;
+            // Always get fresh dimensions from DOM
+            const rect = particle.el.getBoundingClientRect();
+            const width = rect.width || DEFAULT_PARTICLE_WIDTH;
+            const height = rect.height || DEFAULT_PARTICLE_HEIGHT;
             particle.width = width;
             particle.height = height;
             return { width, height };
         }
 
+        function clampColumnIndex(col = 0) {
+            const maxCol = Math.max(1, gridMetrics.cols || TETRIS_COLS) - 1;
+            if (!Number.isFinite(col)) return 0;
+            return Math.max(0, Math.min(maxCol, Math.round(col)));
+        }
 
+        function createEmptyGrid() {
+            const rows = Math.max(1, gridMetrics.rows || TETRIS_ROWS);
+            const cols = Math.max(1, gridMetrics.cols || TETRIS_COLS);
+            return Array.from({ length: rows }, () => Array(cols).fill(null));
+        }
 
+        function resetDropQueue() {
+            pendingParticleQueue = [];
+            pendingParticleKeys.clear();
+            if (spawnTimeoutId) {
+                clearTimeout(spawnTimeoutId);
+                spawnTimeoutId = null;
+            }
+        }
 
+        function prunePendingQueue(validKeys = null) {
+            if (!pendingParticleQueue.length) return;
+            pendingParticleQueue = pendingParticleQueue.filter(entry => {
+                const keep = !validKeys || validKeys.has(entry.key);
+                if (!keep) {
+                    pendingParticleKeys.delete(entry.key);
+                }
+                return keep;
+            });
+            if (!pendingParticleQueue.length && spawnTimeoutId) {
+                clearTimeout(spawnTimeoutId);
+                spawnTimeoutId = null;
+            }
+        }
 
+        function enqueueParticleCreation(entry) {
+            if (!entry || pendingParticleKeys.has(entry.key)) return;
+            if (isBoardFull()) {
+                return;
+            }
+            pendingParticleQueue.push(entry);
+            pendingParticleKeys.add(entry.key);
+            processPendingParticles();
+        }
+
+        function processPendingParticles() {
+            if (!pendingParticleQueue.length) return;
+            if (wordParticles.some(p => p.state === 'falling')) return;
+            if (spawnTimeoutId) return;
+            const delay = DROP_QUEUE_DELAY_BASE + Math.random() * DROP_QUEUE_DELAY_VARIANCE;
+            spawnTimeoutId = setTimeout(() => {
+                spawnTimeoutId = null;
+                if (!pendingParticleQueue.length) {
+                    processPendingParticles();
+                    return;
+                }
+                if (isBoardFull()) {
+                    pendingParticleQueue = [];
+                    pendingParticleKeys.clear();
+                    return;
+                }
+                const next = pendingParticleQueue.shift();
+                if (!next) {
+                    processPendingParticles();
+                    return;
+                }
+                pendingParticleKeys.delete(next.key);
+                const newParticle = createTetrisParticle(next.key, next.data, next.maxWeightSnapshot, next.index);
+                wordParticles.push(newParticle);
+                ensureAnimationLoop();
+            }, delay);
+        }
+
+        function removePendingByText(text) {
+            if (!text || !pendingParticleQueue.length) return;
+            pendingParticleQueue = pendingParticleQueue.filter(entry => {
+                if (entry.data?.text === text) {
+                    pendingParticleKeys.delete(entry.key);
+                    return false;
+                }
+                return true;
+            });
+            if (!pendingParticleQueue.length && spawnTimeoutId) {
+                clearTimeout(spawnTimeoutId);
+                spawnTimeoutId = null;
+            }
+        }
+
+        function rebuildGridFromParticles() {
+            tetrisGrid = createEmptyGrid();
+            wordParticles.forEach(particle => {
+                if (!particle || particle.row === null || particle.state !== 'locked') {
+                    return;
+                }
+                const clampedRow = Math.max(0, Math.min(particle.row, gridMetrics.rows - 1));
+                const clampedCol = clampColumnIndex(particle.col);
+                particle.row = clampedRow;
+                particle.col = clampedCol;
+                if (!tetrisGrid[clampedRow]) {
+                    tetrisGrid[clampedRow] = Array(gridMetrics.cols).fill(null);
+                }
+                tetrisGrid[clampedRow][clampedCol] = particle;
+            });
+        }
+
+        function updateGridMetrics(wordCount = MAX_WORDS) {
+            const { width, height } = getCloudBounds();
+            const safeWidth = Math.max(width, 300);
+            const bottomPadding = 0;
+            const safeHeight = Math.max(300, height - bottomPadding);
+            gridMetrics.width = safeWidth;
+            gridMetrics.height = safeHeight;
+            const availableWidth = Math.max(width, 1);
+            let computedCols = Math.max(1, Math.floor(availableWidth / MIN_COLUMN_WIDTH));
+            computedCols = Math.min(TETRIS_COLS, Math.max(MIN_TETRIS_COLS, computedCols));
+            gridMetrics.cols = computedCols;
+            const desiredRows = Math.max(MIN_TETRIS_ROWS, Math.floor(safeHeight / DESIRED_ROW_HEIGHT));
+            gridMetrics.rows = Math.min(TETRIS_ROWS, desiredRows || MIN_TETRIS_ROWS);
+            const tentativeWidth = availableWidth / Math.max(1, gridMetrics.cols);
+            gridMetrics.cellWidth = Math.round(Math.max(TETRIS_CELL_WIDTH_MIN, Math.min(TETRIS_CELL_WIDTH_MAX, tentativeWidth)));
+            const totalGridWidth = gridMetrics.cellWidth * gridMetrics.cols;
+            const widthOverflow = Math.max(0, totalGridWidth - width);
+            if (widthOverflow > 0) {
+                gridMetrics.cellWidth = Math.round((width - widthOverflow) / gridMetrics.cols);
+            }
+            const gridTotalWidth = gridMetrics.cellWidth * gridMetrics.cols;
+            gridMetrics.offsetX = Math.round((width - gridTotalWidth) / 2 + gridMetrics.cellWidth / 2);
+            let cellHeight = safeHeight / gridMetrics.rows;
+            gridMetrics.cellHeight = Math.round(Math.max(TETRIS_CELL_HEIGHT_MIN, Math.min(TETRIS_CELL_HEIGHT_MAX, cellHeight)));
+            const maxAspectHeight = Math.round(gridMetrics.cellWidth * 0.45);
+            if (maxAspectHeight > 0) {
+                gridMetrics.cellHeight = Math.min(gridMetrics.cellHeight, Math.max(TETRIS_CELL_HEIGHT_MIN, maxAspectHeight));
+            }
+            const idealTextHeight = FIXED_FONT_SIZE + 14;
+            gridMetrics.cellHeight = Math.min(gridMetrics.cellHeight, idealTextHeight);
+            const totalGridHeight = gridMetrics.cellHeight * gridMetrics.rows;
+            if (totalGridHeight > safeHeight) {
+                gridMetrics.cellHeight = Math.round(safeHeight / gridMetrics.rows);
+            }
+            const gridTotalHeight = gridMetrics.cellHeight * gridMetrics.rows;
+            // Align to absolute bottom - last row sits at screen bottom
+            gridMetrics.offsetY = Math.round(safeHeight - (gridMetrics.rows - 0.5) * gridMetrics.cellHeight);
+        }
+
+        function getCellCenter(col, row) {
+            return {
+                x: Math.round(gridMetrics.offsetX + col * gridMetrics.cellWidth),
+                y: Math.round(gridMetrics.offsetY + row * gridMetrics.cellHeight)
+            };
+        }
+
+        function getBoardCapacity() {
+            const rows = Math.max(1, gridMetrics.rows || TETRIS_ROWS);
+            const cols = Math.max(1, gridMetrics.cols || TETRIS_COLS);
+            return rows * cols;
+        }
+
+        function getLockedCellCount() {
+            let count = 0;
+            for (let row = 0; row < tetrisGrid.length; row++) {
+                const rowCells = tetrisGrid[row];
+                if (!rowCells) continue;
+                for (let col = 0; col < rowCells.length; col++) {
+                    if (rowCells[col]) {
+                        count++;
+                    }
+                }
+            }
+            return count;
+        }
+
+        function isBoardFull() {
+            const capacity = getBoardCapacity();
+            if (capacity <= 0) return false;
+            return getLockedCellCount() >= capacity;
+        }
+
+        function pickSpawnColumn() {
+            const heights = [];
+            for (let col = 0; col < gridMetrics.cols; col++) {
+                let height = 0;
+                for (let row = 0; row < gridMetrics.rows; row++) {
+                    const rowCells = tetrisGrid[row];
+                    if (rowCells && rowCells[col]) {
+                        height = gridMetrics.rows - row;
+                        break;
+                    }
+                }
+                heights.push(height);
+            }
+            const minHeight = Math.min(...heights);
+            const candidates = heights
+                .map((h, idx) => (h === minHeight ? idx : null))
+                .filter(idx => idx !== null);
+            return candidates[Math.floor(Math.random() * candidates.length)];
+        }
+
+        function updateWordDimensions(particle) {
+            if (!particle || !particle.el) return;
+            const isVertical = particle.isVertical || particle.el.classList.contains('concept-word-vertical');
+            const verticalHeight = particle.verticalHeight || 1;
+
+            // Fixed grid size
+            const cellWidth = gridMetrics.cellWidth - TETRIS_CELL_INSET * 2;
+            const cellHeight = gridMetrics.cellHeight - TETRIS_CELL_INSET * 2;
+
+            particle.el.style.boxSizing = 'border-box';
+            particle.el.style.display = 'flex';
+            particle.el.style.alignItems = 'center';
+            particle.el.style.justifyContent = 'center';
+            particle.el.style.whiteSpace = 'nowrap';
+            particle.el.style.wordBreak = 'keep-all';
+            particle.el.style.textAlign = 'center';
+            particle.el.style.overflow = 'hidden';
+            particle.el.style.textOverflow = 'ellipsis';
+
+            if (isVertical) {
+                // Vertical blocks are taller (multiple cells)
+                particle.el.style.width = `${cellWidth}px`;
+                particle.el.style.height = `${cellHeight * verticalHeight}px`;
+                particle.el.style.writingMode = 'vertical-rl';
+                particle.el.style.textOrientation = 'upright';
+                particle.el.style.padding = '12px 6px';
+                particle.width = cellWidth;
+                particle.height = cellHeight * verticalHeight;
+            } else {
+                // Horizontal blocks are single cell
+                particle.el.style.width = `${cellWidth}px`;
+                particle.el.style.height = `${cellHeight}px`;
+                particle.el.style.writingMode = 'horizontal-tb';
+                particle.el.style.padding = '6px 8px';
+                particle.width = cellWidth;
+                particle.height = cellHeight;
+            }
+        }
+
+        function updateDomPosition(particle) {
+            if (!particle || !particle.el) return;
+
+            // Center horizontally
+            const left = particle.x - particle.width / 2;
+            particle.el.style.left = `${left}px`;
+
+            // For vertical blocks, align bottom edge; for horizontal, center
+            if (particle.isVertical) {
+                // Bottom edge at y position
+                const top = particle.y - particle.height;
+                particle.el.style.top = `${top}px`;
+            } else {
+                // Center vertically
+                const top = particle.y - particle.height / 2;
+                particle.el.style.top = `${top}px`;
+            }
+        }
+
+        function removeParticle(particle, options = {}) {
+            if (!particle) return;
+            let released = false;
+            if (particle.row !== null && tetrisGrid[particle.row] && tetrisGrid[particle.row][particle.col] === particle) {
+                tetrisGrid[particle.row][particle.col] = null;
+                released = true;
+            }
+            particle.state = 'removed';
+            if (particle.el) {
+                particle.el.classList.remove('concept-word-visible');
+                particle.el.classList.add('concept-word-hidden');
+                const delay = options.immediate ? 0 : 450;
+                setTimeout(() => {
+                    particle.el?.remove();
+                }, delay);
+            }
+            if (released) {
+                releaseUnsupportedWords();
+                ensureAnimationLoop();
+                processPendingParticles();
+            }
+        }
+
+        function lockParticle(particle, targetRow) {
+            if (!particle || !particle.el) return;
+            const verticalHeight = particle.verticalHeight || 1;
+            const clampedRow = Math.min(Math.max(targetRow, 0), gridMetrics.rows - 1);
+            const clampedCol = clampColumnIndex(particle.col);
+
+            // Position at bottom row (y is bottom edge for vertical, center for horizontal)
+            const { x, y } = getCellCenter(clampedCol, clampedRow);
+
+            particle.x = x;
+            particle.y = y;
+            particle.row = clampedRow;
+            particle.col = clampedCol;
+            particle.state = 'locked';
+            updateDomPosition(particle);
+
+            // Occupy multiple rows for vertical blocks
+            if (particle.isVertical) {
+                for (let i = 0; i < verticalHeight; i++) {
+                    const occupyRow = clampedRow - i;
+                    if (occupyRow >= 0) {
+                        if (!tetrisGrid[occupyRow]) {
+                            tetrisGrid[occupyRow] = Array(gridMetrics.cols).fill(null);
+                        }
+                        tetrisGrid[occupyRow][clampedCol] = particle;
+                    }
+                }
+            } else {
+                if (!tetrisGrid[clampedRow]) {
+                    tetrisGrid[clampedRow] = Array(gridMetrics.cols).fill(null);
+                }
+                tetrisGrid[clampedRow][clampedCol] = particle;
+            }
+
+            particle.el.style.transition = 'left 160ms ease, top 160ms ease';
+            setTimeout(() => {
+                if (particle.el) {
+                    particle.el.style.transition = '';
+                }
+            }, 200);
+            checkCompletedRows();
+            setTimeout(() => {
+                processPendingParticles();
+            }, 120);
+        }
+
+        function removeAnswerFromDisplay(answerRef) {
+            if (!answerRef) return;
+            const index = displayAnswers.indexOf(answerRef);
+            if (index !== -1) {
+                displayAnswers.splice(index, 1);
+            }
+        }
+
+        function clearRow(row) {
+            const rowCells = tetrisGrid[row];
+            if (!rowCells) return;
+            for (let col = 0; col < gridMetrics.cols; col++) {
+                const particle = rowCells[col];
+                if (!particle) continue;
+                rowCells[col] = null;
+                removeAnswerFromDisplay(particle.answerRef);
+                removeParticle(particle);
+                wordParticles = wordParticles.filter(p => p !== particle);
+            }
+        }
+
+        function releaseUnsupportedWords() {
+            for (let row = gridMetrics.rows - 2; row >= 0; row--) {
+                const rowCells = tetrisGrid[row];
+                if (!rowCells) continue;
+                for (let col = 0; col < gridMetrics.cols; col++) {
+                    const particle = rowCells[col];
+                    if (!particle) continue;
+                    const nextRow = tetrisGrid[row + 1];
+                    const below = nextRow ? nextRow[col] : null;
+                    if (!below) {
+                        rowCells[col] = null;
+                        particle.row = null;
+                        particle.state = 'falling';
+                    }
+                }
+            }
+        }
+
+        function checkCompletedRows() {
+            // 줄이 가득 차도 제거하지 않고 계속 쌓이도록 유지
+            return;
+        }
+
+        function createTetrisParticle(key, data, maxWeight, index) {
+            const { text, weight } = data;
+            const wordEl = document.createElement('span');
+            wordEl.className = 'concept-word concept-word-tetris';
+            const allowVertical = false;
+            const isVertical = false;
+            const verticalHeight = 1;
+
+            if (isVertical) {
+                wordEl.classList.add('concept-word-vertical');
+            }
+            wordEl.textContent = text;
+            wordEl.dataset.wordKey = key;
+            const assignedColor = selectWordColor(weight / (maxWeight || 1), index);
+            wordEl.style.color = assignedColor;
+            wordEl.style.fontSize = `${FIXED_FONT_SIZE}px`;
+            updateWordDimensions({ el: wordEl, isVertical, verticalHeight });
+            wordsLayer.appendChild(wordEl);
+
+            const spawnCol = pickSpawnColumn();
+            const spawnY = -gridMetrics.cellHeight * (isVertical ? verticalHeight + 1 : 2);
+            const { x: targetX } = getCellCenter(spawnCol, 0);
+            const { width } = getCloudBounds();
+            const spawnX = width / 2; // Start from horizontal center
+
+            const particleData = {
+                key,
+                el: wordEl,
+                col: spawnCol,
+                row: null,
+                x: spawnX,
+                y: spawnY,
+                state: 'falling',
+                fallSpeed: TETRIS_BASE_FALL_SPEED + (Math.random() - 0.5) * TETRIS_SPEED_VARIANCE,
+                answerRef: data.answerRef,
+                weight,
+                color: assignedColor,
+                bornAt: performance.now(),
+                targetX,
+                isVertical,
+                verticalHeight
+            };
+
+            updateWordDimensions(particleData);
+            updateDomPosition(particleData);
+
+            wordEl.addEventListener('click', () => {
+                hiddenWords.push(text);
+                removePendingByText(text);
+                removeParticle(particleData);
+                wordParticles = wordParticles.filter(p => p !== particleData);
+            });
+
+            requestAnimationFrame(() => {
+                wordEl.classList.add('concept-word-visible');
+                animateWordEntry(wordEl);
+            });
+
+            const weightRatio = maxWeight > 0 ? weight / maxWeight : 0;
+            const isHero = weightRatio > 0.7;
+            const isAccent = !isHero && weightRatio > 0.4;
+            wordEl.classList.toggle('concept-word-hero', isHero);
+            wordEl.classList.toggle('concept-word-accent', isAccent);
+
+            return particleData;
+        }
+
+        function updateFallingParticle(particle, delta) {
+            if (!particle || particle.state !== 'falling') return;
+            const columnIndex = clampColumnIndex(particle.col);
+            if (columnIndex !== particle.col) {
+                particle.col = columnIndex;
+                particle.targetX = getCellCenter(columnIndex, 0).x;
+            }
+            const speed = particle.fallSpeed || TETRIS_BASE_FALL_SPEED;
+            const newY = particle.y + speed * delta;
+            const horizontalTarget = particle.targetX ?? particle.x;
+            const deltaX = horizontalTarget - particle.x;
+            if (Math.abs(deltaX) > 0.5) {
+                const horizontalSpeed = gridMetrics.cellWidth * 2.2;
+                const maxStep = horizontalSpeed * delta;
+                const step = Math.sign(deltaX) * Math.min(Math.abs(deltaX), maxStep);
+                particle.x += step;
+            } else {
+                particle.x = horizontalTarget;
+            }
+            const verticalHeight = particle.verticalHeight || 1;
+            // Calculate bottom edge position
+            let bottomEdge;
+            if (particle.isVertical) {
+                // For vertical: y is the bottom edge
+                bottomEdge = newY;
+            } else {
+                // For horizontal: y is center, so add half height
+                bottomEdge = newY + gridMetrics.cellHeight / 2;
+            }
+            const relative = bottomEdge - gridMetrics.offsetY;
+            let targetRow = Math.floor(relative / gridMetrics.cellHeight);
+
+            if (targetRow >= gridMetrics.rows) {
+                lockParticle(particle, gridMetrics.rows - 1);
+                return;
+            }
+
+            // Check collision with existing blocks
+            const rowCells = targetRow >= 0 ? tetrisGrid[targetRow] : null;
+            if (rowCells && rowCells[columnIndex]) {
+                lockParticle(particle, targetRow - 1);
+                return;
+            }
+
+            // For vertical blocks, also check if any occupied rows above
+            if (particle.isVertical && targetRow >= 0) {
+                for (let i = 1; i < verticalHeight; i++) {
+                    const checkRow = targetRow - i;
+                    if (checkRow >= 0 && tetrisGrid[checkRow] && tetrisGrid[checkRow][columnIndex]) {
+                        lockParticle(particle, targetRow - 1);
+                        return;
+                    }
+                }
+            }
+            particle.y = newY;
+            updateDomPosition(particle);
+        }
+
+        function ensureAnimationLoop() {
+            if (animationFrameId) return;
+            if (!wordParticles.some(p => p.state === 'falling')) return;
+            animationFrameId = requestAnimationFrame(simulationLoop);
+        }
 
         function stopTimer() {
             if (timerInterval) {
@@ -421,20 +1001,6 @@
             return true;
         }
 
-        function updateParticleTargets() {
-            if (!wordParticles.length) return;
-            const { width, height } = getCloudBounds();
-            const centerW = width / 2;
-            const centerH = height / 2;
-            const geometry = getSpiralGeometry(width, height, wordParticles.length);
-            wordParticles.forEach(p => assignParticleTarget(p, centerW, centerH, geometry, p.spiralIndex || 0));
-
-            // Reinitialize D3 simulation with updated targets
-            if (d3Simulation) {
-                initD3Simulation();
-            }
-        }
-
         // --- Core Functions ---
         function updateQuestionMeta(question) {
             conceptQuestion.textContent = question.question;
@@ -461,7 +1027,7 @@
                 qrCodeInstance = new QRCode(qrCodeContainer, { text: urlString, width: 192, height: 192, colorDark: "#0f172a", colorLight: "#ffffff", correctLevel: QRCode.CorrectLevel.H });
             }
         }
-        
+
         function navigateToQuestion(index, options = {}) {
             const { force = false } = options;
             console.log('navigateToQuestion called with index:', index);
@@ -484,162 +1050,68 @@
         function extractWordInstances(answers) {
             console.log('extractWordInstances called with answers:', answers);
             const frequency = new Map();
-            answers.forEach(answer => {
+            const baseCounts = new Map();
+            const sanitized = [];
+
+            const orderedAnswers = [...answers].reverse(); // oldest first
+
+            orderedAnswers.forEach(answer => {
                 console.log('Processing answer:', answer);
                 if (!answer.answer_text) {
                     console.log('No answer_text found, skipping');
                     return;
                 }
-                console.log('answer_text:', answer.answer_text);
-                // Use entire answer as a single token (preserve spaces)
                 const token = answer.answer_text.trim();
-                if (token.length > 0) {
-                    frequency.set(token, (frequency.get(token) || 0) + 1);
+                console.log('answer_text:', token);
+                if (token.length === 0) {
+                    console.log('Empty token after trim, skipping');
+                    return;
                 }
-                console.log('Extracted token:', token);
+                baseCounts.set(token, (baseCounts.get(token) || 0) + 1);
+                sanitized.push({ token, answer });
             });
+
+            sanitized.forEach(({ token, answer }) => {
+                const uniqueKey = answer.id || `${token}-${answer.created_at || Date.now()}-${Math.random()}`;
+                const weight = baseCounts.get(token) || 1;
+                const createdAtTs = answer.created_at_ts || Date.parse(answer.created_at || '') || Date.now();
+                frequency.set(uniqueKey, { text: token, weight, answerId: answer.id, createdAt: createdAtTs, answerRef: answer });
+                console.log('Extracted unique token:', uniqueKey, 'weight:', weight);
+            });
+
             console.log('Final frequency map:', frequency);
             return frequency;
         }
 
-        // --- D3 Force Simulation Setup ---
-        function initD3Simulation() {
-            const { width: containerWidth, height: containerHeight } = getCloudBounds();
-            const centerW = containerWidth / 2;
-            const centerH = containerHeight / 2;
-
-            if (d3Simulation) {
-                d3Simulation.stop();
+        function addAnswerToDisplay(answer) {
+            displayAnswers.unshift(answer);
+            if (displayAnswers.length > MAX_WORDS) {
+                displayAnswers.pop();
             }
-
-            d3Simulation = d3.forceSimulation(wordParticles)
-                .alphaDecay(0.0005)
-                .velocityDecay(0.98)
-                .alphaMin(0.0001)
-                .force('collide', d3.forceCollide(d => {
-                    const { width, height } = getParticleDimensions(d);
-                    return Math.max(width, height) / 2 + MIN_SEPARATION;
-                }).strength(1.0).iterations(5))
-                .force('strong-separate', () => {
-                    // Strong separation force to prevent any overlap
-                    for (let i = 0; i < wordParticles.length; i++) {
-                        for (let j = i + 1; j < wordParticles.length; j++) {
-                            const p1 = wordParticles[i];
-                            const p2 = wordParticles[j];
-
-                            const dx = p2.x - p1.x;
-                            const dy = p2.y - p1.y;
-                            const distance = Math.hypot(dx, dy);
-
-                            const { width: w1, height: h1 } = getParticleDimensions(p1);
-                            const { width: w2, height: h2 } = getParticleDimensions(p2);
-                            const minDist = (Math.max(w1, w2) / 2 + Math.max(h1, h2) / 2) + MIN_SEPARATION;
-
-                            // Check if overlapping or too close
-                            if (distance < minDist && distance > 0) {
-                                const overlap = minDist - distance;
-                                const pushStrength = overlap * 0.5; // Strong repulsion
-
-                                const nx = dx / distance;
-                                const ny = dy / distance;
-
-                                // Push both particles apart
-                                p1.vx -= nx * pushStrength * 0.5;
-                                p1.vy -= ny * pushStrength * 0.5;
-                                p2.vx += nx * pushStrength * 0.5;
-                                p2.vy += ny * pushStrength * 0.5;
-                            }
-                        }
-                    }
-                })
-                .force('radial', d3.forceRadial(d => d.ringRadius || 100, centerW, centerH).strength(0.005))
-                .force('x', d3.forceX(d => d.targetX || centerW).strength(0.004))
-                .force('y', d3.forceY(d => d.targetY || centerH).strength(0.004))
-                .on('tick', () => {
-                    const timestamp = performance.now();
-                    const currentAlpha = d3Simulation.alpha();
-
-                    wordParticles.forEach(p => {
-                        // Apply intro motion override
-                        if (p.phase === 'intro') {
-                            updateIntroMotion(p, centerW, centerH, timestamp);
-                            p.vx = (p.x - (p.prevX || p.x)) * 0.5;
-                            p.vy = (p.y - (p.prevY || p.y)) * 0.5;
-                        }
-
-                        // Gradually reduce velocity as simulation stabilizes
-                        if (currentAlpha < 0.1 && p.phase !== 'intro') {
-                            p.vx *= 0.5;
-                            p.vy *= 0.5;
-                        }
-
-                        // Hard limit on velocity to prevent spinning
-                        const speed = Math.hypot(p.vx || 0, p.vy || 0);
-                        if (speed > MAX_PARTICLE_SPEED) {
-                            const ratio = MAX_PARTICLE_SPEED / speed;
-                            p.vx *= ratio;
-                            p.vy *= ratio;
-                        }
-
-                        // Strict boundary handling to keep within cell image
-                        const maxRadius = Math.min(containerWidth, containerHeight) * MAX_CELL_SPREAD_RATIO;
-                        const dx = p.x - centerW;
-                        const dy = p.y - centerH;
-                        const distFromCenter = Math.hypot(dx, dy);
-
-                        // Soft boundary: slow down as approaching edge
-                        if (distFromCenter > maxRadius * 0.9) {
-                            const overRatio = (distFromCenter - maxRadius * 0.9) / (maxRadius * 0.1);
-                            p.vx *= (1 - overRatio * 0.5);
-                            p.vy *= (1 - overRatio * 0.5);
-                        }
-
-                        // Hard boundary: cannot exceed
-                        if (distFromCenter > maxRadius) {
-                            const angle = Math.atan2(dy, dx);
-                            p.x = centerW + Math.cos(angle) * maxRadius;
-                            p.y = centerH + Math.sin(angle) * maxRadius;
-                            p.vx = 0;
-                            p.vy = 0;
-                        }
-
-                        // Font size is fixed - no animation needed
-
-                        // Update DOM position
-                        p.el.style.left = `${p.x}px`;
-                        p.el.style.top = `${p.y}px`;
-
-                        p.prevX = p.x;
-                        p.prevY = p.y;
-                    });
-                });
-
-            return d3Simulation;
         }
 
-        // --- Legacy Simulation Loop (now simplified) ---
+        // --- Tetris-style Simulation Loop ---
         function simulationLoop(timestamp = performance.now()) {
-            if (!d3Simulation || wordParticles.length === 0) {
-                if (wordParticles.length > 0) {
-                    initD3Simulation();
-                }
-                animationFrameId = requestAnimationFrame(simulationLoop);
+            if (!wordParticles.some(p => p.state === 'falling')) {
+                animationFrameId = null;
+                lastFrameTime = null;
                 return;
             }
 
-            // D3 simulation handles everything via 'tick' event
+            if (!lastFrameTime) lastFrameTime = timestamp;
+            const delta = Math.min(0.05, (timestamp - lastFrameTime) / 1000);
+            lastFrameTime = timestamp;
+
+            wordParticles.forEach(p => updateFallingParticle(p, delta));
+
             animationFrameId = requestAnimationFrame(simulationLoop);
         }
 
         function renderWords(frequencyMap) {
             console.log('renderWords called with frequencyMap:', frequencyMap);
 
-            const existingParticles = new Map();
-            const now = performance.now();
-            wordParticles.forEach(p => {
-                if (!p.bornAt) p.bornAt = now;
-                existingParticles.set(p.el.textContent, p);
-            });
+            updateGridMetrics(frequencyMap.size);
+            rebuildGridFromParticles();
 
             if (frequencyMap.size === 0 && wordParticles.length === 0) {
                 wordsLayer.innerHTML = '<div class="concept-empty">첫 번째 단어를 기다리고 있어요</div>';
@@ -647,167 +1119,90 @@
                     cancelAnimationFrame(animationFrameId);
                     animationFrameId = null;
                 }
+                tetrisGrid = createEmptyGrid();
+                resetDropQueue();
                 return;
             } else if (frequencyMap.size > 0 && wordsLayer.querySelector('.concept-empty')) {
                 wordsLayer.innerHTML = '';
             }
 
-            const sortedWords = [...frequencyMap.entries()].sort((a, b) => b[1] - a[1]);
-            const limited = sortedWords.slice(0, MAX_WORDS).filter(([text]) => !hiddenWords.includes(text));
-            const newWordTexts = new Set(limited.map(item => item[0]));
-            
+            const existingParticles = new Map();
+            wordParticles.forEach(p => existingParticles.set(p.key, p));
+
+            const sortedWords = [...frequencyMap.entries()].sort((a, b) => {
+                const aTime = a[1].createdAt || 0;
+                const bTime = b[1].createdAt || 0;
+                if (aTime === bTime) {
+                    return a[0].localeCompare(b[0]);
+                }
+                return aTime - bTime;
+            });
+            // Don't limit - keep all words, board capacity will handle limits
+            const limited = sortedWords.filter(([, data]) => !hiddenWords.includes(data.text));
+            const liveKeys = new Set(limited.map(item => item[0]));
+            const maxWeight = limited.length ? Math.max(...limited.map(([, data]) => data.weight || 1)) : 1;
+
+            prunePendingQueue(liveKeys);
+            const boardFull = isBoardFull();
+
             wordParticles = wordParticles.filter(p => {
-                if (!newWordTexts.has(p.el.textContent)) {
-                    if (now - (p.bornAt || now) < MIN_WORD_LIFETIME) {
-                        return true;
-                    }
-                    p.el.classList.remove('concept-word-visible');
-                    p.el.classList.add('concept-word-hidden');
-                    setTimeout(() => p.el.remove(), 700);
+                if (!liveKeys.has(p.key)) {
+                    removeParticle(p, { immediate: true });
                     return false;
                 }
+                updateWordDimensions(p);
                 return true;
             });
+            const pendingEntries = [];
 
-            const { width: containerWidth, height: containerHeight } = getCloudBounds();
-            const centerW = containerWidth / 2;
-            const centerH = containerHeight / 2;
-            const geometry = getSpiralGeometry(containerWidth, containerHeight, limited.length);
-
-            limited.forEach(([text, weight], index) => {
-                // Keep normal order: outer rings fill first, then move inward
-                const spiralIndex = index;
-
-                let particle = existingParticles.get(text);
+            limited.forEach(([key, data], index) => {
+                const particle = existingParticles.get(key);
+                const weightValue = data.weight || 1;
                 if (particle) {
-                    // Existing particle - keep fixed font size, no changes
-                    if (particle.phase !== 'intro') {
-                        assignParticleTarget(particle, centerW, centerH, geometry, spiralIndex);
+                    particle.weight = weightValue;
+                    particle.answerRef = data.answerRef;
+                    const weightRatio = maxWeight > 0 ? weightValue / maxWeight : 0;
+                    const isHero = weightRatio > 0.7;
+                    const isAccent = !isHero && weightRatio > 0.4;
+                    particle.el.classList.toggle('concept-word-hero', isHero);
+                    particle.el.classList.toggle('concept-word-accent', isAccent);
+                    updateWordDimensions(particle);
+                    if (particle.row !== null) {
+                        const clampedRow = Math.max(0, Math.min(particle.row, gridMetrics.rows - 1));
+                        particle.row = clampedRow;
+                        const { x, y } = getCellCenter(particle.col, clampedRow);
+                        particle.x = x;
+                        particle.y = y;
+                        updateDomPosition(particle);
                     }
-                    particle.el.style.color = particle.color;
-                } else {
-                    const wordEl = document.createElement('span');
-                    wordEl.className = 'concept-word';
-
-                    // Determine if vertical BEFORE setting text
-                    const isVertical = Math.random() < 0.35;
-                    if (isVertical) {
-                        wordEl.classList.add('concept-word-vertical');
-                        // Keep text as is for vertical (with spaces)
-                        wordEl.textContent = text;
-                    } else {
-                        wordEl.textContent = text;
-                    }
-
-                    const assignedColor = selectWordColor(weight / Math.max(...limited.map(item => item[1])), index);
-                    wordEl.style.color = assignedColor;
-
-                    // Use fixed font size for all words
-                    wordEl.style.fontSize = `${FIXED_FONT_SIZE}px`;
-
-                    // Click to delete
-                    wordEl.addEventListener('click', () => {
-                        hiddenWords.push(text);
-
-                        // D3 transition for smooth fade out
-                        if (window.d3) {
-                            d3.select(wordEl)
-                                .transition()
-                                .duration(600)
-                                .ease(d3.easeCubicOut)
-                                .style('opacity', 0)
-                                .style('transform', 'scale(0.7)')
-                                .on('end', () => {
-                                    wordEl.remove();
-                                    wordParticles = wordParticles.filter(p => p.el !== wordEl);
-                                    if (wordParticles.length > 0) {
-                                        updateParticleTargets();
-                                        if (!animationFrameId) simulationLoop(performance.now());
-                                    } else {
-                                        wordsLayer.innerHTML = '<div class="concept-empty">첫 번째 단어를 기다리고 있어요</div>';
-                                        if (animationFrameId) { cancelAnimationFrame(animationFrameId); animationFrameId = null; }
-                                    }
-                                });
-                        } else {
-                            wordEl.classList.remove('concept-word-visible');
-                            wordEl.classList.add('concept-word-hidden');
-                            setTimeout(() => {
-                                wordEl.remove();
-                                wordParticles = wordParticles.filter(p => p.el !== wordEl);
-                                if (wordParticles.length > 0) {
-                                    updateParticleTargets();
-                                    if (!animationFrameId) simulationLoop(performance.now());
-                                } else {
-                                    wordsLayer.innerHTML = '<div class="concept-empty">첫 번째 단어를 기다리고 있어요</div>';
-                                    if (animationFrameId) { cancelAnimationFrame(animationFrameId); animationFrameId = null; }
-                                }
-                            }, 700);
-                        }
-                    });
-
-                    wordsLayer.appendChild(wordEl);
-
-                    const rect = wordEl.getBoundingClientRect();
-                    particle = {
-                        el: wordEl,
-                        x: centerW,
-                        y: centerH,
-                        prevX: centerW,
-                        prevY: centerH,
-                        originX: centerW,
-                        originY: centerH,
-                        vx: 0,
-                        vy: 0,
-                        width: rect.width,
-                        height: rect.height,
-                        currentFontSize: FIXED_FONT_SIZE,
-                        targetFontSize: FIXED_FONT_SIZE,
-                        isVertical,
-                        spiralIndex,
-                        phase: 'intro',
-                        spiralProgress: 0,
-                        introDuration: INTRO_DURATION_BASE + Math.random() * INTRO_DURATION_VARIANCE,
-                        introStart: null,
-                        bornAt: now,
-                        color: assignedColor
-                    };
-                    assignParticleTarget(particle, centerW, centerH, geometry, spiralIndex);
-
-                    // Start at center and move to target position
-                    particle.originX = centerW;
-                    particle.originY = centerH;
-                    particle.x = centerW;
-                    particle.y = centerH;
-                    particle.prevX = centerW;
-                    particle.prevY = centerH;
-                    wordEl.style.left = `${centerW}px`;
-                    wordEl.style.top = `${centerH}px`;
-                    wordParticles.push(particle);
-                    const introParticles = wordParticles.filter(p => p.phase === 'intro');
-
-
-                    requestAnimationFrame(() => {
-                        wordEl.classList.add('concept-word-visible');
-                        animateWordEntry(wordEl);
-                    });
+                    return;
                 }
-                
-                const weightRatio = weight / Math.max(...limited.map(item => item[1]));
-                const isHero = weightRatio > 0.7;
-                const isAccent = !isHero && weightRatio > 0.4;
-                particle.el.classList.toggle('concept-word-hero', isHero);
-                particle.el.classList.toggle('concept-word-accent', isAccent);
+
+                if (boardFull) {
+                    return;
+                }
+
+                if (!pendingParticleKeys.has(key)) {
+                    pendingEntries.push({ key, data, index });
+                }
             });
 
-            if (!animationFrameId && wordParticles.length > 0) {
-                simulationLoop(performance.now());
+            if (!boardFull) {
+                pendingEntries.forEach(entry => {
+                    enqueueParticleCreation({
+                        key: entry.key,
+                        data: entry.data,
+                        index: entry.index,
+                        maxWeightSnapshot: maxWeight
+                    });
+                });
+            } else {
+                pendingEntries.length = 0;
+                resetDropQueue();
             }
 
-            // Update D3 simulation with new particles
-            if (d3Simulation && wordParticles.length > 0) {
-                d3Simulation.nodes(wordParticles);
-                d3Simulation.alpha(0.15).restart();
-            }
+            processPendingParticles();
+            ensureAnimationLoop();
         }
 
         // --- Data Fetching & Control ---
@@ -820,22 +1215,27 @@
             }
             if (simulationInterval) clearInterval(simulationInterval);
             if (animationFrameId) cancelAnimationFrame(animationFrameId);
-            if (d3Simulation) d3Simulation.stop();
             simulationInterval = null;
             animationFrameId = null;
-            d3Simulation = null;
+            lastFrameTime = null;
         }
-        
+
         function resetDisplay() {
             console.log('resetDisplay called');
             stopAllIntervals();
             mockAnswers = [];
+            displayAnswers = [];
             wordParticles = [];
             hiddenWords = [];
+            resetDropQueue();
             wordsLayer.innerHTML = '';
             conceptTotal.textContent = '0';
             stopTimer();
             conceptUpdated.textContent = '10:00';
+            mockWordQueue = shuffleArray([...MOCK_WORD_POOL]);
+            mockWordIndex = 0;
+            tetrisGrid = createEmptyGrid();
+            lastFrameTime = null;
         }
 
         function startRealtimeSimulation() {
@@ -850,7 +1250,7 @@
                 let answer;
 
                 if (currentQuestion && currentQuestion.type === 'text') {
-                    answer = TEXT_ANSWERS[Math.floor(Math.random() * TEXT_ANSWERS.length)];
+                    answer = getNextMockWord();
                 } else {
                     answer = KEYWORDS[Math.floor(Math.random() * KEYWORDS.length)] || KEYWORDS[index % KEYWORDS.length];
                 }
@@ -876,7 +1276,8 @@
                     question_id: questionId,
                     answer: answer,
                     answer_text: answer,
-                    created_at: new Date().toISOString()
+                    created_at: new Date().toISOString(),
+                    created_at_ts: Date.now()
                 };
             }
 
@@ -888,18 +1289,20 @@
                 }
                 const newAnswer = generateSingleMockAnswer(question.id, count);
                 mockAnswers.unshift(newAnswer);
-                const frequencyMap = extractWordInstances(mockAnswers);
+                addAnswerToDisplay(newAnswer);
+                const frequencyMap = extractWordInstances(displayAnswers);
                 renderWords(frequencyMap);
                 conceptTotal.textContent = mockAnswers.length;
                 count++;
             }, 500);
-            
+
             // Simulation loop is started by renderWords if words exist
         }
 
         async function startRealtimeSubscription() {
             console.log('startRealtimeSubscription called');
             stopAllIntervals();
+            resetDropQueue();
             mockAnswers = [];
             wordParticles = [];
             hiddenWords = [];
@@ -948,12 +1351,14 @@
                                     question_id: a.question_id,
                                     answer: a.answer_text,
                                     answer_text: a.answer_text,
-                                    created_at: a.created_at
+                                    created_at: a.created_at,
+                                    created_at_ts: Date.parse(a.created_at) || Date.now()
                                 };
                                 mockAnswers.unshift(newAnswer);
+                                addAnswerToDisplay(newAnswer);
                             });
 
-                            const frequencyMap = extractWordInstances(mockAnswers);
+                            const frequencyMap = extractWordInstances(displayAnswers);
                             renderWords(frequencyMap);
                             conceptTotal.textContent = mockAnswers.length;
                         }
@@ -974,7 +1379,23 @@
         });
 
         window.addEventListener('resize', () => {
-            updateParticleTargets();
+            updateGridMetrics(wordParticles.length);
+            wordParticles.forEach(p => {
+                updateWordDimensions(p);
+                const baseRow = p.row !== null ? Math.max(0, Math.min(p.row, gridMetrics.rows - 1)) : 0;
+                const clampedCol = clampColumnIndex(p.col);
+                p.col = clampedCol;
+                const { x, y } = getCellCenter(clampedCol, baseRow);
+                p.x = x;
+                if (p.row !== null) {
+                    p.row = baseRow;
+                    p.y = y;
+                } else {
+                    p.targetX = x;
+                }
+                updateDomPosition(p);
+            });
+            rebuildGridFromParticles();
         });
 
         // --- Initial Load ---
