@@ -1,7 +1,10 @@
 @font-face {
     font-family: 'GangwonBold';
-    src: url('./fonts/나눔손글씨 규리의 일기.ttf') format('truetype');
-    font-weight: normal;
+    src: local('GangwonEduAll Bold'),
+        local('GangwonEdu Bold'),
+        local('강원교육모두 Bold'),
+        local('GangwonEduAll-Bold');
+    font-weight: 700;
     font-style: normal;
     font-display: swap;
 }
@@ -1705,8 +1708,8 @@ footer a:hover {
 .concept-word {
     position: absolute;
     font-family: 'GangwonBold', cursive;
-    font-weight: 600;
-    -webkit-text-stroke: 0.3px rgba(30, 41, 59, 0.4);
+    font-weight: 700;
+    -webkit-text-stroke: 0.5px rgba(30, 41, 59, 0.5);
     text-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
     cursor: pointer;
     color: rgba(30, 41, 59, 0.9);
