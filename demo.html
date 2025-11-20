@@ -169,12 +169,15 @@
         const TETRIS_ROWS = 24; // Maximum rows supported
         const MIN_TETRIS_ROWS = 6;
         const DESIRED_ROW_HEIGHT = 140;
+        const MIN_COLUMN_WIDTH = 180;
+        const MIN_TETRIS_COLS = 1;
         const TETRIS_BASE_FALL_SPEED = 180;
         const TETRIS_SPEED_VARIANCE = 60;
         const TETRIS_CELL_WIDTH_MIN = 140;
         const TETRIS_CELL_WIDTH_MAX = 220;
-        const TETRIS_CELL_HEIGHT_MIN = 90;
-        const TETRIS_CELL_HEIGHT_MAX = 150;
+        const TETRIS_CELL_HEIGHT_MIN = 48;
+        const TETRIS_CELL_HEIGHT_MAX = 130;
+        const TETRIS_CELL_INSET = 0;
         const MOCK_WORD_POOL = buildMockWordPool();
         let mockWordQueue = shuffleArray([...MOCK_WORD_POOL]);
         let mockWordIndex = 0;
@@ -430,8 +433,16 @@
             return { width, height };
         }
 
+        function clampColumnIndex(col = 0) {
+            const maxCol = Math.max(1, gridMetrics.cols || TETRIS_COLS) - 1;
+            if (!Number.isFinite(col)) return 0;
+            return Math.max(0, Math.min(maxCol, Math.round(col)));
+        }
+
         function createEmptyGrid() {
-            return Array.from({ length: TETRIS_ROWS }, () => Array(TETRIS_COLS).fill(null));
+            const rows = Math.max(1, gridMetrics.rows || TETRIS_ROWS);
+            const cols = Math.max(1, gridMetrics.cols || TETRIS_COLS);
+            return Array.from({ length: rows }, () => Array(cols).fill(null));
         }
 
         function resetDropQueue() {
@@ -460,6 +471,9 @@
 
         function enqueueParticleCreation(entry) {
             if (!entry || pendingParticleKeys.has(entry.key)) return;
+            if (isBoardFull()) {
+                return;
+            }
             pendingParticleQueue.push(entry);
             pendingParticleKeys.add(entry.key);
             processPendingParticles();
@@ -474,6 +488,11 @@
                 spawnTimeoutId = null;
                 if (!pendingParticleQueue.length) {
                     processPendingParticles();
+                    return;
+                }
+                if (isBoardFull()) {
+                    pendingParticleQueue = [];
+                    pendingParticleKeys.clear();
                     return;
                 }
                 const next = pendingParticleQueue.shift();
@@ -510,48 +529,85 @@
                     return;
                 }
                 const clampedRow = Math.max(0, Math.min(particle.row, gridMetrics.rows - 1));
+                const clampedCol = clampColumnIndex(particle.col);
                 particle.row = clampedRow;
+                particle.col = clampedCol;
                 if (!tetrisGrid[clampedRow]) {
                     tetrisGrid[clampedRow] = Array(gridMetrics.cols).fill(null);
                 }
-                tetrisGrid[clampedRow][particle.col] = particle;
+                tetrisGrid[clampedRow][clampedCol] = particle;
             });
         }
 
         function updateGridMetrics(wordCount = MAX_WORDS) {
             const { width, height } = getCloudBounds();
             const safeWidth = Math.max(width, 300);
-            const bottomPadding = 80;
+            const bottomPadding = 0;
             const safeHeight = Math.max(300, height - bottomPadding);
             gridMetrics.width = safeWidth;
             gridMetrics.height = safeHeight;
-            gridMetrics.cols = TETRIS_COLS;
+            const availableWidth = Math.max(width, 1);
+            let computedCols = Math.max(1, Math.floor(availableWidth / MIN_COLUMN_WIDTH));
+            computedCols = Math.min(TETRIS_COLS, Math.max(MIN_TETRIS_COLS, computedCols));
+            gridMetrics.cols = computedCols;
             const desiredRows = Math.max(MIN_TETRIS_ROWS, Math.floor(safeHeight / DESIRED_ROW_HEIGHT));
             gridMetrics.rows = Math.min(TETRIS_ROWS, desiredRows || MIN_TETRIS_ROWS);
-            const tentativeWidth = width / gridMetrics.cols;
-            if (tentativeWidth >= TETRIS_CELL_WIDTH_MIN) {
-                gridMetrics.cellWidth = Math.min(TETRIS_CELL_WIDTH_MAX, Math.max(TETRIS_CELL_WIDTH_MIN, tentativeWidth));
-            } else {
-                gridMetrics.cellWidth = tentativeWidth;
-            }
+            const tentativeWidth = availableWidth / Math.max(1, gridMetrics.cols);
+            gridMetrics.cellWidth = Math.round(Math.max(TETRIS_CELL_WIDTH_MIN, Math.min(TETRIS_CELL_WIDTH_MAX, tentativeWidth)));
             const totalGridWidth = gridMetrics.cellWidth * gridMetrics.cols;
-            gridMetrics.offsetX = Math.max(gridMetrics.cellWidth / 2, (width - totalGridWidth) / 2 + gridMetrics.cellWidth / 2);
-            let cellHeight = safeHeight / gridMetrics.rows;
-            cellHeight = Math.min(TETRIS_CELL_HEIGHT_MAX, Math.max(TETRIS_CELL_HEIGHT_MIN, cellHeight));
-            let totalGridHeight = cellHeight * gridMetrics.rows;
-            if (totalGridHeight > safeHeight) {
-                cellHeight = safeHeight / gridMetrics.rows;
-                totalGridHeight = cellHeight * gridMetrics.rows;
+            const widthOverflow = Math.max(0, totalGridWidth - width);
+            if (widthOverflow > 0) {
+                gridMetrics.cellWidth = Math.round((width - widthOverflow) / gridMetrics.cols);
             }
-            gridMetrics.cellHeight = cellHeight;
-            gridMetrics.offsetY = safeHeight - totalGridHeight + cellHeight / 2;
+            const gridTotalWidth = gridMetrics.cellWidth * gridMetrics.cols;
+            gridMetrics.offsetX = Math.round((width - gridTotalWidth) / 2 + gridMetrics.cellWidth / 2);
+            let cellHeight = safeHeight / gridMetrics.rows;
+            gridMetrics.cellHeight = Math.round(Math.max(TETRIS_CELL_HEIGHT_MIN, Math.min(TETRIS_CELL_HEIGHT_MAX, cellHeight)));
+            const maxAspectHeight = Math.round(gridMetrics.cellWidth * 0.45);
+            if (maxAspectHeight > 0) {
+                gridMetrics.cellHeight = Math.min(gridMetrics.cellHeight, Math.max(TETRIS_CELL_HEIGHT_MIN, maxAspectHeight));
+            }
+            const idealTextHeight = FIXED_FONT_SIZE + 14;
+            gridMetrics.cellHeight = Math.min(gridMetrics.cellHeight, idealTextHeight);
+            const totalGridHeight = gridMetrics.cellHeight * gridMetrics.rows;
+            if (totalGridHeight > safeHeight) {
+                gridMetrics.cellHeight = Math.round(safeHeight / gridMetrics.rows);
+            }
+            const gridTotalHeight = gridMetrics.cellHeight * gridMetrics.rows;
+            gridMetrics.offsetY = Math.round((safeHeight - gridTotalHeight) / 2 + gridMetrics.cellHeight / 2);
         }
 
         function getCellCenter(col, row) {
             return {
-                x: gridMetrics.offsetX + col * gridMetrics.cellWidth,
-                y: gridMetrics.offsetY + row * gridMetrics.cellHeight
+                x: Math.round(gridMetrics.offsetX + col * gridMetrics.cellWidth),
+                y: Math.round(gridMetrics.offsetY + row * gridMetrics.cellHeight)
             };
+        }
+
+        function getBoardCapacity() {
+            const rows = Math.max(1, gridMetrics.rows || TETRIS_ROWS);
+            const cols = Math.max(1, gridMetrics.cols || TETRIS_COLS);
+            return rows * cols;
+        }
+
+        function getLockedCellCount() {
+            let count = 0;
+            for (let row = 0; row < tetrisGrid.length; row++) {
+                const rowCells = tetrisGrid[row];
+                if (!rowCells) continue;
+                for (let col = 0; col < rowCells.length; col++) {
+                    if (rowCells[col]) {
+                        count++;
+                    }
+                }
+            }
+            return count;
+        }
+
+        function isBoardFull() {
+            const capacity = getBoardCapacity();
+            if (capacity <= 0) return false;
+            return getLockedCellCount() >= capacity;
         }
 
         function pickSpawnColumn() {
@@ -559,7 +615,8 @@
             for (let col = 0; col < gridMetrics.cols; col++) {
                 let height = 0;
                 for (let row = 0; row < gridMetrics.rows; row++) {
-                    if (tetrisGrid[row][col]) {
+                    const rowCells = tetrisGrid[row];
+                    if (rowCells && rowCells[col]) {
                         height = gridMetrics.rows - row;
                         break;
                     }
@@ -575,11 +632,24 @@
 
         function updateWordDimensions(particle) {
             if (!particle || !particle.el) return;
-            const horizontalPadding = 48;
-            particle.el.style.maxWidth = `${Math.max(60, gridMetrics.cellWidth - horizontalPadding)}px`;
+            const width = Math.max(60, gridMetrics.cellWidth - TETRIS_CELL_INSET * 2);
+            const height = Math.max(50, gridMetrics.cellHeight - TETRIS_CELL_INSET * 2);
+            particle.el.style.boxSizing = 'border-box';
+            particle.el.style.width = `${Math.round(width)}px`;
+            particle.el.style.height = `${Math.round(height)}px`;
+            particle.el.style.maxWidth = particle.el.style.width;
+            particle.el.style.maxHeight = particle.el.style.height;
+            particle.el.style.padding = '6px 12px';
+            particle.el.style.display = 'flex';
+            particle.el.style.alignItems = 'center';
+            particle.el.style.justifyContent = 'center';
             particle.el.style.whiteSpace = 'nowrap';
+            particle.el.style.wordBreak = 'keep-all';
+            particle.el.style.textOverflow = 'ellipsis';
             particle.el.style.textAlign = 'center';
-            particle.el.style.padding = '14px 26px';
+            particle.el.style.overflow = 'hidden';
+            particle.width = Math.round(width);
+            particle.height = Math.round(height);
         }
 
         function updateDomPosition(particle) {
@@ -614,13 +684,18 @@
         function lockParticle(particle, targetRow) {
             if (!particle || !particle.el) return;
             const clampedRow = Math.min(Math.max(targetRow, 0), gridMetrics.rows - 1);
-            const { x, y } = getCellCenter(particle.col, clampedRow);
+            const clampedCol = clampColumnIndex(particle.col);
+            const { x, y } = getCellCenter(clampedCol, clampedRow);
             particle.x = x;
             particle.y = y;
             particle.row = clampedRow;
+            particle.col = clampedCol;
             particle.state = 'locked';
             updateDomPosition(particle);
-            tetrisGrid[clampedRow][particle.col] = particle;
+            if (!tetrisGrid[clampedRow]) {
+                tetrisGrid[clampedRow] = Array(gridMetrics.cols).fill(null);
+            }
+            tetrisGrid[clampedRow][clampedCol] = particle;
             particle.el.style.transition = 'left 160ms ease, top 160ms ease';
             setTimeout(() => {
                 if (particle.el) {
@@ -642,10 +717,12 @@
         }
 
         function clearRow(row) {
+            const rowCells = tetrisGrid[row];
+            if (!rowCells) return;
             for (let col = 0; col < gridMetrics.cols; col++) {
-                const particle = tetrisGrid[row][col];
+                const particle = rowCells[col];
                 if (!particle) continue;
-                tetrisGrid[row][col] = null;
+                rowCells[col] = null;
                 removeAnswerFromDisplay(particle.answerRef);
                 removeParticle(particle);
                 wordParticles = wordParticles.filter(p => p !== particle);
@@ -654,12 +731,15 @@
 
         function releaseUnsupportedWords() {
             for (let row = gridMetrics.rows - 2; row >= 0; row--) {
+                const rowCells = tetrisGrid[row];
+                if (!rowCells) continue;
                 for (let col = 0; col < gridMetrics.cols; col++) {
-                    const particle = tetrisGrid[row][col];
+                    const particle = rowCells[col];
                     if (!particle) continue;
-                    const below = tetrisGrid[row + 1][col];
+                    const nextRow = tetrisGrid[row + 1];
+                    const below = nextRow ? nextRow[col] : null;
                     if (!below) {
-                        tetrisGrid[row][col] = null;
+                        rowCells[col] = null;
                         particle.row = null;
                         particle.state = 'falling';
                     }
@@ -675,8 +755,9 @@
         function createTetrisParticle(key, data, maxWeight, index) {
             const { text, weight } = data;
             const wordEl = document.createElement('span');
-            wordEl.className = 'concept-word';
-            const isVertical = Math.random() < 0.2;
+            wordEl.className = 'concept-word concept-word-tetris';
+            const allowVertical = false;
+            const isVertical = allowVertical && Math.random() < 0.2;
             if (isVertical) {
                 wordEl.classList.add('concept-word-vertical');
             }
@@ -691,14 +772,14 @@
             const spawnCol = pickSpawnColumn();
             const spawnY = gridMetrics.offsetY - gridMetrics.cellHeight * 2;
             const { x: targetX } = getCellCenter(spawnCol, 0);
-            const middleColumnX = getCellCenter(Math.floor(gridMetrics.cols / 2), 0).x;
+            const spawnX = targetX;
 
             const particleData = {
                 key,
                 el: wordEl,
                 col: spawnCol,
                 row: null,
-                x: middleColumnX,
+                x: spawnX,
                 y: spawnY,
                 state: 'falling',
                 fallSpeed: TETRIS_BASE_FALL_SPEED + (Math.random() - 0.5) * TETRIS_SPEED_VARIANCE,
@@ -735,6 +816,11 @@
 
         function updateFallingParticle(particle, delta) {
             if (!particle || particle.state !== 'falling') return;
+            const columnIndex = clampColumnIndex(particle.col);
+            if (columnIndex !== particle.col) {
+                particle.col = columnIndex;
+                particle.targetX = getCellCenter(columnIndex, 0).x;
+            }
             const speed = particle.fallSpeed || TETRIS_BASE_FALL_SPEED;
             const newY = particle.y + speed * delta;
             const horizontalTarget = particle.targetX ?? particle.x;
@@ -754,7 +840,8 @@
                 lockParticle(particle, gridMetrics.rows - 1);
                 return;
             }
-            if (targetRow >= 0 && tetrisGrid[targetRow][particle.col]) {
+            const rowCells = targetRow >= 0 ? tetrisGrid[targetRow] : null;
+            if (rowCells && rowCells[columnIndex]) {
                 lockParticle(particle, targetRow - 1);
                 return;
             }
@@ -977,6 +1064,7 @@
             const maxWeight = limited.length ? Math.max(...limited.map(([, data]) => data.weight || 1)) : 1;
 
             prunePendingQueue(liveKeys);
+            const boardFull = isBoardFull();
 
             wordParticles = wordParticles.filter(p => {
                 if (!liveKeys.has(p.key)) {
@@ -1011,19 +1099,28 @@
                     return;
                 }
 
+                if (boardFull) {
+                    return;
+                }
+
                 if (!pendingParticleKeys.has(key)) {
                     pendingEntries.push({ key, data, index });
                 }
             });
 
-            pendingEntries.forEach(entry => {
-                enqueueParticleCreation({
-                    key: entry.key,
-                    data: entry.data,
-                    index: entry.index,
-                    maxWeightSnapshot: maxWeight
+            if (!boardFull) {
+                pendingEntries.forEach(entry => {
+                    enqueueParticleCreation({
+                        key: entry.key,
+                        data: entry.data,
+                        index: entry.index,
+                        maxWeightSnapshot: maxWeight
+                    });
                 });
-            });
+            } else {
+                pendingEntries.length = 0;
+                resetDropQueue();
+            }
 
             processPendingParticles();
             ensureAnimationLoop();
@@ -1207,11 +1304,15 @@
             wordParticles.forEach(p => {
                 updateWordDimensions(p);
                 const baseRow = p.row !== null ? Math.max(0, Math.min(p.row, gridMetrics.rows - 1)) : 0;
-                const { x, y } = getCellCenter(p.col, baseRow);
+                const clampedCol = clampColumnIndex(p.col);
+                p.col = clampedCol;
+                const { x, y } = getCellCenter(clampedCol, baseRow);
                 p.x = x;
                 if (p.row !== null) {
                     p.row = baseRow;
                     p.y = y;
+                } else {
+                    p.targetX = x;
                 }
                 updateDomPosition(p);
             });
