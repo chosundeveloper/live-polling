@@ -1325,8 +1325,15 @@ footer a:hover {
     font-size: clamp(1rem, 2vw, 1.4rem);
     margin: 0;
     font-weight: 600;
-    color: #1e293b;
+    color: #38bdf8;
     font-family: 'Space Grotesk', 'Outfit', sans-serif;
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(10px);
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    border-radius: 999px;
+    padding: 8px 16px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2), inset 0 1px 2px rgba(255, 255, 255, 0.2);
+    display: inline-block;
 }
 
 .concept-question-desc {
