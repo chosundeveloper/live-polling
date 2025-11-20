@@ -515,8 +515,8 @@
             }
 
             d3Simulation = d3.forceSimulation(wordParticles)
-                .alphaDecay(0.02) // 천천히 멈추도록 감소 (부드러운 움직임)
-                .velocityDecay(0.3) // 마찰력 적절히 유지
+                .alphaDecay(0.08) // Increase decay to settle faster
+                .velocityDecay(0.6) // Increase friction to prevent endless spinning
                 .alphaMin(0.001)
                 .force('collide', d3.forceCollide(d => {
                     const { width, height } = getParticleDimensions(d);
