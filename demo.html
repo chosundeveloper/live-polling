@@ -574,7 +574,8 @@
                 gridMetrics.cellHeight = Math.round(safeHeight / gridMetrics.rows);
             }
             const gridTotalHeight = gridMetrics.cellHeight * gridMetrics.rows;
-            gridMetrics.offsetY = Math.round(safeHeight - gridTotalHeight + gridMetrics.cellHeight / 2);
+            // Align to absolute bottom - last row sits at screen bottom
+            gridMetrics.offsetY = Math.round(safeHeight - (gridMetrics.rows - 0.5) * gridMetrics.cellHeight);
         }
 
         function getCellCenter(col, row) {
