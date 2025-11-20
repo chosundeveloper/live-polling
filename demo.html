@@ -705,8 +705,18 @@
             const clampedRow = Math.min(Math.max(targetRow, 0), gridMetrics.rows - 1);
             const clampedCol = clampColumnIndex(particle.col);
 
-            // For vertical blocks, position from bottom row
-            const { x, y } = getCellCenter(clampedCol, clampedRow);
+            // For vertical blocks, calculate y position from bottom
+            const { x } = getCellCenter(clampedCol, clampedRow);
+            let y;
+            if (particle.isVertical) {
+                // Position so bottom of vertical block aligns with target row
+                const bottomRowCenter = getCellCenter(clampedCol, clampedRow).y;
+                const blockHeight = gridMetrics.cellHeight * verticalHeight;
+                y = bottomRowCenter - (blockHeight / 2) + (gridMetrics.cellHeight / 2);
+            } else {
+                y = getCellCenter(clampedCol, clampedRow).y;
+            }
+
             particle.x = x;
             particle.y = y;
             particle.row = clampedRow;
@@ -874,17 +884,34 @@
             } else {
                 particle.x = horizontalTarget;
             }
-            const bottomEdge = newY + gridMetrics.cellHeight / 2;
+            const verticalHeight = particle.verticalHeight || 1;
+            // For vertical blocks, check bottom edge of entire block
+            const blockHeight = particle.isVertical ? gridMetrics.cellHeight * verticalHeight : gridMetrics.cellHeight;
+            const bottomEdge = newY + blockHeight / 2;
             const relative = bottomEdge - gridMetrics.offsetY;
             let targetRow = Math.floor(relative / gridMetrics.cellHeight);
+
             if (targetRow >= gridMetrics.rows) {
                 lockParticle(particle, gridMetrics.rows - 1);
                 return;
             }
+
+            // Check collision with existing blocks
             const rowCells = targetRow >= 0 ? tetrisGrid[targetRow] : null;
             if (rowCells && rowCells[columnIndex]) {
                 lockParticle(particle, targetRow - 1);
                 return;
+            }
+
+            // For vertical blocks, also check if any occupied rows above
+            if (particle.isVertical && targetRow >= 0) {
+                for (let i = 1; i < verticalHeight; i++) {
+                    const checkRow = targetRow - i;
+                    if (checkRow >= 0 && tetrisGrid[checkRow] && tetrisGrid[checkRow][columnIndex]) {
+                        lockParticle(particle, targetRow - 1);
+                        return;
+                    }
+                }
             }
             particle.y = newY;
             updateDomPosition(particle);
