@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="ko">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -10,6 +11,8 @@
             padding: 0;
             box-sizing: border-box;
         }
+
+
 
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
@@ -61,7 +64,8 @@
             cursor: pointer;
             transition: transform 0.2s, box-shadow 0.2s;
             white-space: nowrap;
-            isolation: isolate; /* allow pseudo elements to sit underneath */
+            isolation: isolate;
+            /* allow pseudo elements to sit underneath */
         }
 
         .word::before {
@@ -125,6 +129,7 @@
         }
     </style>
 </head>
+
 <body>
     <div class="container">
         <div class="title">🎮 테트리스 스타일 단어 애니메이션</div>
@@ -145,8 +150,8 @@
 
     <script>
         const WORDS = ['감사', '기쁨', '평안', '은혜', '회개', '찬양', '경배', '사랑', '소망', '믿음',
-                       '겸손', '순종', '감격', '기대', '축복', '회복', '치유', '새힘', '감동', '기도',
-                       '간절함', '뜨거움', '충만', '평온', '기다림', '갈망', '간구', '고백', '헌신'];
+            '겸손', '순종', '감격', '기대', '축복', '회복', '치유', '새힘', '감동', '기도',
+            '간절함', '뜨거움', '충만', '평온', '기다림', '갈망', '간구', '고백', '헌신'];
 
         const COLORS = ['#5e4fa2', '#3288bd', '#66c2a5', '#fdae61', '#f46d43', '#d53e4f', '#9e0142'];
 
@@ -357,4 +362,5 @@
         });
     </script>
 </body>
+
 </html>

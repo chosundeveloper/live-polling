@@ -529,7 +529,7 @@
                 .force('collide', d3.forceCollide(d => {
                     const { width, height } = getParticleDimensions(d);
                     // Diagonal radius + minimal padding
-                    return Math.sqrt(width * width + height * height) / 2 + 2;
+                    return Math.sqrt(width * width + height * height) / 2 + 5;
                 }).strength(1.0).iterations(10)) // High iterations for stability
                 .force('x', d3.forceX(d => d.targetX || centerW).strength(0.008)) // Very gentle attraction
                 .force('y', d3.forceY(d => d.targetY || centerH).strength(0.008))
@@ -542,8 +542,7 @@
                         wordParticles.forEach(p => {
                             p.vx = 0;
                             p.vy = 0;
-                            p.x = p.targetX || p.x;
-                            p.y = p.targetY || p.y;
+                            // Do NOT snap to target, keep the collision-resolved position
                             p.fx = p.x;
                             p.fy = p.y;
                             p.el.style.left = `${p.x}px`;
