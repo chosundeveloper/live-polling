@@ -207,12 +207,13 @@
                 return;
             }
 
-            const initialSize = FIXED_FONT_SIZE * 2.5;
+            const initialSize = FIXED_FONT_SIZE * 1.2; // Reduced from 2.5 for softer pop
             const finalSize = FIXED_FONT_SIZE;
             console.log(`📏 Setting up fontSize animation from ${initialSize}px to ${finalSize}px`);
 
-            // Set initial large size with CSS
+            // Set initial large size and opacity with CSS
             wordEl.style.fontSize = `${initialSize}px`;
+            wordEl.style.opacity = '0';
             wordEl.style.transition = 'none';
             console.log('✅ Initial fontSize set:', wordEl.style.fontSize);
 
@@ -221,8 +222,9 @@
 
             // Start animation after a small delay
             requestAnimationFrame(() => {
-                wordEl.style.transition = 'font-size 1.2s cubic-bezier(0.34, 1.56, 0.64, 1)';
+                wordEl.style.transition = 'font-size 1.2s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 1.2s ease-out';
                 wordEl.style.fontSize = `${finalSize}px`;
+                wordEl.style.opacity = '1';
                 console.log('🎬 Animation started');
             });
 
@@ -515,8 +517,8 @@
             }
 
             d3Simulation = d3.forceSimulation(wordParticles)
-                .alphaDecay(0.08) // Increase decay to settle faster
-                .velocityDecay(0.6) // Increase friction to prevent endless spinning
+                .alphaDecay(0.03) // Slightly higher than 0.02 for stability but smooth
+                .velocityDecay(0.35) // Low friction for smooth movement
                 .alphaMin(0.001)
                 .force('collide', d3.forceCollide(d => {
                     const { width, height } = getParticleDimensions(d);
@@ -772,15 +774,13 @@
                     };
                     assignParticleTarget(particle, centerW, centerH, geometry, spiralIndex);
 
-                    // Start at target position directly
-                    particle.x = particle.targetX || centerW;
-                    particle.y = particle.targetY || centerH;
+                    // Start at center with slight jitter to allow spreading
+                    particle.x = centerW + (Math.random() - 0.5) * 10;
+                    particle.y = centerH + (Math.random() - 0.5) * 10;
                     particle.prevX = particle.x;
                     particle.prevY = particle.y;
-                    particle.prevX = centerW;
-                    particle.prevY = centerH;
-                    wordEl.style.left = `${centerW}px`;
-                    wordEl.style.top = `${centerH}px`;
+                    wordEl.style.left = `${particle.x}px`;
+                    wordEl.style.top = `${particle.y}px`;
                     wordParticles.push(particle);
                     const introParticles = wordParticles.filter(p => p.phase === 'intro');
 
