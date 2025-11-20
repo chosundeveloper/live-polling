@@ -1325,14 +1325,14 @@ footer a:hover {
     font-size: clamp(1rem, 2vw, 1.4rem);
     margin: 0;
     font-weight: 600;
-    color: #e2e8f0;
+    color: rgba(30, 41, 59, 0.9);
     font-family: 'Space Grotesk', 'Outfit', sans-serif;
-    background: rgba(30, 41, 59, 0.9);
+    background: rgba(255, 255, 255, 0.1);
     backdrop-filter: blur(10px);
-    border: 1px solid rgba(148, 163, 184, 0.3);
-    border-radius: 20px;
-    padding: 12px 20px;
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    border-radius: 999px;
+    padding: 8px 16px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2), inset 0 1px 2px rgba(255, 255, 255, 0.2);
     display: inline-block;
 }
 
@@ -1629,7 +1629,7 @@ footer a:hover {
     font-weight: 400;
     text-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
     cursor: pointer;
-    color: #38bdf8;
+    color: #ffffff;
     opacity: 0;
     --concept-scale: 0.9;
     transform: translate(-50%, -50%) scale(var(--concept-scale));
