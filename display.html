@@ -164,17 +164,8 @@
         const PUSH_THRESHOLD_RATIO = 0.10; // Start pushing outward very early
 
         function selectWordColor(weightRatio, index) {
-            // Select random color, excluding poorly visible ones
-            // 50% chance for blue (#3288bd index 1), 50% for other allowed colors
-            if (Math.random() < 0.5) {
-                return COLOR_PALETTE[1]; // Blue
-            }
-
-            let colorIndex;
-            do {
-                colorIndex = Math.floor(Math.random() * COLOR_PALETTE.length);
-            } while (EXCLUDED_COLOR_INDICES.includes(colorIndex));
-            return COLOR_PALETTE[colorIndex];
+            // Always return white color
+            return '#ffffff';
         }
         window.selectWordColor = selectWordColor;
 
