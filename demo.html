@@ -806,9 +806,9 @@
             const { text, weight } = data;
             const wordEl = document.createElement('span');
             wordEl.className = 'concept-word concept-word-tetris';
-            const allowVertical = true;
-            const isVertical = allowVertical && Math.random() < 0.3;
-            const verticalHeight = isVertical ? Math.floor(Math.random() * 2) + 2 : 1; // 2-3 cells for vertical
+            const allowVertical = false;
+            const isVertical = false;
+            const verticalHeight = 1;
 
             if (isVertical) {
                 wordEl.classList.add('concept-word-vertical');
