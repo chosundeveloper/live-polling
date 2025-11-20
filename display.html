@@ -682,7 +682,15 @@
                         // Keep text as is for vertical (with spaces)
                         wordEl.textContent = text;
                     } else {
-                        wordEl.textContent = text;
+                        // Replace first space with <br> for two-line display
+                        if (text.includes(' ')) {
+                            const firstSpaceIndex = text.indexOf(' ');
+                            const firstPart = text.substring(0, firstSpaceIndex);
+                            const secondPart = text.substring(firstSpaceIndex + 1);
+                            wordEl.innerHTML = `${firstPart}<br>${secondPart}`;
+                        } else {
+                            wordEl.textContent = text;
+                        }
                     }
 
                     const assignedColor = selectWordColor(weight / Math.max(...limited.map(item => item[1])), index);

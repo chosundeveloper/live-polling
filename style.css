@@ -1723,7 +1723,7 @@ footer a:hover {
     transform: translate(-50%, -50%) scale(var(--concept-scale));
     transition: opacity 0.5s ease, box-shadow 0.3s ease;
     will-change: transform, left, top;
-    white-space: nowrap;
+    white-space: normal;
     background: rgba(255, 255, 255, 0.1);
     backdrop-filter: blur(10px);
     border: 1px solid rgba(255, 255, 255, 0.3);
