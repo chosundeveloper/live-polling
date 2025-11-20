@@ -520,9 +520,9 @@
                 .alphaMin(0.001)
                 .force('collide', d3.forceCollide(d => {
                     const { width, height } = getParticleDimensions(d);
-                    // 충돌 반경을 넉넉하게 설정하여 겹침 방지
-                    return Math.max(width, height) / 1.8 + 5;
-                }).strength(0.9).iterations(4)) // 강도와 반복 횟수 증가로 겹침 강력 방지
+                    // Use diagonal radius for better coverage of rectangular words + extra padding
+                    return Math.sqrt(width * width + height * height) / 2 + 10;
+                }).strength(1.0).iterations(8)) // Increased strength and iterations
                 .force('x', d3.forceX(d => d.targetX || centerW).strength(0.03)) // 인력 감소로 부드러운 이동
                 .force('y', d3.forceY(d => d.targetY || centerH).strength(0.03))
                 .on('tick', () => {
