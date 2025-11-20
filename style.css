@@ -1,8 +1,7 @@
 @font-face {
     font-family: 'GangwonBold';
-    src: local('GangwonEduAll Bold'), local('GangwonEdu Bold'), local('강원교육모두 Bold'),
-        url('./fonts/ga_bold.otf') format('opentype');
-    font-weight: 700;
+    src: url('./fonts/NanumGyuri.ttf') format('truetype');
+    font-weight: normal;
     font-style: normal;
     font-display: swap;
 }
