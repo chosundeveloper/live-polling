@@ -520,13 +520,14 @@
                 .alphaDecay(0.03) // Slightly higher than 0.02 for stability but smooth
                 .velocityDecay(0.35) // Low friction for smooth movement
                 .alphaMin(0.001)
+                .force('charge', d3.forceManyBody().strength(-20)) // Add repulsion to help spreading
                 .force('collide', d3.forceCollide(d => {
                     const { width, height } = getParticleDimensions(d);
-                    // Use diagonal radius for better coverage of rectangular words + extra padding
-                    return Math.sqrt(width * width + height * height) / 2 + 10;
-                }).strength(1.0).iterations(8)) // Increased strength and iterations
-                .force('x', d3.forceX(d => d.targetX || centerW).strength(0.03)) // 인력 감소로 부드러운 이동
-                .force('y', d3.forceY(d => d.targetY || centerH).strength(0.03))
+                    // Use diagonal radius + larger padding to strictly prevent overlap
+                    return Math.sqrt(width * width + height * height) / 2 + 15;
+                }).strength(1.0).iterations(12)) // Maximize collision resolution
+                .force('x', d3.forceX(d => d.targetX || centerW).strength(0.02)) // Reduce attraction to allow spreading
+                .force('y', d3.forceY(d => d.targetY || centerH).strength(0.02))
                 .on('tick', () => {
                     const timestamp = performance.now();
                     const currentAlpha = d3Simulation.alpha();
