@@ -1,6 +1,6 @@
 @font-face {
     font-family: 'GangwonBold';
-    src: url('./ga_bold.otf') format('opentype');
+    src: url('./fonts/ga_bold.otf') format('opentype');
     font-weight: 700;
     font-style: normal;
     font-display: swap;
