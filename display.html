@@ -513,51 +513,25 @@
             }
 
             d3Simulation = d3.forceSimulation(wordParticles)
-                .alphaDecay(0.0005)
-                .velocityDecay(0.98)
-                .alphaMin(0.0001)
+                .alphaDecay(0.05)
+                .velocityDecay(0.6)
+                .alphaMin(0.001)
                 .force('collide', d3.forceCollide(d => {
                     const { width, height } = getParticleDimensions(d);
                     return Math.max(width, height) / 2 + MIN_SEPARATION;
-                }).strength(1.0).iterations(5))
-                .force('strong-separate', () => {
-                    // Strong separation force to prevent any overlap
-                    for (let i = 0; i < wordParticles.length; i++) {
-                        for (let j = i + 1; j < wordParticles.length; j++) {
-                            const p1 = wordParticles[i];
-                            const p2 = wordParticles[j];
-
-                            const dx = p2.x - p1.x;
-                            const dy = p2.y - p1.y;
-                            const distance = Math.hypot(dx, dy);
-
-                            const { width: w1, height: h1 } = getParticleDimensions(p1);
-                            const { width: w2, height: h2 } = getParticleDimensions(p2);
-                            const minDist = (Math.max(w1, w2) / 2 + Math.max(h1, h2) / 2) + MIN_SEPARATION;
-
-                            // Check if overlapping or too close
-                            if (distance < minDist && distance > 0) {
-                                const overlap = minDist - distance;
-                                const pushStrength = overlap * 0.5; // Strong repulsion
-
-                                const nx = dx / distance;
-                                const ny = dy / distance;
-
-                                // Push both particles apart
-                                p1.vx -= nx * pushStrength * 0.5;
-                                p1.vy -= ny * pushStrength * 0.5;
-                                p2.vx += nx * pushStrength * 0.5;
-                                p2.vy += ny * pushStrength * 0.5;
-                            }
-                        }
-                    }
-                })
-                .force('radial', d3.forceRadial(d => d.ringRadius || 100, centerW, centerH).strength(0.005))
-                .force('x', d3.forceX(d => d.targetX || centerW).strength(0.004))
-                .force('y', d3.forceY(d => d.targetY || centerH).strength(0.004))
+                }).strength(0.9).iterations(3))
+                .force('radial', d3.forceRadial(d => d.ringRadius || 100, centerW, centerH).strength(0.05))
+                .force('x', d3.forceX(d => d.targetX || centerW).strength(0.08))
+                .force('y', d3.forceY(d => d.targetY || centerH).strength(0.08))
                 .on('tick', () => {
                     const timestamp = performance.now();
                     const currentAlpha = d3Simulation.alpha();
+
+                    // Stop simulation when settled
+                    if (currentAlpha < 0.01) {
+                        d3Simulation.stop();
+                        return;
+                    }
 
                     wordParticles.forEach(p => {
                         // Apply intro motion override
@@ -624,6 +598,12 @@
                     initD3Simulation();
                 }
                 animationFrameId = requestAnimationFrame(simulationLoop);
+                return;
+            }
+
+            // Check if simulation is stopped
+            if (d3Simulation.alpha() < 0.01) {
+                // Simulation has settled, no need to continue loop
                 return;
             }
 
