@@ -1350,8 +1350,8 @@ footer a:hover {
 
 .concept-question-display h2 {
     font-size: clamp(1rem, 2vw, 1.4rem);
-    margin: 0;
-    font-weight: 700;
+    font-weight: normal;
+    -webkit-text-stroke: 0.5px rgba(255, 255, 255, 0.3);
     color: #ffffff;
     font-family: 'Nanum Gyuri', cursive;
     background: rgba(30, 41, 59, 0.9);
@@ -1715,7 +1715,8 @@ footer a:hover {
 .concept-word {
     position: absolute;
     font-family: 'Nanum Gyuri', cursive;
-    font-weight: 700;
+    font-weight: normal;
+    -webkit-text-stroke: 0.5px rgba(30, 41, 59, 0.5);
     text-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
     cursor: pointer;
     color: rgba(30, 41, 59, 0.9);
