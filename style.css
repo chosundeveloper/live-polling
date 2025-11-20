@@ -1,5 +1,5 @@
 @font-face {
-    font-family: 'GangwonEduAll';
+    font-family: 'GangwonBold';
     src: url('./ga_bold.otf') format('opentype');
     font-weight: 700;
     font-style: normal;
@@ -28,7 +28,7 @@
 }
 
 body {
-    font-family: 'GangwonEduAll', cursive, -apple-system, BlinkMacSystemFont, sans-serif;
+    font-family: 'GangwonBold', cursive, -apple-system, BlinkMacSystemFont, sans-serif;
     background: linear-gradient(135deg, var(--color-deep) 0%, var(--color-sky) 100%);
     min-height: 100vh;
     color: var(--ink-primary);
@@ -301,7 +301,7 @@ body.display-body {
     background: #f8f9fa;
     padding: 2px 8px;
     border-radius: 4px;
-    font-family: 'GangwonEduAll', cursive;
+    font-family: 'GangwonBold', cursive;
     color: #e83e8c;
 }
 
@@ -800,7 +800,7 @@ body.display-body {
     justify-content: center;
     min-height: 100vh;
     padding: 20px;
-    font-family: 'GangwonEduAll', cursive;
+    font-family: 'GangwonBold', cursive;
     font-weight: 400;
     font-size: 16px;
 }
@@ -953,7 +953,7 @@ body.display-body {
     border: 1.5px solid #e2e8f0;
     border-radius: 8px;
     font-size: 0.9em;
-    font-family: 'GangwonEduAll', cursive;
+    font-family: 'GangwonBold', cursive;
     font-weight: 300;
     resize: vertical;
     transition: border-color 0.2s ease, box-shadow 0.2s ease;
@@ -1249,7 +1249,7 @@ footer a:hover {
     width: 100vw;
     background: #000 url('back.jpeg') center center / cover no-repeat fixed;
     color: var(--ink-primary);
-    font-family: 'GangwonEduAll', cursive;
+    font-family: 'GangwonBold', cursive;
     overflow: hidden;
     margin: 0;
     padding: 0;
@@ -1344,7 +1344,7 @@ footer a:hover {
     margin: 0;
     font-weight: normal;
     color: #ffffff;
-    font-family: 'GangwonEduAll', cursive;
+    font-family: 'GangwonBold', cursive;
     background: rgba(30, 41, 59, 0.9);
     backdrop-filter: blur(10px);
     border: 1px solid rgba(148, 163, 184, 0.3);
@@ -1704,7 +1704,7 @@ footer a:hover {
 
 .concept-word {
     position: absolute;
-    font-family: 'GangwonEduAll', cursive;
+    font-family: 'GangwonBold', cursive;
     font-weight: normal;
     text-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
     cursor: pointer;
@@ -1897,7 +1897,7 @@ footer a:hover {
     font-size: 1.1rem;
     font-weight: 600;
     color: var(--ink-primary);
-    font-family: 'GangwonEduAll', cursive;
+    font-family: 'GangwonBold', cursive;
 }
 
 .concept-label {
