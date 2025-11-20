@@ -161,7 +161,7 @@
         const COLOR_PALETTE = ['#5e4fa2', '#3288bd', '#66c2a5', '#abdda4', '#e6f598', '#fee08b', '#fdae61', '#f46d43', '#d53e4f', '#9e0142'];
         // Exclude yellow (#e6f598 index 4), lime green (#abdda4 index 3), light orange (#fee08b index 5), orange (#fdae61 index 6), and dark red (#9e0142 index 9)
         const EXCLUDED_COLOR_INDICES = [3, 4, 5, 6, 9];
-        const MAX_CELL_SPREAD_RATIO = 0.38; // Expanded for much more space
+        const MAX_CELL_SPREAD_RATIO = 0.32; // Reduced for tighter packing
         const INNER_CORE_RATIO = 0.06; // Inner core that stays stable (very small)
         const PUSH_THRESHOLD_RATIO = 0.10; // Start pushing outward very early
 
@@ -520,11 +520,11 @@
                 .alphaDecay(0.01) // Very slow decay for extended, smooth settling
                 .velocityDecay(0.25) // Low friction for fluid, drifting movement
                 .alphaMin(0.001)
-                .force('charge', d3.forceManyBody().strength(-15)) // Gentle repulsion
+                .force('charge', d3.forceManyBody().strength(-5)) // Reduced repulsion
                 .force('collide', d3.forceCollide(d => {
                     const { width, height } = getParticleDimensions(d);
-                    // Diagonal radius + extra padding to guarantee no overlap
-                    return Math.sqrt(width * width + height * height) / 2 + 10;
+                    // Diagonal radius + minimal padding
+                    return Math.sqrt(width * width + height * height) / 2 + 2;
                 }).strength(1.0).iterations(10)) // High iterations for stability
                 .force('x', d3.forceX(d => d.targetX || centerW).strength(0.015)) // Very gentle attraction
                 .force('y', d3.forceY(d => d.targetY || centerH).strength(0.015))
