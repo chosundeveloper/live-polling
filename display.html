@@ -677,6 +677,19 @@
                     // Use fixed font size for all words
                     wordEl.style.fontSize = `${FIXED_FONT_SIZE}px`;
 
+                    // Random rainbow border color
+                    const rainbowColors = [
+                        'rgba(255, 0, 0, 0.6)',      // Red
+                        'rgba(255, 127, 0, 0.6)',    // Orange
+                        'rgba(255, 255, 0, 0.6)',    // Yellow
+                        'rgba(0, 255, 0, 0.6)',      // Green
+                        'rgba(0, 0, 255, 0.6)',      // Blue
+                        'rgba(75, 0, 130, 0.6)',     // Indigo
+                        'rgba(148, 0, 211, 0.6)'     // Violet
+                    ];
+                    const randomBorderColor = rainbowColors[Math.floor(Math.random() * rainbowColors.length)];
+                    wordEl.style.borderColor = randomBorderColor;
+
                     // Click to delete
                     wordEl.addEventListener('click', () => {
                         hiddenWords.push(text);
