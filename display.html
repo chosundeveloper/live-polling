@@ -138,7 +138,7 @@
         ];
         const MAX_WORDS = 150;
         const FIXED_FONT_SIZE = 25; // Fixed font size for all words
-        const MAX_PARTICLE_SPEED = 2.0;
+        const MAX_PARTICLE_SPEED = 0.8;
         const MIN_SEPARATION = 500;
         const DEFAULT_PARTICLE_WIDTH = 200;
         const DEFAULT_PARTICLE_HEIGHT = 60;
@@ -518,7 +518,7 @@
 
             d3Simulation = d3.forceSimulation(wordParticles)
                 .alphaDecay(0.01) // Very slow decay for extended, smooth settling
-                .velocityDecay(0.25) // Low friction for fluid, drifting movement
+                .velocityDecay(0.4) // Higher friction for smoother, slower movement
                 .alphaMin(0.001)
                 .force('charge', d3.forceManyBody().strength(-5)) // Reduced repulsion
                 .force('collide', d3.forceCollide(d => {
@@ -785,7 +785,7 @@
             // Update D3 simulation with new particles
             if (d3Simulation && wordParticles.length > 0) {
                 d3Simulation.nodes(wordParticles);
-                d3Simulation.alpha(0.5).restart();
+                d3Simulation.alpha(0.3).restart();
             }
         }
 
