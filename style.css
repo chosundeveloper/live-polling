@@ -1706,7 +1706,7 @@ footer a:hover {
     position: absolute;
     font-family: 'GangwonBold', cursive;
     font-weight: normal;
-    -webkit-text-stroke: 0.4px rgba(30, 41, 59, 0.3);
+    -webkit-text-stroke: 0.6px rgba(30, 41, 59, 0.4);
     text-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
     cursor: pointer;
     color: rgba(30, 41, 59, 0.9);
