@@ -672,8 +672,21 @@
 
         function updateDomPosition(particle) {
             if (!particle || !particle.el) return;
-            particle.el.style.left = `${particle.x}px`;
-            particle.el.style.top = `${particle.y}px`;
+
+            // Center horizontally
+            const left = particle.x - particle.width / 2;
+            particle.el.style.left = `${left}px`;
+
+            // For vertical blocks, align bottom edge; for horizontal, center
+            if (particle.isVertical) {
+                // Bottom edge at y position
+                const top = particle.y - particle.height;
+                particle.el.style.top = `${top}px`;
+            } else {
+                // Center vertically
+                const top = particle.y - particle.height / 2;
+                particle.el.style.top = `${top}px`;
+            }
         }
 
         function removeParticle(particle, options = {}) {
@@ -705,17 +718,8 @@
             const clampedRow = Math.min(Math.max(targetRow, 0), gridMetrics.rows - 1);
             const clampedCol = clampColumnIndex(particle.col);
 
-            // For vertical blocks, calculate y position from bottom
-            const { x } = getCellCenter(clampedCol, clampedRow);
-            let y;
-            if (particle.isVertical) {
-                // Position so bottom of vertical block aligns with target row
-                const bottomRowCenter = getCellCenter(clampedCol, clampedRow).y;
-                const blockHeight = gridMetrics.cellHeight * verticalHeight;
-                y = bottomRowCenter - (blockHeight / 2) + (gridMetrics.cellHeight / 2);
-            } else {
-                y = getCellCenter(clampedCol, clampedRow).y;
-            }
+            // Position at bottom row (y is bottom edge for vertical, center for horizontal)
+            const { x, y } = getCellCenter(clampedCol, clampedRow);
 
             particle.x = x;
             particle.y = y;
