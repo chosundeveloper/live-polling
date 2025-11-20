@@ -1707,7 +1707,7 @@ footer a:hover {
 .concept-word {
     position: absolute;
     font-family: 'Nanum Pen Script', cursive;
-    font-weight: 400;
+    font-weight: 700;
     text-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
     cursor: pointer;
     color: rgba(30, 41, 59, 0.9);
