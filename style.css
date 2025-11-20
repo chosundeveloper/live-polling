@@ -1789,7 +1789,7 @@ footer a:hover {
 }
 
 .concept-word-vertical {
-    padding: 4px 3px;
+    padding: 3px 4px;
     writing-mode: vertical-rl;
     text-orientation: upright;
     white-space: pre;
