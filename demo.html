@@ -633,9 +633,10 @@
 
         function updateWordDimensions(particle) {
             if (!particle || !particle.el) return;
-            const isVertical = particle.el.classList.contains('concept-word-vertical');
+            const isVertical = particle.isVertical || particle.el.classList.contains('concept-word-vertical');
+            const verticalHeight = particle.verticalHeight || 1;
 
-            // Fixed grid size - all blocks same size
+            // Fixed grid size
             const cellWidth = gridMetrics.cellWidth - TETRIS_CELL_INSET * 2;
             const cellHeight = gridMetrics.cellHeight - TETRIS_CELL_INSET * 2;
 
@@ -643,8 +644,6 @@
             particle.el.style.display = 'flex';
             particle.el.style.alignItems = 'center';
             particle.el.style.justifyContent = 'center';
-            particle.el.style.width = `${cellWidth}px`;
-            particle.el.style.height = `${cellHeight}px`;
             particle.el.style.whiteSpace = 'nowrap';
             particle.el.style.wordBreak = 'keep-all';
             particle.el.style.textAlign = 'center';
@@ -652,16 +651,23 @@
             particle.el.style.textOverflow = 'ellipsis';
 
             if (isVertical) {
+                // Vertical blocks are taller (multiple cells)
+                particle.el.style.width = `${cellWidth}px`;
+                particle.el.style.height = `${cellHeight * verticalHeight}px`;
                 particle.el.style.writingMode = 'vertical-rl';
                 particle.el.style.textOrientation = 'upright';
-                particle.el.style.padding = '8px 6px';
+                particle.el.style.padding = '12px 6px';
+                particle.width = cellWidth;
+                particle.height = cellHeight * verticalHeight;
             } else {
+                // Horizontal blocks are single cell
+                particle.el.style.width = `${cellWidth}px`;
+                particle.el.style.height = `${cellHeight}px`;
                 particle.el.style.writingMode = 'horizontal-tb';
                 particle.el.style.padding = '6px 8px';
+                particle.width = cellWidth;
+                particle.height = cellHeight;
             }
-
-            particle.width = cellWidth;
-            particle.height = cellHeight;
         }
 
         function updateDomPosition(particle) {
@@ -695,8 +701,11 @@
 
         function lockParticle(particle, targetRow) {
             if (!particle || !particle.el) return;
+            const verticalHeight = particle.verticalHeight || 1;
             const clampedRow = Math.min(Math.max(targetRow, 0), gridMetrics.rows - 1);
             const clampedCol = clampColumnIndex(particle.col);
+
+            // For vertical blocks, position from bottom row
             const { x, y } = getCellCenter(clampedCol, clampedRow);
             particle.x = x;
             particle.y = y;
@@ -704,10 +713,25 @@
             particle.col = clampedCol;
             particle.state = 'locked';
             updateDomPosition(particle);
-            if (!tetrisGrid[clampedRow]) {
-                tetrisGrid[clampedRow] = Array(gridMetrics.cols).fill(null);
+
+            // Occupy multiple rows for vertical blocks
+            if (particle.isVertical) {
+                for (let i = 0; i < verticalHeight; i++) {
+                    const occupyRow = clampedRow - i;
+                    if (occupyRow >= 0) {
+                        if (!tetrisGrid[occupyRow]) {
+                            tetrisGrid[occupyRow] = Array(gridMetrics.cols).fill(null);
+                        }
+                        tetrisGrid[occupyRow][clampedCol] = particle;
+                    }
+                }
+            } else {
+                if (!tetrisGrid[clampedRow]) {
+                    tetrisGrid[clampedRow] = Array(gridMetrics.cols).fill(null);
+                }
+                tetrisGrid[clampedRow][clampedCol] = particle;
             }
-            tetrisGrid[clampedRow][clampedCol] = particle;
+
             particle.el.style.transition = 'left 160ms ease, top 160ms ease';
             setTimeout(() => {
                 if (particle.el) {
@@ -770,6 +794,8 @@
             wordEl.className = 'concept-word concept-word-tetris';
             const allowVertical = true;
             const isVertical = allowVertical && Math.random() < 0.3;
+            const verticalHeight = isVertical ? Math.floor(Math.random() * 2) + 2 : 1; // 2-3 cells for vertical
+
             if (isVertical) {
                 wordEl.classList.add('concept-word-vertical');
             }
@@ -778,11 +804,11 @@
             const assignedColor = selectWordColor(weight / (maxWeight || 1), index);
             wordEl.style.color = assignedColor;
             wordEl.style.fontSize = `${FIXED_FONT_SIZE}px`;
-            updateWordDimensions({ el: wordEl });
+            updateWordDimensions({ el: wordEl, isVertical, verticalHeight });
             wordsLayer.appendChild(wordEl);
 
             const spawnCol = pickSpawnColumn();
-            const spawnY = -gridMetrics.cellHeight * 2; // Spawn from top center
+            const spawnY = -gridMetrics.cellHeight * (isVertical ? verticalHeight + 1 : 2);
             const { x: targetX } = getCellCenter(spawnCol, 0);
             const { width } = getCloudBounds();
             const spawnX = width / 2; // Start from horizontal center
@@ -800,7 +826,9 @@
                 weight,
                 color: assignedColor,
                 bornAt: performance.now(),
-                targetX
+                targetX,
+                isVertical,
+                verticalHeight
             };
 
             updateWordDimensions(particleData);
