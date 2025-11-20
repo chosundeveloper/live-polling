@@ -635,36 +635,33 @@
             if (!particle || !particle.el) return;
             const isVertical = particle.el.classList.contains('concept-word-vertical');
 
-            // Set initial dimensions
+            // Fixed grid size - all blocks same size
+            const cellWidth = gridMetrics.cellWidth - TETRIS_CELL_INSET * 2;
+            const cellHeight = gridMetrics.cellHeight - TETRIS_CELL_INSET * 2;
+
             particle.el.style.boxSizing = 'border-box';
-            particle.el.style.display = 'inline-flex';
+            particle.el.style.display = 'flex';
             particle.el.style.alignItems = 'center';
             particle.el.style.justifyContent = 'center';
-            particle.el.style.padding = '8px 12px';
+            particle.el.style.width = `${cellWidth}px`;
+            particle.el.style.height = `${cellHeight}px`;
             particle.el.style.whiteSpace = 'nowrap';
             particle.el.style.wordBreak = 'keep-all';
             particle.el.style.textAlign = 'center';
-            particle.el.style.overflow = 'visible';
-            particle.el.style.width = 'auto';
-            particle.el.style.height = 'auto';
-            particle.el.style.minWidth = '40px';
-            particle.el.style.minHeight = '30px';
+            particle.el.style.overflow = 'hidden';
+            particle.el.style.textOverflow = 'ellipsis';
 
             if (isVertical) {
                 particle.el.style.writingMode = 'vertical-rl';
                 particle.el.style.textOrientation = 'upright';
-                particle.el.style.padding = '12px 8px';
-                particle.el.style.maxHeight = '200px'; // Limit vertical text height
+                particle.el.style.padding = '8px 6px';
             } else {
                 particle.el.style.writingMode = 'horizontal-tb';
-                particle.el.style.padding = '8px 12px';
-                particle.el.style.maxWidth = '250px'; // Limit horizontal text width
+                particle.el.style.padding = '6px 8px';
             }
 
-            // Get actual rendered size
-            const rect = particle.el.getBoundingClientRect();
-            particle.width = Math.round(rect.width);
-            particle.height = Math.round(rect.height);
+            particle.width = cellWidth;
+            particle.height = cellHeight;
         }
 
         function updateDomPosition(particle) {
