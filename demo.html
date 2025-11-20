@@ -654,9 +654,11 @@
                 particle.el.style.writingMode = 'vertical-rl';
                 particle.el.style.textOrientation = 'upright';
                 particle.el.style.padding = '12px 8px';
+                particle.el.style.maxHeight = '200px'; // Limit vertical text height
             } else {
                 particle.el.style.writingMode = 'horizontal-tb';
                 particle.el.style.padding = '8px 12px';
+                particle.el.style.maxWidth = '250px'; // Limit horizontal text width
             }
 
             // Get actual rendered size
