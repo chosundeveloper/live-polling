@@ -1705,8 +1705,8 @@ footer a:hover {
 .concept-word {
     position: absolute;
     font-family: 'GangwonBold', cursive;
-    font-weight: normal;
-    -webkit-text-stroke: 1.2px rgba(30, 41, 59, 0.7);
+    font-weight: 700;
+    -webkit-text-stroke: 1.5px rgba(30, 41, 59, 0.8);
     text-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
     cursor: pointer;
     color: rgba(30, 41, 59, 0.9);
