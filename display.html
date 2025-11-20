@@ -518,12 +518,10 @@
                 .alphaMin(0.0001)
                 .force('collide', d3.forceCollide(d => {
                     const { width, height } = getParticleDimensions(d);
-                    return Math.max(width, height) / 2 + MIN_SEPARATION / 2;
-                }).strength(0.6).iterations(3))
-                .force('gentle-separate', () => {
-                    // Custom force: when words overlap, move the outer one toward cell boundary
-                    const maxRadius = Math.min(containerWidth, containerHeight) * MAX_CELL_SPREAD_RATIO;
-
+                    return Math.max(width, height) / 2 + MIN_SEPARATION;
+                }).strength(1.0).iterations(5))
+                .force('strong-separate', () => {
+                    // Strong separation force to prevent any overlap
                     for (let i = 0; i < wordParticles.length; i++) {
                         for (let j = i + 1; j < wordParticles.length; j++) {
                             const p1 = wordParticles[i];
@@ -537,30 +535,19 @@
                             const { width: w2, height: h2 } = getParticleDimensions(p2);
                             const minDist = (Math.max(w1, w2) / 2 + Math.max(h1, h2) / 2) + MIN_SEPARATION;
 
-                            // Check if overlapping
+                            // Check if overlapping or too close
                             if (distance < minDist && distance > 0) {
-                                // Determine which is further from center
-                                const dist1 = Math.hypot(p1.x - centerW, p1.y - centerH);
-                                const dist2 = Math.hypot(p2.x - centerW, p2.y - centerH);
+                                const overlap = minDist - distance;
+                                const pushStrength = overlap * 0.5; // Strong repulsion
 
-                                const outerWord = dist1 > dist2 ? p1 : p2;
-                                const outerDist = dist1 > dist2 ? dist1 : dist2;
+                                const nx = dx / distance;
+                                const ny = dy / distance;
 
-                                // Only move if it's in outer zone
-                                const pushThreshold = maxRadius * (PUSH_THRESHOLD_RATIO / MAX_CELL_SPREAD_RATIO);
-
-                                if (outerDist > pushThreshold) {
-                                    // Push rapidly toward cell boundary (radial direction)
-                                    const angle = Math.atan2(outerWord.y - centerH, outerWord.x - centerW);
-                                    const overlap = minDist - distance;
-
-                                    // Very gentle push with moderate distance-based multiplier
-                                    const distRatio = outerDist / maxRadius;
-                                    const pushStrength = overlap * 0.01 * (1 + distRatio * 0.5);
-
-                                    outerWord.vx += Math.cos(angle) * pushStrength;
-                                    outerWord.vy += Math.sin(angle) * pushStrength;
-                                }
+                                // Push both particles apart
+                                p1.vx -= nx * pushStrength * 0.5;
+                                p1.vy -= ny * pushStrength * 0.5;
+                                p2.vx += nx * pushStrength * 0.5;
+                                p2.vy += ny * pushStrength * 0.5;
                             }
                         }
                     }
