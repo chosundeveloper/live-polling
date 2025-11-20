@@ -177,7 +177,7 @@
         const TETRIS_CELL_WIDTH_MAX = 220;
         const TETRIS_CELL_HEIGHT_MIN = 48;
         const TETRIS_CELL_HEIGHT_MAX = 130;
-        const TETRIS_CELL_INSET = 0;
+        const TETRIS_CELL_INSET = 2;
         const MOCK_WORD_POOL = buildMockWordPool();
         let mockWordQueue = shuffleArray([...MOCK_WORD_POOL]);
         let mockWordIndex = 0;
@@ -639,7 +639,7 @@
             particle.el.style.height = `${Math.round(height)}px`;
             particle.el.style.maxWidth = particle.el.style.width;
             particle.el.style.maxHeight = particle.el.style.height;
-            particle.el.style.padding = '6px 12px';
+            particle.el.style.padding = '4px 8px';
             particle.el.style.display = 'flex';
             particle.el.style.alignItems = 'center';
             particle.el.style.justifyContent = 'center';
