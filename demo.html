@@ -889,9 +889,15 @@
                 particle.x = horizontalTarget;
             }
             const verticalHeight = particle.verticalHeight || 1;
-            // For vertical blocks, check bottom edge of entire block
-            const blockHeight = particle.isVertical ? gridMetrics.cellHeight * verticalHeight : gridMetrics.cellHeight;
-            const bottomEdge = newY + blockHeight / 2;
+            // Calculate bottom edge position
+            let bottomEdge;
+            if (particle.isVertical) {
+                // For vertical: y is the bottom edge
+                bottomEdge = newY;
+            } else {
+                // For horizontal: y is center, so add half height
+                bottomEdge = newY + gridMetrics.cellHeight / 2;
+            }
             const relative = bottomEdge - gridMetrics.offsetY;
             let targetRow = Math.floor(relative / gridMetrics.cellHeight);
 
