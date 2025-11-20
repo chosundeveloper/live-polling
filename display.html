@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="ko">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -11,6 +12,7 @@
     <script src="https://cdn.jsdelivr.net/npm/motion@11.11.13/dist/motion.min.js"></script>
     <script src="https://d3js.org/d3.v7.min.js"></script>
 </head>
+
 <body class="concept-body concept-display">
     <div class="concept-wrapper">
         <header class="concept-top">
@@ -164,8 +166,8 @@
         const PUSH_THRESHOLD_RATIO = 0.10; // Start pushing outward very early
 
         function selectWordColor(weightRatio, index) {
-            // Always return white color
-            return '#ffffff';
+            // Always return navy color
+            return 'rgba(30, 41, 59, 0.9)';
         }
         window.selectWordColor = selectWordColor;
 
@@ -461,7 +463,7 @@
                 qrCodeInstance = new QRCode(qrCodeContainer, { text: urlString, width: 192, height: 192, colorDark: "#0f172a", colorLight: "#ffffff", correctLevel: QRCode.CorrectLevel.H });
             }
         }
-        
+
         function navigateToQuestion(index, options = {}) {
             const { force = false } = options;
             console.log('navigateToQuestion called with index:', index);
@@ -513,38 +515,52 @@
             }
 
             d3Simulation = d3.forceSimulation(wordParticles)
-                .alphaDecay(0.05)
-                .velocityDecay(0.6)
+                .alphaDecay(0.1) // 더 빨리 멈추도록 증가 (기존 0.05)
+                .velocityDecay(0.4) // 마찰력 증가 (기존 0.2)
                 .alphaMin(0.001)
                 .force('collide', d3.forceCollide(d => {
                     const { width, height } = getParticleDimensions(d);
                     return Math.max(width, height) / 2 + MIN_SEPARATION;
-                }).strength(0.9).iterations(3))
-                .force('radial', d3.forceRadial(d => d.ringRadius || 100, centerW, centerH).strength(0.05))
-                .force('x', d3.forceX(d => d.targetX || centerW).strength(0.08))
+                }).strength(0.7).iterations(3)) // 반복 횟수 증가, 강도 약간 감소
+                .force('x', d3.forceX(d => d.targetX || centerW).strength(0.08)) // 중심 인력 약간 증가
                 .force('y', d3.forceY(d => d.targetY || centerH).strength(0.08))
                 .on('tick', () => {
                     const timestamp = performance.now();
                     const currentAlpha = d3Simulation.alpha();
 
-                    // Stop simulation when settled
-                    if (currentAlpha < 0.01) {
+                    // Stop simulation when settled and freeze all particles
+                    if (currentAlpha < 0.05) { // 멈춤 임계값 완화
+                        wordParticles.forEach(p => {
+                            p.vx = 0;
+                            p.vy = 0;
+                            p.x = p.targetX || p.x;
+                            p.y = p.targetY || p.y;
+                            p.fx = p.x; // 위치 고정
+                            p.fy = p.y;
+                            p.el.style.left = `${p.x}px`;
+                            p.el.style.top = `${p.y}px`;
+                        });
                         d3Simulation.stop();
                         return;
                     }
 
                     wordParticles.forEach(p => {
-                        // Apply intro motion override
-                        if (p.phase === 'intro') {
-                            updateIntroMotion(p, centerW, centerH, timestamp);
-                            p.vx = (p.x - (p.prevX || p.x)) * 0.5;
-                            p.vy = (p.y - (p.prevY || p.y)) * 0.5;
-                        }
+                        // 이미 고정된 입자는 건너뜀
+                        if (p.fx !== null && p.fx !== undefined) return;
 
-                        // Gradually reduce velocity as simulation stabilizes
-                        if (currentAlpha < 0.1 && p.phase !== 'intro') {
-                            p.vx *= 0.5;
-                            p.vy *= 0.5;
+                        // Gradually freeze particles as they approach target
+                        const dx = (p.targetX || centerW) - p.x;
+                        const dy = (p.targetY || centerH) - p.y;
+                        const distToTarget = Math.hypot(dx, dy);
+
+                        // If very close to target, snap to position and stop
+                        if (distToTarget < 8) { // 거리 허용 오차 증가
+                            p.x = p.targetX || p.x;
+                            p.y = p.targetY || p.y;
+                            p.vx = 0;
+                            p.vy = 0;
+                            p.fx = p.x; // 위치 고정
+                            p.fy = p.y;
                         }
 
                         // Hard limit on velocity to prevent spinning
@@ -557,9 +573,7 @@
 
                         // Strict boundary handling to keep within cell image
                         const maxRadius = Math.min(containerWidth, containerHeight) * MAX_CELL_SPREAD_RATIO;
-                        const dx = p.x - centerW;
-                        const dy = p.y - centerH;
-                        const distFromCenter = Math.hypot(dx, dy);
+                        const distFromCenter = Math.hypot(p.x - centerW, p.y - centerH);
 
                         // Soft boundary: slow down as approaching edge
                         if (distFromCenter > maxRadius * 0.9) {
@@ -570,14 +584,12 @@
 
                         // Hard boundary: cannot exceed
                         if (distFromCenter > maxRadius) {
-                            const angle = Math.atan2(dy, dx);
+                            const angle = Math.atan2(p.y - centerH, p.x - centerW);
                             p.x = centerW + Math.cos(angle) * maxRadius;
                             p.y = centerH + Math.sin(angle) * maxRadius;
                             p.vx = 0;
                             p.vy = 0;
                         }
-
-                        // Font size is fixed - no animation needed
 
                         // Update DOM position
                         p.el.style.left = `${p.x}px`;
@@ -635,7 +647,7 @@
             const sortedWords = [...frequencyMap.entries()].sort((a, b) => b[1] - a[1]);
             const limited = sortedWords.slice(0, MAX_WORDS).filter(([text]) => !hiddenWords.includes(text));
             const newWordTexts = new Set(limited.map(item => item[0]));
-            
+
             wordParticles = wordParticles.filter(p => {
                 if (!newWordTexts.has(p.el.textContent)) {
                     if (now - (p.bornAt || now) < MIN_WORD_LIFETIME) {
@@ -662,7 +674,14 @@
                 if (particle) {
                     // Existing particle - keep fixed font size, no changes
                     if (particle.phase !== 'intro') {
+                        const oldSpiralIndex = particle.spiralIndex;
                         assignParticleTarget(particle, centerW, centerH, geometry, spiralIndex);
+
+                        // 순위(위치)가 변경된 경우에만 고정 해제하여 이동 허용
+                        if (oldSpiralIndex !== spiralIndex) {
+                            particle.fx = null;
+                            particle.fy = null;
+                        }
                     }
                     particle.el.style.color = particle.color;
                 } else {
@@ -744,20 +763,20 @@
                         targetFontSize: FIXED_FONT_SIZE,
                         isVertical,
                         spiralIndex,
-                        phase: 'intro',
+                        phase: 'stable',
                         spiralProgress: 0,
-                        introDuration: INTRO_DURATION_BASE + Math.random() * INTRO_DURATION_VARIANCE,
+                        introDuration: 0,
                         introStart: null,
                         bornAt: now,
                         color: assignedColor
                     };
                     assignParticleTarget(particle, centerW, centerH, geometry, spiralIndex);
 
-                    // Start at center and move to target position
-                    particle.originX = centerW;
-                    particle.originY = centerH;
-                    particle.x = centerW;
-                    particle.y = centerH;
+                    // Start at target position directly
+                    particle.x = particle.targetX || centerW;
+                    particle.y = particle.targetY || centerH;
+                    particle.prevX = particle.x;
+                    particle.prevY = particle.y;
                     particle.prevX = centerW;
                     particle.prevY = centerH;
                     wordEl.style.left = `${centerW}px`;
@@ -771,7 +790,7 @@
                         animateWordEntry(wordEl);
                     });
                 }
-                
+
                 const weightRatio = weight / Math.max(...limited.map(item => item[1]));
                 const isHero = weightRatio > 0.7;
                 const isAccent = !isHero && weightRatio > 0.4;
@@ -786,7 +805,7 @@
             // Update D3 simulation with new particles
             if (d3Simulation && wordParticles.length > 0) {
                 d3Simulation.nodes(wordParticles);
-                d3Simulation.alpha(0.15).restart();
+                d3Simulation.alpha(0.08).restart(); // 0.15 -> 0.08로 감소하여 진동 최소화
             }
         }
 
@@ -805,7 +824,7 @@
             animationFrameId = null;
             d3Simulation = null;
         }
-        
+
         function resetDisplay() {
             console.log('resetDisplay called');
             stopAllIntervals();
@@ -873,7 +892,7 @@
                 conceptTotal.textContent = mockAnswers.length;
                 count++;
             }, 500);
-            
+
             // Simulation loop is started by renderWords if words exist
         }
 
@@ -966,4 +985,5 @@
         }
     </script>
 </body>
+
 </html>
