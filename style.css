@@ -1,7 +1,7 @@
 @font-face {
     font-family: 'GangwonBold';
-    src: url('./fonts/GangwonEduAllBold.otf') format('opentype');
-    
+    src: url('./fonts/강원교육모두 Bold.otf') format('opentype');
+
     font-style: normal;
     font-display: swap;
 }
@@ -33,7 +33,7 @@ body {
     min-height: 100vh;
     color: var(--ink-primary);
     line-height: 1.6;
-    
+
     font-size: 15px;
     /* Default font size */
 }
@@ -131,7 +131,7 @@ body.display-body {
 
 .question-num {
     font-size: 2.5em;
-    
+
     color: #667eea;
     min-width: 60px;
     text-align: center;
@@ -226,7 +226,7 @@ body.display-body {
     padding: 5px 15px;
     border-radius: 20px;
     font-size: 0.85em;
-    
+
     margin-bottom: 15px;
 }
 
@@ -248,7 +248,7 @@ body.display-body {
     border: none;
     border-radius: 10px;
     font-size: 1em;
-    
+
     cursor: pointer;
     text-decoration: none;
     text-align: center;
@@ -308,7 +308,7 @@ body.display-body {
 .setup-notice a {
     color: #667eea;
     text-decoration: none;
-    
+
 }
 
 .setup-notice a:hover {
@@ -368,7 +368,7 @@ body.display-body {
     padding: 10px 20px;
     border-radius: 30px;
     font-size: 1.1em;
-    
+
     color: white;
 }
 
@@ -426,7 +426,7 @@ body.display-body {
     padding: 6px 14px;
     border-radius: 999px;
     font-size: 0.85em;
-    
+
     letter-spacing: 0.5px;
 }
 
@@ -441,7 +441,7 @@ body.display-body {
 
 .info-heading {
     font-size: 1.1em;
-    
+
     color: rgba(31, 42, 55, 0.8);
 }
 
@@ -469,7 +469,7 @@ body.display-body {
 .qr-instruction {
     margin-top: 15px;
     color: rgba(31, 42, 55, 0.7);
-    
+
     line-height: 1.5;
 }
 
@@ -497,14 +497,14 @@ body.display-body {
 
 .meta-value {
     font-size: 1.6em;
-    
+
     color: rgba(31, 42, 55, 0.85);
 }
 
 .meta-value.last-updated {
     font-size: 1.2em;
     color: rgba(31, 42, 55, 0.65);
-    
+
 }
 
 /* 답변 메인 영역 */
@@ -540,7 +540,7 @@ body.display-body {
     border-radius: 999px;
     border: 1px solid rgba(239, 90, 104, 0.4);
     font-size: 0.75em;
-    
+
     text-transform: uppercase;
     letter-spacing: 0.2em;
     color: var(--color-coral);
@@ -548,7 +548,7 @@ body.display-body {
 
 .responses-title {
     font-size: 1.2em;
-    
+
     color: rgba(31, 42, 55, 0.75);
 }
 
@@ -564,11 +564,11 @@ body.display-body {
 
 .word-cloud-placeholder {
     color: rgba(31, 42, 55, 0.6);
-    
+
 }
 
 .cloud-word {
-    
+
     font-size: 1.1em;
     transform: scale(var(--scale, 1));
     transition: transform 0.3s ease;
@@ -593,7 +593,7 @@ body.display-body {
     flex: 1 1 100%;
     text-align: center;
     color: rgba(31, 42, 55, 0.7);
-    
+
     background: rgba(255, 255, 255, 0.92);
     border-radius: 20px;
     padding: 28px 32px;
@@ -627,7 +627,7 @@ body.display-body {
 
 .answer-line-text {
     font-size: 1.25em;
-    
+
     color: #0f1f2e;
     line-height: 1.4;
 }
@@ -690,7 +690,7 @@ body.display-body {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    
+
     font-size: 0.9em;
 }
 
@@ -729,7 +729,7 @@ body.display-body {
     border-radius: 14px;
     background: rgba(109, 151, 216, 0.1);
     color: rgba(31, 42, 55, 0.6);
-    
+
 }
 
 /* 슬라이드 네비게이션 */
@@ -801,7 +801,7 @@ body.display-body {
     min-height: 100vh;
     padding: 20px;
     font-family: 'GangwonBold', cursive;
-    
+
     font-size: 16px;
 }
 
@@ -823,7 +823,7 @@ body.display-body {
     color: #667eea;
     font-size: 1.4em;
     margin-bottom: 16px;
-    
+
 }
 
 /* 타이머 */
@@ -880,7 +880,7 @@ body.display-body {
     left: 50%;
     transform: translate(-50%, -50%);
     font-size: 0.65em;
-    
+
     color: #667eea;
     transition: color 0.3s ease;
     white-space: nowrap;
@@ -891,7 +891,7 @@ body.display-body {
         position: static;
         transform: none;
         font-size: 1.5em;
-        
+
     }
 }
 
@@ -904,7 +904,7 @@ body.display-body {
 .timer-label {
     font-size: 0.8em;
     color: #94a3b8;
-    
+
 }
 
 .question-display {
@@ -921,14 +921,14 @@ body.display-body {
     text-transform: uppercase;
     letter-spacing: 0.5px;
     margin-bottom: 8px;
-    
+
 }
 
 .question-text {
     font-size: 1em;
     color: #334155;
     line-height: 1.5;
-    
+
 }
 
 .answer-form {
@@ -942,7 +942,7 @@ body.display-body {
 .form-group label {
     display: block;
     margin-bottom: 8px;
-    
+
     color: #475569;
     font-size: 0.85em;
 }
@@ -954,7 +954,7 @@ body.display-body {
     border-radius: 8px;
     font-size: 0.9em;
     font-family: 'GangwonBold', cursive;
-    
+
     resize: vertical;
     transition: border-color 0.2s ease, box-shadow 0.2s ease;
     line-height: 1.5;
@@ -971,7 +971,7 @@ body.display-body {
     font-size: 0.8em;
     color: #94a3b8;
     margin-top: 6px;
-    
+
 }
 
 .btn-submit {
@@ -980,7 +980,7 @@ body.display-body {
     background: #667eea;
     color: white;
     font-size: 0.95em;
-    
+
     border-radius: 8px;
     transition: background 0.2s ease;
 }
@@ -1023,7 +1023,7 @@ body.display-body {
 .error-message h3 {
     color: #334155;
     font-size: 1.3em;
-    
+
     margin-bottom: 12px;
 }
 
@@ -1031,7 +1031,7 @@ body.display-body {
 .error-message p {
     color: #64748b;
     font-size: 0.9em;
-    
+
     margin-bottom: 20px;
 }
 
@@ -1046,7 +1046,7 @@ footer {
 footer a {
     color: white;
     text-decoration: none;
-    
+
     border-bottom: 2px solid rgba(255, 255, 255, 0.5);
     transition: border-color 0.3s ease;
 }
@@ -1129,7 +1129,7 @@ footer a:hover {
     /* 모바일 전용 answer 페이지 스타일 */
     .answer-body {
         font-size: 15px;
-        
+
         padding: 16px;
         -webkit-font-smoothing: antialiased;
         -moz-osx-font-smoothing: grayscale;
@@ -1142,7 +1142,7 @@ footer a:hover {
 
     .answer-header h1 {
         font-size: 1.3em;
-        
+
         margin-bottom: 12px;
     }
 
@@ -1161,12 +1161,12 @@ footer a:hover {
 
     .timer-text {
         font-size: 1.4em;
-        
+
     }
 
     .timer-label {
         font-size: 0.7em;
-        
+
     }
 
     .question-display {
@@ -1178,49 +1178,49 @@ footer a:hover {
 
     .question-label {
         font-size: 0.65em;
-        
+
     }
 
     .question-text {
         font-size: 1em;
-        
+
         line-height: 1.6;
     }
 
     .form-group label {
         font-size: 0.85em;
-        
+
         margin-bottom: 8px;
     }
 
     .answer-input {
         font-size: 0.95em;
-        
+
         padding: 12px 14px;
         line-height: 1.6;
     }
 
     .char-count {
         font-size: 0.8em;
-        
+
     }
 
     .btn-submit {
         font-size: 1em;
-        
+
         padding: 14px;
     }
 
     .success-message h3,
     .error-message h3 {
         font-size: 1.3em;
-        
+
     }
 
     .success-message p,
     .error-message p {
         font-size: 0.95em;
-        
+
     }
 }
 
@@ -1342,7 +1342,7 @@ footer a:hover {
 .concept-question-display h2 {
     font-size: clamp(1rem, 2vw, 1.4rem);
     margin: 0;
-    
+
     color: #ffffff;
     font-family: 'GangwonBold', cursive;
     background: rgba(30, 41, 59, 0.9);
@@ -1648,14 +1648,14 @@ footer a:hover {
 .concept-stats-card .concept-label {
     font-size: 0.55rem;
     color: rgba(148, 163, 184, 0.8);
-    
+
 }
 
 .concept-qr-card .concept-value,
 .concept-stats-card .concept-value {
     font-size: 0.8rem;
     color: #e2e8f0;
-    
+
 }
 
 .concept-qr-card .concept-action-ghost,
@@ -1705,7 +1705,7 @@ footer a:hover {
 .concept-word {
     position: absolute;
     font-family: 'GangwonBold', cursive;
-    
+
     -webkit-text-stroke: 1.5px rgba(30, 41, 59, 0.8);
     text-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
     cursor: pointer;
@@ -1808,7 +1808,7 @@ footer a:hover {
 }
 
 .concept-word-hero {
-    
+
     z-index: 10;
 }
 
@@ -1839,7 +1839,7 @@ footer a:hover {
     background: rgba(255, 255, 255, 0.95);
     border-radius: 12px;
     font-size: 1.1rem;
-    
+
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
     opacity: 0;
     transform: translateY(-20px) scale(0.95);
@@ -1896,7 +1896,7 @@ footer a:hover {
 
 .concept-value {
     font-size: 1.1rem;
-    
+
     color: var(--ink-primary);
     font-family: 'GangwonBold', cursive;
 }
@@ -1920,7 +1920,7 @@ footer a:hover {
     border-radius: 999px;
     padding: 8px 16px;
     font-size: 0.8rem;
-    
+
     letter-spacing: 0.02em;
     cursor: pointer;
     transition: background-color 0.2s, color 0.2s;
