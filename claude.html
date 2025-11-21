@@ -136,10 +136,10 @@
         ];
 
         const FIXED_FONT_SIZE = 25;
-        const MAX_WORDS = 50;
+        const MAX_WORDS = 200; // Allow 200+ words
         const TIMER_DURATION_MS = 600 * 1000; // 10 minutes
-        const SPAWN_INTERVAL = 200;
-        const COLLISION_PADDING = 80; // Extra space between words
+        const SPAWN_INTERVAL = 50; // Faster spawn rate
+        const COLLISION_PADDING = 50; // Reduced padding to fit more words
 
         function getCloudBounds() {
             const rect = wordsLayer.getBoundingClientRect();
@@ -159,7 +159,7 @@
             const GOLDEN_ANGLE = Math.PI * (3 - Math.sqrt(5));
             const index = existingParticles.length;
             const angle = index * GOLDEN_ANGLE;
-            const radius = 80 * Math.sqrt(index + 1); // Start spreading from center
+            const radius = 50 * Math.sqrt(index + 1); // Tighter spiral for more words
 
             const x = centerX + Math.cos(angle) * radius;
             const y = centerY + Math.sin(angle) * radius;
@@ -177,16 +177,16 @@
             }
 
             d3Simulation = d3.forceSimulation(wordParticles)
-                .alphaDecay(0.01)
-                .velocityDecay(0.3)
-                .force('charge', d3.forceManyBody().strength(-200))
+                .alphaDecay(0.005) // Slower decay for smoother settling
+                .velocityDecay(0.4) // More friction
+                .force('charge', d3.forceManyBody().strength(-100)) // Reduced repulsion for tighter packing
                 .force('collide', d3.forceCollide(d => {
                     const w = d.width || 180;
                     const h = d.height || 60;
                     return Math.sqrt(w * w + h * h) / 2 + COLLISION_PADDING;
-                }).strength(1.0).iterations(3))
-                .force('x', d3.forceX(d => d.targetX || centerX).strength(0.05))
-                .force('y', d3.forceY(d => d.targetY || centerY).strength(0.05))
+                }).strength(1.0).iterations(5)) // More iterations for better collision
+                .force('x', d3.forceX(d => d.targetX || centerX).strength(0.03))
+                .force('y', d3.forceY(d => d.targetY || centerY).strength(0.03))
                 .on('tick', () => {
                     wordParticles.forEach(p => {
                         // Keep within bounds
