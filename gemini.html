@@ -730,9 +730,11 @@
                     };
                     assignParticleTarget(particle, centerW, centerH, geometry, spiralIndex);
 
-                    // Start at random position within the container to prevent initial clumping
-                    particle.x = Math.random() * containerWidth;
-                    particle.y = Math.random() * containerHeight;
+                    // Start near target position with some randomness to prevent clumping
+                    // This prevents words from appearing in a line at the top
+                    const randomOffset = 100; // pixels
+                    particle.x = particle.targetX + (Math.random() - 0.5) * randomOffset;
+                    particle.y = particle.targetY + (Math.random() - 0.5) * randomOffset;
                     particle.prevX = particle.x;
                     particle.prevY = particle.y;
                     wordEl.style.left = `${particle.x}px`;
