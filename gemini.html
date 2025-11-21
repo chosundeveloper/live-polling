@@ -30,6 +30,18 @@
             transition: color 0.3s ease, border-color 0.3s ease;
             /* Smooth color transitions */
         }
+
+        /* Safari-specific fix for vertical text */
+        .concept-word-vertical {
+            writing-mode: vertical-rl !important;
+            text-orientation: upright !important;
+            letter-spacing: 0 !important;
+            line-height: 1.2 !important;
+            white-space: nowrap !important;
+            /* Safari needs explicit dimensions */
+            min-width: auto !important;
+            width: auto !important;
+        }
     </style>
 </head>
 
