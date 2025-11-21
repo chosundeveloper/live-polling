@@ -1806,7 +1806,8 @@ footer a:hover {
     pointer-events: none;
 }
 
-.concept-word-vertical .concept-char {
+/* Vertical word styling disabled - all words stay horizontal */
+/*.concept-word-vertical .concept-char {
     display: block;
     line-height: 0.3;
     margin: 0;
@@ -1823,14 +1824,15 @@ footer a:hover {
 
 .concept-word-vertical .concept-char:not(.concept-word-block) {
     display: none;
-}
+}*/
 
 .concept-word-visible {
     opacity: 0.96;
     --concept-scale: 1;
 }
 
-.concept-word-vertical {
+/* Disabled: all words stay horizontal */
+/*.concept-word-vertical {
     padding: 8px 3px;
     writing-mode: vertical-rl;
     text-orientation: upright;
@@ -1841,7 +1843,7 @@ footer a:hover {
     max-height: 80vh;
     overflow: hidden;
     text-overflow: ellipsis;
-}
+}*/
 
 .concept-word:hover {
     transform: translate(-50%, -50%) scale(1.08);
