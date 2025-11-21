@@ -182,12 +182,12 @@
             const wordsPerColumn = Math.max(1, Math.floor(containerHeight / (avgWordHeight + padding)));
             const maxCapacity = Math.max(wordsPerRow * wordsPerColumn, 1);
 
-            // Target exactly 80 words if space permits
+            // Target exactly 100 words if space permits
             // But do not exceed 60% capacity to ensure no overlap
             const densityLimit = Math.floor(maxCapacity * 0.60);
-            const MAX_WORDS = Math.min(80, densityLimit);
+            const MAX_WORDS = Math.min(100, densityLimit);
 
-            console.log(`📐 Screen capacity: ${maxCapacity}, Density Limit: ${densityLimit}, Using: ${MAX_WORDS} max words (Target 80)`);
+            console.log(`📐 Screen capacity: ${maxCapacity}, Density Limit: ${densityLimit}, Using: ${MAX_WORDS} max words (Target 100)`);
             return MAX_WORDS;
         }
 
