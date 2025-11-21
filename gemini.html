@@ -183,8 +183,8 @@
             const maxCapacity = Math.max(wordsPerRow * wordsPerColumn, 1);
 
             // Target exactly 100 words if space permits
-            // But do not exceed 60% capacity to ensure no overlap
-            const densityLimit = Math.floor(maxCapacity * 0.60);
+            // Use 80% capacity to allow reaching 100 words while relying on physics to prevent overlap
+            const densityLimit = Math.floor(maxCapacity * 0.80);
             const MAX_WORDS = Math.min(100, densityLimit);
 
             console.log(`📐 Screen capacity: ${maxCapacity}, Density Limit: ${densityLimit}, Using: ${MAX_WORDS} max words (Target 100)`);
