@@ -728,21 +728,21 @@
                     const fontSize = FIXED_FONT_SIZE;
                     wordEl.style.fontSize = `${fontSize}px`;
 
-                    // Ultra transparent pastel background colors (background visible)
+                    // Ultra transparent pastel colors with borders
                     const pastelStyles = [
-                        'rgba(255, 183, 197, 0.25)', // Pink
-                        'rgba(255, 214, 165, 0.25)', // Peach
-                        'rgba(250, 227, 217, 0.25)', // Soft coral
-                        'rgba(224, 236, 255, 0.25)', // Powder blue
-                        'rgba(210, 245, 227, 0.25)', // Mint
-                        'rgba(231, 223, 255, 0.25)', // Lavender
-                        'rgba(255, 233, 233, 0.25)', // Blush
-                        'rgba(255, 240, 219, 0.25)', // Light apricot
-                        'rgba(219, 236, 227, 0.25)'  // Pastel teal
+                        { bg: 'rgba(255, 183, 197, 0.25)', border: 'rgba(255, 183, 197, 0.5)' }, // Pink
+                        { bg: 'rgba(255, 214, 165, 0.25)', border: 'rgba(255, 214, 165, 0.5)' }, // Peach
+                        { bg: 'rgba(250, 227, 217, 0.25)', border: 'rgba(250, 227, 217, 0.5)' }, // Soft coral
+                        { bg: 'rgba(224, 236, 255, 0.25)', border: 'rgba(224, 236, 255, 0.5)' }, // Powder blue
+                        { bg: 'rgba(210, 245, 227, 0.25)', border: 'rgba(210, 245, 227, 0.5)' }, // Mint
+                        { bg: 'rgba(231, 223, 255, 0.25)', border: 'rgba(231, 223, 255, 0.5)' }, // Lavender
+                        { bg: 'rgba(255, 233, 233, 0.25)', border: 'rgba(255, 233, 233, 0.5)' }, // Blush
+                        { bg: 'rgba(255, 240, 219, 0.25)', border: 'rgba(255, 240, 219, 0.5)' }, // Light apricot
+                        { bg: 'rgba(219, 236, 227, 0.25)', border: 'rgba(219, 236, 227, 0.5)' }  // Pastel teal
                     ];
-                    const pastelColor = pastelStyles[Math.floor(Math.random() * pastelStyles.length)];
-                    wordEl.style.border = 'none';
-                    wordEl.style.backgroundColor = pastelColor;
+                    const pastelStyle = pastelStyles[Math.floor(Math.random() * pastelStyles.length)];
+                    wordEl.style.border = `2px solid ${pastelStyle.border}`;
+                    wordEl.style.backgroundColor = pastelStyle.bg;
                     wordEl.style.boxShadow = `0 4px 12px rgba(0, 0, 0, 0.08)`;
 
                     // Force horizontal writing mode - prevent vertical text
