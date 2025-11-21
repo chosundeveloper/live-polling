@@ -175,18 +175,17 @@
             // Match display.html dimensions
             const avgWordWidth = 180;
             const avgWordHeight = 60;
-            // Use smaller padding for CALCULATION only to allow more words (target ~100)
-            const calculationPadding = 20;
+            // Tighter padding for calculation to allow higher density
+            const padding = 30;
 
-            const wordsPerRow = Math.max(1, Math.floor(containerWidth / (avgWordWidth + calculationPadding)));
-            const wordsPerColumn = Math.max(1, Math.floor(containerHeight / (avgWordHeight + calculationPadding)));
+            const wordsPerRow = Math.max(1, Math.floor(containerWidth / (avgWordWidth + padding)));
+            const wordsPerColumn = Math.max(1, Math.floor(containerHeight / (avgWordHeight + padding)));
             const maxCapacity = Math.max(wordsPerRow * wordsPerColumn, 1);
 
-            // Target around 100 words if space permits
-            // Using 80% of the tighter grid capacity
-            const calculatedMax = Math.floor(maxCapacity * 0.80);
-            const MAX_WORDS = Math.min(120, Math.max(80, calculatedMax));
-            console.log(`📐 Screen capacity (tight): ${maxCapacity}, Using: ${MAX_WORDS} max words (Target ~100)`);
+            // Increase density: Use 60% of capacity
+            // This packs words closer but collision force prevents overlap
+            const MAX_WORDS = Math.floor(maxCapacity * 0.60);
+            console.log(`📐 Screen capacity: ${maxCapacity}, Using: ${MAX_WORDS} max words (60% density)`);
             return MAX_WORDS;
         }
 
@@ -456,7 +455,7 @@
                 .alphaDecay(0.002) // Slower decay for smooth settling
                 .velocityDecay(0.4) // Lower friction for fluid movement
                 .alphaMin(0.001)
-                .force('charge', d3.forceManyBody().strength(-20)) // Reduced repulsion to prevent edge crowding
+                .force('charge', d3.forceManyBody().strength(-15)) // Minimal repulsion to allow tight packing
                 .force('wallRepulsion', alpha => {
                     const padding = 80; // Distance from wall to start repelling
                     const strength = 0.5 * alpha; // Strength of repulsion
@@ -473,9 +472,9 @@
                 })
                 .force('collide', d3.forceCollide(d => {
                     const { width, height } = getParticleDimensions(d);
-                    // STRICT collision: Use full bounding circle radius + padding
-                    // No 0.9 factor. This ensures visual elements never touch.
-                    return Math.hypot(width, height) / 2 + 10;
+                    // STRICT collision with MINIMAL padding
+                    // Use full bounding circle radius + 2px for very tight but non-overlapping packing
+                    return Math.hypot(width, height) / 2 + 2;
                 }).strength(1.0).iterations(16))
                 .force('x', d3.forceX(d => d.targetX || centerW).strength(0.03)) // Slightly stronger pull to target
                 .force('y', d3.forceY(d => d.targetY || centerH).strength(0.03))
