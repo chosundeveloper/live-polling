@@ -585,18 +585,21 @@
             console.log(`📊 After MAX_WORDS limit (${MAX_WORDS}): ${limited.length}`);
             const newWordIds = new Set(limited.map(item => item[0]));
 
-            wordParticles = wordParticles.filter(p => {
-                if (!newWordIds.has(p.uniqueId)) {
-                    if (now - (p.bornAt || now) < MIN_WORD_LIFETIME) {
-                        return true;
-                    }
-                    p.el.classList.remove('concept-word-visible');
-                    p.el.classList.add('concept-word-hidden');
-                    setTimeout(() => p.el.remove(), 700);
-                    return false;
-                }
-                return true;
-            });
+            // DISABLED: Auto-deletion of old words
+            // Keep all words visible - only manual deletion via click
+            // wordParticles = wordParticles.filter(p => {
+            //     if (!newWordIds.has(p.uniqueId)) {
+            //         if (now - (p.bornAt || now) < MIN_WORD_LIFETIME) {
+            //             return true;
+            //         }
+            //         p.el.classList.remove('concept-word-visible');
+            //         p.el.classList.add('concept-word-hidden');
+            //         setTimeout(() => p.el.remove(), 700);
+            //         return false;
+            //     }
+            //     return true;
+            // });
+
 
             const { width: containerWidth, height: containerHeight } = getCloudBounds();
             const centerW = containerWidth / 2;
