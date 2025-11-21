@@ -213,7 +213,22 @@
             '치유를 간절히 바라요',
             '축복을 받기 원해요',
             '헌신하고 싶습니다',
-            '감동이 밀려옵니다'
+            '감동이 밀려옵니다',
+            '주님을 찬양합니다',
+            '은혜로 충만합니다',
+            '기쁨이 넘칩니다',
+            '평안을 누립니다',
+            '사랑을 전합니다',
+            '소망을 품습니다',
+            '믿음을 고백합니다',
+            '감사를 드립니다',
+            '회개를 합니다',
+            '치유를 구합니다',
+            '축복을 빕니다',
+            '헌신을 다짐합니다',
+            '경배를 드립니다',
+            '찬양을 올립니다',
+            '기도를 올립니다'
         ];
         const FIXED_FONT_SIZE = 22; // Fixed font size for all words
         const MAX_PARTICLE_SPEED = 0.4; // Slower speed for smoother feel
@@ -926,7 +941,8 @@
             }
 
             simulationInterval = setInterval(() => {
-                const TARGET_MOCK_WORDS = 100; // Fixed target for mock mode
+                const TARGET_MOCK_WORDS = 200; // Increased to 200 for mock mode
+                const MAX_VISIBLE_WORDS = 90; // Auto-delete when over 90
 
                 if (count >= 2000) {
                     clearInterval(simulationInterval);
@@ -940,6 +956,13 @@
                     clearInterval(simulationInterval);
                     simulationInterval = null;
                     return;
+                }
+
+                // Auto-delete oldest words if over 90
+                if (mockAnswers.length > MAX_VISIBLE_WORDS) {
+                    const toRemove = mockAnswers.length - MAX_VISIBLE_WORDS;
+                    mockAnswers = mockAnswers.slice(0, MAX_VISIBLE_WORDS);
+                    console.log(`🗑️ Auto-deleted ${toRemove} oldest words (keeping ${MAX_VISIBLE_WORDS})`);
                 }
 
                 const batchSize = Math.min(MOCK_BATCH_SIZE, remainingSlots);
