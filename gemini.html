@@ -25,8 +25,9 @@
         }
 
         .concept-word {
-            padding: 4px 6px !important;
-            border-width: 2px !important;
+            padding: 2px 5px !important;
+            border: 1px solid rgba(255, 255, 255, 0.25) !important;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12) !important;
             transition: color 0.3s ease, border-color 0.3s ease;
             /* Smooth color transitions */
         }
@@ -35,9 +36,9 @@
         .concept-word-vertical {
             writing-mode: vertical-rl !important;
             text-orientation: upright !important;
-            letter-spacing: 0.1em !important;
-            word-spacing: 0.2em !important;
-            line-height: 1.5 !important;
+            letter-spacing: 0.05em !important;
+            word-spacing: 0.1em !important;
+            line-height: 1.25 !important;
             white-space: nowrap !important;
             /* Safari needs explicit dimensions */
             min-width: auto !important;
@@ -50,7 +51,7 @@
 
         .concept-word-vertical .concept-char {
             display: block !important;
-            margin: 2px 0 !important;
+            margin: 1px 0 !important;
         }
     </style>
 </head>
@@ -675,15 +676,8 @@
                     const wordEl = document.createElement('span');
                     wordEl.className = 'concept-word';
 
-                    // Determine if vertical BEFORE setting text
-                    const isVertical = Math.random() < 0.35;
-                    if (isVertical) {
-                        wordEl.classList.add('concept-word-vertical');
-                        // Keep text as is for vertical (with spaces)
-                        wordEl.textContent = text;
-                    } else {
-                        wordEl.textContent = text;
-                    }
+                    // Force horizontal rendering for all words
+                    wordEl.textContent = text;
 
                     const assignedColor = selectWordColor(1, index);
                     wordEl.style.color = assignedColor;
