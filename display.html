@@ -150,17 +150,17 @@
         // Calculate max words based on screen space
         function calculateMaxWords() {
             const { width: containerWidth, height: containerHeight } = getCloudBounds();
-            const avgWordWidth = 150; // Average word bubble width
-            const avgWordHeight = 50; // Average word bubble height
-            const padding = 10; // Space between words
+            const avgWordWidth = 180; // Average word bubble width (increased)
+            const avgWordHeight = 60; // Average word bubble height (increased)
+            const padding = 40; // Large space between words to prevent overlap
 
             const wordsPerRow = Math.floor(containerWidth / (avgWordWidth + padding));
             const wordsPerColumn = Math.floor(containerHeight / (avgWordHeight + padding));
             const maxCapacity = wordsPerRow * wordsPerColumn;
 
-            // Use 80% of capacity to avoid overcrowding
-            const MAX_WORDS = Math.floor(maxCapacity * 0.8);
-            console.log(`📐 Screen capacity: ${maxCapacity}, Using: ${MAX_WORDS} max words`);
+            // Use only 50% of capacity to prevent overcrowding and overlap
+            const MAX_WORDS = Math.floor(maxCapacity * 0.5);
+            console.log(`📐 Screen capacity: ${maxCapacity}, Using: ${MAX_WORDS} max words (50% to prevent overlap)`);
             return MAX_WORDS;
         }
 
@@ -534,12 +534,12 @@
                 .alphaDecay(0.005) // Very slow decay for extended, smooth settling
                 .velocityDecay(0.5) // Higher friction for smoother, slower movement
                 .alphaMin(0.001)
-                .force('charge', d3.forceManyBody().strength(-5)) // Reduced repulsion
+                .force('charge', d3.forceManyBody().strength(-50)) // Strong repulsion to prevent overlap
                 .force('collide', d3.forceCollide(d => {
                     const { width, height } = getParticleDimensions(d);
-                    // Diagonal radius + minimal padding
-                    return Math.sqrt(width * width + height * height) / 2 + 5;
-                }).strength(1.0).iterations(10)) // High iterations for stability
+                    // Diagonal radius + large padding to prevent overlap
+                    return Math.sqrt(width * width + height * height) / 2 + 30;
+                }).strength(1.0).iterations(15)) // More iterations for better collision
                 .force('x', d3.forceX(d => d.targetX || centerW).strength(0.008)) // Very gentle attraction
                 .force('y', d3.forceY(d => d.targetY || centerH).strength(0.008))
                 .on('tick', () => {
