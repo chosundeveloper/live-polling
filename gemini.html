@@ -834,15 +834,17 @@
             }
 
             simulationInterval = setInterval(() => {
+                const TARGET_MOCK_WORDS = 100; // Fixed target for mock mode
+
                 if (count >= 2000) {
                     clearInterval(simulationInterval);
                     simulationInterval = null;
                     return;
                 }
 
-                const remainingSlots = Math.max(0, MAX_WORDS - mockAnswers.length);
+                const remainingSlots = Math.max(0, TARGET_MOCK_WORDS - mockAnswers.length);
                 if (remainingSlots <= 0) {
-                    console.log('🛑 Mock capacity reached. Stopping additional word generation to avoid overlap.');
+                    console.log(`🛑 Mock target of ${TARGET_MOCK_WORDS} words reached.`);
                     clearInterval(simulationInterval);
                     simulationInterval = null;
                     return;
