@@ -158,9 +158,9 @@
             const wordsPerColumn = Math.floor(containerHeight / (avgWordHeight + padding));
             const maxCapacity = wordsPerRow * wordsPerColumn;
 
-            // Use only 40% of capacity to prevent overcrowding and overlap
-            const MAX_WORDS = Math.floor(maxCapacity * 0.4);
-            console.log(`📐 Screen capacity: ${maxCapacity}, Using: ${MAX_WORDS} max words (40% to prevent overlap)`);
+            // Use only 30% of capacity to ensure absolutely no overlap
+            const MAX_WORDS = Math.floor(maxCapacity * 0.30);
+            console.log(`📐 Screen capacity: ${maxCapacity}, Using: ${MAX_WORDS} max words (30% to prevent overlap)`);
             return MAX_WORDS;
         }
 
@@ -184,7 +184,7 @@
         const COLOR_PALETTE = ['#5e4fa2', '#3288bd', '#66c2a5', '#abdda4', '#e6f598', '#fee08b', '#fdae61', '#f46d43', '#d53e4f', '#9e0142'];
         // Exclude yellow (#e6f598 index 4), lime green (#abdda4 index 3), light orange (#fee08b index 5), orange (#fdae61 index 6), and dark red (#9e0142 index 9)
         const EXCLUDED_COLOR_INDICES = [3, 4, 5, 6, 9];
-        const MAX_CELL_SPREAD_RATIO = 0.32; // Reduced for tighter packing
+        const MAX_CELL_SPREAD_RATIO = 0.45; // Increased to use more screen space
         const INNER_CORE_RATIO = 0.06; // Inner core that stays stable (very small)
         const PUSH_THRESHOLD_RATIO = 0.10; // Start pushing outward very early
 
@@ -791,9 +791,9 @@
                     };
                     assignParticleTarget(particle, centerW, centerH, geometry, spiralIndex);
 
-                    // Start at center with slight jitter to allow spreading
-                    particle.x = centerW + (Math.random() - 0.5) * 10;
-                    particle.y = centerH + (Math.random() - 0.5) * 10;
+                    // Start at random position within the container to prevent initial clumping
+                    particle.x = Math.random() * containerWidth;
+                    particle.y = Math.random() * containerHeight;
                     particle.prevX = particle.x;
                     particle.prevY = particle.y;
                     wordEl.style.left = `${particle.x}px`;
