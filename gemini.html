@@ -161,30 +161,29 @@
             '헌신의 다짐을',
             '회개하는 심령'
         ];
-        const FIXED_FONT_SIZE = 25; // Fixed font size for all words
+        const FIXED_FONT_SIZE = 20; // Reduced font size to fit more words
         const MAX_PARTICLE_SPEED = 0.4; // Slower speed for smoother feel
         const MIN_SEPARATION = 500;
-        const DEFAULT_PARTICLE_WIDTH = 200;
-        const DEFAULT_PARTICLE_HEIGHT = 60;
+        const DEFAULT_PARTICLE_WIDTH = 160; // Reduced default width
+        const DEFAULT_PARTICLE_HEIGHT = 50; // Reduced default height
 
-        const WORD_PADDING = 100; // px, additional breathing room between bubbles
+        const WORD_PADDING = 60; // Reduced padding
 
         // Calculate max words based on screen space
         function calculateMaxWords() {
             const { width: containerWidth, height: containerHeight } = getCloudBounds();
-            const avgWordWidth = 180; // Average word bubble width (increased)
-            const avgWordHeight = 60; // Average word bubble height (increased)
-            const padding = WORD_PADDING; // Extra space between words to prevent touching
+            const avgWordWidth = 150;
+            const avgWordHeight = 50;
+            const padding = 40;
 
             const wordsPerRow = Math.max(1, Math.floor(containerWidth / (avgWordWidth + padding)));
             const wordsPerColumn = Math.max(1, Math.floor(containerHeight / (avgWordHeight + padding)));
             const maxCapacity = Math.max(wordsPerRow * wordsPerColumn, 1);
 
-            // Use 60% of capacity to show much more words while maintaining some spacing
-            // Ensure at least 200 words if screen allows, but respect physical limits
-            const calculatedMax = Math.floor(maxCapacity * 0.60);
-            const MAX_WORDS = Math.max(200, calculatedMax);
-            console.log(`📐 Screen capacity: ${maxCapacity}, Using: ${MAX_WORDS} max words (Targeting 200+, or 60% of capacity)`);
+            // Use 50% of capacity to ensure absolutely no overlapping at edges
+            // Prioritize clean layout over quantity as requested
+            const MAX_WORDS = Math.floor(maxCapacity * 0.50);
+            console.log(`📐 Screen capacity: ${maxCapacity}, Using: ${MAX_WORDS} max words (50% for clean edges)`);
             return MAX_WORDS;
         }
 
@@ -454,15 +453,29 @@
                 .alphaDecay(0.002) // Slower decay for smooth settling
                 .velocityDecay(0.4) // Lower friction for fluid movement
                 .alphaMin(0.001)
-                .force('charge', d3.forceManyBody().strength(-50)) // Gentle repulsion between nodes
+                .force('charge', d3.forceManyBody().strength(-20)) // Reduced repulsion to prevent edge crowding
+                .force('wallRepulsion', alpha => {
+                    const padding = 80; // Distance from wall to start repelling
+                    const strength = 0.5 * alpha; // Strength of repulsion
+                    wordParticles.forEach(p => {
+                        const halfW = (p.width || DEFAULT_PARTICLE_WIDTH) / 2;
+                        const halfH = (p.height || DEFAULT_PARTICLE_HEIGHT) / 2;
+
+                        // Apply force away from walls
+                        if (p.x - halfW < padding) p.vx += (padding - (p.x - halfW)) * strength;
+                        if (p.x + halfW > containerWidth - padding) p.vx -= ((p.x + halfW) - (containerWidth - padding)) * strength;
+                        if (p.y - halfH < padding) p.vy += (padding - (p.y - halfH)) * strength;
+                        if (p.y + halfH > containerHeight - padding) p.vy -= ((p.y + halfH) - (containerHeight - padding)) * strength;
+                    });
+                })
                 .force('collide', d3.forceCollide(d => {
                     const { width, height } = getParticleDimensions(d);
-                    // Use a larger radius to ensure absolutely no overlap
-                    // Calculate radius based on the larger dimension plus generous padding
-                    return Math.max(width, height) / 1.8 + 20;
-                }).strength(1.0).iterations(12)) // Max strength and high iterations for rigid collision
-                .force('x', d3.forceX(d => d.targetX || centerW).strength(0.02)) // Gentle pull to target
-                .force('y', d3.forceY(d => d.targetY || centerH).strength(0.02))
+                    // Tighter collision radius to fit more words without overlap
+                    // Using hypotenuse/2 is bounding circle, we reduce it slightly to allow tighter packing but add padding
+                    return Math.hypot(width, height) / 2 * 0.9 + 5;
+                }).strength(1.0).iterations(16))
+                .force('x', d3.forceX(d => d.targetX || centerW).strength(0.03)) // Slightly stronger pull to target
+                .force('y', d3.forceY(d => d.targetY || centerH).strength(0.03))
                 .on('tick', () => {
                     wordParticles.forEach(p => {
                         if (p.fx !== null && p.fx !== undefined) return;
@@ -476,7 +489,7 @@
                         }
 
                         // Boundary Constraint with bounce
-                        const padding = 40;
+                        const padding = 20;
                         const halfW = (p.width || DEFAULT_PARTICLE_WIDTH) / 2;
                         const halfH = (p.height || DEFAULT_PARTICLE_HEIGHT) / 2;
 
@@ -485,20 +498,20 @@
 
                         if (nextX < padding + halfW) {
                             p.x = padding + halfW;
-                            p.vx *= -0.3;
+                            p.vx *= -0.2;
                         } else if (nextX > containerWidth - padding - halfW) {
                             p.x = containerWidth - padding - halfW;
-                            p.vx *= -0.3;
+                            p.vx *= -0.2;
                         } else {
                             p.x = nextX;
                         }
 
                         if (nextY < padding + halfH) {
                             p.y = padding + halfH;
-                            p.vy *= -0.3;
+                            p.vy *= -0.2;
                         } else if (nextY > containerHeight - padding - halfH) {
                             p.y = containerHeight - padding - halfH;
-                            p.vy *= -0.3;
+                            p.vy *= -0.2;
                         } else {
                             p.y = nextY;
                         }
