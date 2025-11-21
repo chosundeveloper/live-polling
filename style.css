@@ -1761,6 +1761,12 @@ footer a:hover {
     isolation: isolate;
 }
 
+.concept-word-multiline {
+    white-space: normal !important;
+    text-align: center;
+    line-height: 1.2;
+}
+
 .concept-word-tetris {
     box-sizing: border-box;
     display: inline-flex;

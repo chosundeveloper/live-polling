@@ -236,6 +236,7 @@
         const MOCK_BATCH_INTERVAL = 400; // Add new words more slowly
         const MOCK_BATCH_SIZE = 2; // Small batch to prevent sudden crowding
         const MAX_INPUT_CHARS = 12;
+        const LINE_BREAK_THRESHOLD = 6;
         const TIMER_DURATION_MS = 600 * 1000; // 600 seconds (10 minutes)
         const COLOR_PALETTE = ['#5e4fa2', '#3288bd', '#66c2a5', '#abdda4', '#e6f598', '#fee08b', '#fdae61', '#f46d43', '#d53e4f', '#9e0142'];
         // Exclude yellow (#e6f598 index 4), lime green (#abdda4 index 3), light orange (#fee08b index 5), orange (#fdae61 index 6), and dark red (#9e0142 index 9)
@@ -250,24 +251,65 @@
         }
         window.selectWordColor = selectWordColor;
 
-        function splitWordIntoCharacters(wordEl) {
-            if (!wordEl || wordEl.dataset.charsSplit === '1') {
-                return wordEl?.querySelectorAll('.concept-char');
+        function getWordLines(rawText = '') {
+            const normalized = rawText.replace(/\s+/g, ' ').trim();
+            const cleanLength = normalized.replace(/\s+/g, '').length;
+            if (cleanLength <= LINE_BREAK_THRESHOLD) {
+                return { lines: normalized ? [normalized] : [], multiline: false, normalized };
             }
-            const text = wordEl.textContent;
+            let charCount = 0;
+            let breakIndex = -1;
+            for (let i = 0; i < normalized.length; i++) {
+                const char = normalized[i];
+                if (char !== ' ') {
+                    charCount++;
+                } else if (charCount > LINE_BREAK_THRESHOLD) {
+                    breakIndex = i;
+                    break;
+                }
+            }
+            if (breakIndex === -1) {
+                return { lines: normalized ? [normalized] : [], multiline: false, normalized };
+            }
+            const firstLine = normalized.slice(0, breakIndex).trim();
+            const secondLine = normalized.slice(breakIndex + 1).trim();
+            if (!firstLine || !secondLine) {
+                return { lines: normalized ? [normalized] : [], multiline: false, normalized };
+            }
+            return { lines: [firstLine, secondLine], multiline: true, normalized };
+        }
 
+        function applyWordLayout(wordEl, rawText = '') {
+            if (!wordEl) return null;
+            const { lines, multiline, normalized } = getWordLines(rawText);
+            const effectiveLines = lines.length > 0 ? lines : [''];
             wordEl.textContent = '';
             const fragment = document.createDocumentFragment();
-
-            // Keep the word as one horizontal block; no vertical splitting needed
-            const textSpan = document.createElement('span');
-            textSpan.className = 'concept-char concept-word-block';
-            textSpan.textContent = text;
-            fragment.appendChild(textSpan);
-
+            effectiveLines.forEach((line, idx) => {
+                const textSpan = document.createElement('span');
+                textSpan.className = 'concept-char concept-word-block';
+                textSpan.textContent = line;
+                fragment.appendChild(textSpan);
+                if (multiline && idx === 0) {
+                    fragment.appendChild(document.createElement('br'));
+                }
+            });
             wordEl.appendChild(fragment);
+            wordEl.classList.toggle('concept-word-multiline', multiline);
+            wordEl.dataset.originalText = normalized;
             wordEl.dataset.charsSplit = '1';
             return wordEl.querySelectorAll('.concept-char');
+        }
+
+        function splitWordIntoCharacters(wordEl) {
+            if (!wordEl) {
+                return null;
+            }
+            if (wordEl.dataset.charsSplit === '1') {
+                return wordEl.querySelectorAll('.concept-char');
+            }
+            const source = wordEl.dataset.originalText || wordEl.textContent || '';
+            return applyWordLayout(wordEl, source);
         }
 
         function animateWordEntry(wordEl) {
@@ -651,7 +693,7 @@
 
                     // Force horizontal rendering for all words
                     const isVertical = false;
-                    wordEl.textContent = text;
+                    applyWordLayout(wordEl, text);
 
                     const assignedColor = selectWordColor(1, index);
                     wordEl.style.color = assignedColor;
