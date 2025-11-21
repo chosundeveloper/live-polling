@@ -185,7 +185,22 @@
             '찬양하는 삶으로',
             '기도하는 마음',
             '헌신의 다짐을',
-            '회개하는 심령'
+            '회개하는 심령',
+            '감사함이 넘쳐요',
+            '주님 사랑해요',
+            '은혜가 가득해요',
+            '기쁨으로 찬양해요',
+            '평안함을 느껴요',
+            '사랑이 충만해요',
+            '소망을 품어요',
+            '믿음으로 살아요',
+            '간절히 기도해요',
+            '감격스러워요',
+            '회개하고 싶어요',
+            '치유를 바라요',
+            '축복을 구해요',
+            '헌신하고 싶어요',
+            '감동이 밀려와요'
         ];
         const FIXED_FONT_SIZE = 22; // Fixed font size for all words
         const MAX_PARTICLE_SPEED = 0.4; // Slower speed for smoother feel
@@ -702,22 +717,22 @@
                     const fontSize = FIXED_FONT_SIZE;
                     wordEl.style.fontSize = `${fontSize}px`;
 
-                    // Pastel fill styles for a soft, pill-like look
+                    // Pastel border styles with soft backgrounds
                     const pastelStyles = [
-                        { fill: 'rgba(255, 183, 197, 0.75)', shadow: 'rgba(255, 183, 197, 0.35)' }, // Pink
-                        { fill: 'rgba(255, 214, 165, 0.75)', shadow: 'rgba(255, 214, 165, 0.35)' }, // Peach
-                        { fill: 'rgba(250, 227, 217, 0.8)', shadow: 'rgba(250, 227, 217, 0.35)' },  // Soft coral
-                        { fill: 'rgba(224, 236, 255, 0.85)', shadow: 'rgba(224, 236, 255, 0.4)' },  // Powder blue
-                        { fill: 'rgba(210, 245, 227, 0.8)', shadow: 'rgba(210, 245, 227, 0.35)' },  // Mint
-                        { fill: 'rgba(231, 223, 255, 0.85)', shadow: 'rgba(231, 223, 255, 0.4)' },  // Lavender
-                        { fill: 'rgba(255, 233, 233, 0.75)', shadow: 'rgba(255, 233, 233, 0.35)' },  // Blush
-                        { fill: 'rgba(255, 240, 219, 0.8)', shadow: 'rgba(255, 240, 219, 0.35)' },  // Light apricot
-                        { fill: 'rgba(219, 236, 227, 0.8)', shadow: 'rgba(219, 236, 227, 0.35)' }   // Pastel teal
+                        { border: 'rgba(255, 183, 197, 0.9)', bg: 'rgba(255, 250, 251, 0.9)' }, // Pink border
+                        { border: 'rgba(255, 200, 150, 0.9)', bg: 'rgba(255, 252, 248, 0.9)' }, // Peach border
+                        { border: 'rgba(250, 200, 190, 0.9)', bg: 'rgba(255, 251, 249, 0.9)' }, // Coral border
+                        { border: 'rgba(180, 210, 255, 0.9)', bg: 'rgba(248, 251, 255, 0.9)' }, // Blue border
+                        { border: 'rgba(180, 235, 210, 0.9)', bg: 'rgba(248, 254, 251, 0.9)' }, // Mint border
+                        { border: 'rgba(210, 195, 255, 0.9)', bg: 'rgba(251, 249, 255, 0.9)' }, // Lavender border
+                        { border: 'rgba(255, 210, 210, 0.9)', bg: 'rgba(255, 251, 251, 0.9)' }, // Blush border
+                        { border: 'rgba(255, 220, 180, 0.9)', bg: 'rgba(255, 253, 249, 0.9)' }, // Apricot border
+                        { border: 'rgba(190, 225, 215, 0.9)', bg: 'rgba(249, 253, 251, 0.9)' }  // Teal border
                     ];
                     const pastel = pastelStyles[Math.floor(Math.random() * pastelStyles.length)];
-                    wordEl.style.border = 'none';
-                    wordEl.style.backgroundColor = pastel.fill;
-                    wordEl.style.boxShadow = `0 10px 24px ${pastel.shadow}`;
+                    wordEl.style.border = `2px solid ${pastel.border}`;
+                    wordEl.style.backgroundColor = pastel.bg;
+                    wordEl.style.boxShadow = `0 4px 12px rgba(0, 0, 0, 0.08)`;
 
                     // Click to delete
                     wordEl.addEventListener('click', () => {
