@@ -484,18 +484,20 @@
         }
 
         function extractWordInstances(answers) {
-            const frequency = new Map();
-            answers.forEach(answer => {
+            const instances = new Map();
+            answers.forEach((answer, idx) => {
                 if (!answer.answer_text) {
                     return;
                 }
-                // Use entire answer as a single token (preserve spaces)
+                // Each answer is a separate instance, even if text is duplicate
                 const token = answer.answer_text.trim();
                 if (token.length > 0) {
-                    frequency.set(token, (frequency.get(token) || 0) + 1);
+                    // Use unique key: answer_id + index to keep each instance separate
+                    const uniqueId = answer.id ? `${answer.id}` : `temp_${idx}_${Date.now()}`;
+                    instances.set(uniqueId, { text: token, weight: 1 });
                 }
             });
-            return frequency;
+            return instances;
         }
 
         // --- D3 Force Simulation Setup ---
@@ -603,7 +605,7 @@
             const now = performance.now();
             wordParticles.forEach(p => {
                 if (!p.bornAt) p.bornAt = now;
-                existingParticles.set(p.el.textContent, p);
+                existingParticles.set(p.uniqueId, p);
             });
 
             if (frequencyMap.size === 0 && wordParticles.length === 0) {
@@ -617,12 +619,12 @@
                 wordsLayer.innerHTML = '';
             }
 
-            const sortedWords = [...frequencyMap.entries()].sort((a, b) => b[1] - a[1]);
-            const limited = sortedWords.slice(0, MAX_WORDS).filter(([text]) => !hiddenWords.includes(text));
-            const newWordTexts = new Set(limited.map(item => item[0]));
+            const sortedWords = [...frequencyMap.entries()].sort((a, b) => b[1].weight - a[1].weight);
+            const limited = sortedWords.slice(0, MAX_WORDS).filter(([id, data]) => !hiddenWords.includes(data.text));
+            const newWordIds = new Set(limited.map(item => item[0]));
 
             wordParticles = wordParticles.filter(p => {
-                if (!newWordTexts.has(p.el.textContent)) {
+                if (!newWordIds.has(p.uniqueId)) {
                     if (now - (p.bornAt || now) < MIN_WORD_LIFETIME) {
                         return true;
                     }
@@ -639,11 +641,14 @@
             const centerH = containerHeight / 2;
             const geometry = getSpiralGeometry(containerWidth, containerHeight, limited.length);
 
-            limited.forEach(([text, weight], index) => {
+            limited.forEach(([uniqueId, data], index) => {
+                const text = data.text;
+                const weight = data.weight;
+
                 // Keep normal order: outer rings fill first, then move inward
                 const spiralIndex = index;
 
-                let particle = existingParticles.get(text);
+                let particle = existingParticles.get(uniqueId);
                 if (particle) {
                     // Existing particle - keep fixed font size, no changes
                     if (particle.phase !== 'intro') {
@@ -671,14 +676,11 @@
                         wordEl.textContent = text;
                     }
 
-                    const assignedColor = selectWordColor(weight / Math.max(...limited.map(item => item[1])), index);
+                    const assignedColor = selectWordColor(1, index);
                     wordEl.style.color = assignedColor;
 
-                    // Font size based on frequency (weight)
-                    const maxWeight = Math.max(...limited.map(item => item[1]));
-                    const minSize = 18;
-                    const maxSize = 60;
-                    const fontSize = minSize + (maxSize - minSize) * (weight / maxWeight);
+                    // Fixed font size for all words
+                    const fontSize = FIXED_FONT_SIZE;
                     wordEl.style.fontSize = `${fontSize}px`;
 
                     // Random rainbow border color
@@ -739,6 +741,7 @@
                     const rect = wordEl.getBoundingClientRect();
                     particle = {
                         el: wordEl,
+                        uniqueId: uniqueId,
                         x: centerW,
                         y: centerH,
                         prevX: centerW,
@@ -749,8 +752,8 @@
                         vy: 0,
                         width: rect.width,
                         height: rect.height,
-                        currentFontSize: FIXED_FONT_SIZE,
-                        targetFontSize: FIXED_FONT_SIZE,
+                        currentFontSize: fontSize,
+                        targetFontSize: fontSize,
                         isVertical,
                         spiralIndex,
                         phase: 'stable',
