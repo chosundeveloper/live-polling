@@ -1817,6 +1817,14 @@ footer a:hover {
     display: inline-block;
     will-change: transform, opacity;
     pointer-events: none;
+    writing-mode: horizontal-tb !important;
+    text-orientation: mixed !important;
+}
+
+.concept-word-block {
+    display: inline-block;
+    writing-mode: horizontal-tb !important;
+    text-orientation: mixed !important;
 }
 
 /* Override vertical styling - force horizontal */

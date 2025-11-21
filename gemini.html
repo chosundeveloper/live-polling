@@ -371,6 +371,17 @@
             const initialSize = FIXED_FONT_SIZE * 1.2;
             const finalSize = FIXED_FONT_SIZE;
 
+            // Force horizontal writing mode - prevent vertical text
+            wordEl.style.writingMode = 'horizontal-tb';
+            wordEl.style.textOrientation = 'mixed';
+
+            // Also apply to all child elements
+            const children = wordEl.querySelectorAll('*');
+            children.forEach(child => {
+                child.style.writingMode = 'horizontal-tb';
+                child.style.textOrientation = 'mixed';
+            });
+
             // Set initial large size and opacity with CSS
             wordEl.style.fontSize = `${initialSize}px`;
             wordEl.style.opacity = '0';
