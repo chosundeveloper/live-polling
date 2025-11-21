@@ -26,10 +26,10 @@
 
         .concept-word {
             padding: 2px 5px !important;
-            border: 1px solid rgba(255, 255, 255, 0.25) !important;
-            background-color: rgba(255, 255, 255, 0.2) !important;
-            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12) !important;
-            transition: color 0.3s ease, border-color 0.3s ease, background-color 0.3s ease;
+            border: none !important;
+            background-color: rgba(255, 255, 255, 0.3) !important;
+            box-shadow: 0 8px 18px rgba(15, 23, 42, 0.12) !important;
+            transition: color 0.3s ease, background-color 0.3s ease, box-shadow 0.3s ease;
             /* Smooth color transitions */
         }
 
@@ -702,21 +702,22 @@
                     const fontSize = FIXED_FONT_SIZE;
                     wordEl.style.fontSize = `${fontSize}px`;
 
-                    // Pastel border/background pairing for softer look
+                    // Pastel fill styles for a soft, pill-like look
                     const pastelStyles = [
-                        { border: 'rgba(255, 183, 197, 0.9)', background: 'rgba(255, 183, 197, 0.25)' }, // Pink
-                        { border: 'rgba(255, 214, 165, 0.9)', background: 'rgba(255, 214, 165, 0.25)' }, // Peach
-                        { border: 'rgba(250, 227, 217, 0.9)', background: 'rgba(250, 227, 217, 0.25)' }, // Soft coral
-                        { border: 'rgba(224, 236, 255, 0.9)', background: 'rgba(224, 236, 255, 0.25)' }, // Powder blue
-                        { border: 'rgba(210, 245, 227, 0.9)', background: 'rgba(210, 245, 227, 0.25)' }, // Mint
-                        { border: 'rgba(231, 223, 255, 0.9)', background: 'rgba(231, 223, 255, 0.25)' }, // Lavender
-                        { border: 'rgba(255, 233, 233, 0.9)', background: 'rgba(255, 233, 233, 0.25)' }, // Blush
-                        { border: 'rgba(255, 240, 219, 0.9)', background: 'rgba(255, 240, 219, 0.25)' }, // Light apricot
-                        { border: 'rgba(219, 236, 227, 0.9)', background: 'rgba(219, 236, 227, 0.25)' }  // Pastel teal
+                        { fill: 'rgba(255, 183, 197, 0.75)', shadow: 'rgba(255, 183, 197, 0.35)' }, // Pink
+                        { fill: 'rgba(255, 214, 165, 0.75)', shadow: 'rgba(255, 214, 165, 0.35)' }, // Peach
+                        { fill: 'rgba(250, 227, 217, 0.8)', shadow: 'rgba(250, 227, 217, 0.35)' },  // Soft coral
+                        { fill: 'rgba(224, 236, 255, 0.85)', shadow: 'rgba(224, 236, 255, 0.4)' },  // Powder blue
+                        { fill: 'rgba(210, 245, 227, 0.8)', shadow: 'rgba(210, 245, 227, 0.35)' },  // Mint
+                        { fill: 'rgba(231, 223, 255, 0.85)', shadow: 'rgba(231, 223, 255, 0.4)' },  // Lavender
+                        { fill: 'rgba(255, 233, 233, 0.75)', shadow: 'rgba(255, 233, 233, 0.35)' },  // Blush
+                        { fill: 'rgba(255, 240, 219, 0.8)', shadow: 'rgba(255, 240, 219, 0.35)' },  // Light apricot
+                        { fill: 'rgba(219, 236, 227, 0.8)', shadow: 'rgba(219, 236, 227, 0.35)' }   // Pastel teal
                     ];
                     const pastel = pastelStyles[Math.floor(Math.random() * pastelStyles.length)];
-                    wordEl.style.borderColor = pastel.border;
-                    wordEl.style.backgroundColor = pastel.background;
+                    wordEl.style.border = 'none';
+                    wordEl.style.backgroundColor = pastel.fill;
+                    wordEl.style.boxShadow = `0 10px 24px ${pastel.shadow}`;
 
                     // Click to delete
                     wordEl.addEventListener('click', () => {
