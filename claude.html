@@ -134,16 +134,16 @@
         ];
 
         const FIXED_FONT_SIZE = 25;
-        const MAX_WORDS = 60; // Reduced to prevent overcrowding
+        const MAX_WORDS = 40; // Much fewer words to prevent any overlap
         const TIMER_DURATION_MS = 600 * 1000; // 10 minutes
-        const SPAWN_INTERVAL = 150; // Slower spawn rate
+        const SPAWN_INTERVAL = 200; // Much slower spawn rate
         const MOVEMENT_SPEED = 0.5; // Gentle movement speed
-        const MIN_DISTANCE = 200; // Increased minimum distance between words
-        const SPREAD_RADIUS_INCREMENT = 100; // Increased spread distance
+        const MIN_DISTANCE = 250; // Much larger minimum distance between words
+        const SPREAD_RADIUS_INCREMENT = 120; // Even more spread distance
 
         // Animation constants
         const EASE_DURATION = 2000; // 2 seconds to ease into position
-        const DRIFT_AMOUNT = 0.15; // Reduced drift to minimize overlap
+        const DRIFT_AMOUNT = 0; // No drift to prevent any overlap
 
         function getCloudBounds() {
             const rect = wordsLayer.getBoundingClientRect();
@@ -208,8 +208,6 @@
             if (!wordParticles.length) return;
 
             const { width, height } = getCloudBounds();
-            const centerX = width / 2;
-            const centerY = height / 2;
 
             wordParticles.forEach(particle => {
                 if (!particle.spawnTime) particle.spawnTime = timestamp;
@@ -223,19 +221,17 @@
                 const currentX = particle.originX + (particle.targetX - particle.originX) * easeProgress;
                 const currentY = particle.originY + (particle.targetY - particle.originY) * easeProgress;
 
-                // Add gentle drift after settling
+                // No drift - stay exactly at target position once settled
                 if (progress >= 1) {
-                    const driftX = Math.sin(timestamp * 0.0005 + particle.driftPhase) * DRIFT_AMOUNT;
-                    const driftY = Math.cos(timestamp * 0.0007 + particle.driftPhase) * DRIFT_AMOUNT;
-                    particle.x = currentX + driftX;
-                    particle.y = currentY + driftY;
+                    particle.x = particle.targetX;
+                    particle.y = particle.targetY;
                 } else {
                     particle.x = currentX;
                     particle.y = currentY;
                 }
 
                 // Keep within bounds
-                const padding = 50;
+                const padding = 100;
                 particle.x = Math.max(padding, Math.min(width - padding, particle.x));
                 particle.y = Math.max(padding, Math.min(height - padding, particle.y));
 
