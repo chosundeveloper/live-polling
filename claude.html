@@ -213,6 +213,52 @@
             return { x, y };
         }
 
+        function checkCollision(p1, p2) {
+            const padding = 40; // Minimum gap between words
+            const p1HalfW = (p1.width || 180) / 2 + padding;
+            const p1HalfH = (p1.height || 60) / 2 + padding;
+            const p2HalfW = (p2.width || 180) / 2 + padding;
+            const p2HalfH = (p2.height || 60) / 2 + padding;
+
+            const overlapX = Math.abs(p1.x - p2.x) < (p1HalfW + p2HalfW);
+            const overlapY = Math.abs(p1.y - p2.y) < (p1HalfH + p2HalfH);
+
+            return overlapX && overlapY;
+        }
+
+        function resolveCollisions() {
+            // Separate overlapping particles
+            for (let i = 0; i < wordParticles.length; i++) {
+                for (let j = i + 1; j < wordParticles.length; j++) {
+                    const p1 = wordParticles[i];
+                    const p2 = wordParticles[j];
+
+                    if (checkCollision(p1, p2)) {
+                        // Calculate overlap and push apart
+                        const dx = p2.x - p1.x;
+                        const dy = p2.y - p1.y;
+                        const dist = Math.sqrt(dx * dx + dy * dy);
+
+                        if (dist < 0.1) continue; // Skip if exactly on top
+
+                        const minDist = (p1.width || 180) / 2 + (p2.width || 180) / 2 + 60;
+                        const overlap = minDist - dist;
+
+                        if (overlap > 0) {
+                            const nx = dx / dist;
+                            const ny = dy / dist;
+                            const separation = overlap / 2;
+
+                            p1.x -= nx * separation;
+                            p1.y -= ny * separation;
+                            p2.x += nx * separation;
+                            p2.y += ny * separation;
+                        }
+                    }
+                }
+            }
+        }
+
         function updateParticlePhysics(timestamp) {
             if (!wordParticles.length) return;
 
@@ -243,8 +289,13 @@
                 const padding = 100;
                 particle.x = Math.max(padding, Math.min(width - padding, particle.x));
                 particle.y = Math.max(padding, Math.min(height - padding, particle.y));
+            });
 
-                // Update DOM
+            // Resolve any collisions
+            resolveCollisions();
+
+            // Update DOM after collision resolution
+            wordParticles.forEach(particle => {
                 particle.el.style.left = `${particle.x}px`;
                 particle.el.style.top = `${particle.y}px`;
             });
