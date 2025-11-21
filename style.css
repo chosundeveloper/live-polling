@@ -1763,8 +1763,15 @@ footer a:hover {
 
 .concept-word-multiline {
     white-space: normal !important;
-    text-align: center;
-    line-height: 1.2;
+    text-align: center !important;
+    line-height: 1.2 !important;
+    display: inline-block !important;
+}
+
+.concept-word-multiline br {
+    display: block !important;
+    content: "" !important;
+    margin: 0 !important;
 }
 
 .concept-word-tetris {
