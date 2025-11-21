@@ -1430,12 +1430,18 @@ footer a:hover {
 
 /* No extra background on decorations for display view */
 
+.concept-decoration.heart {
+    font-size: 24px;
+    animation: floatHeart 8s ease-in-out infinite;
+    opacity: 0.85;
+    filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.2));
+}
+
 .concept-decoration.star {
-    width: 14px;
-    height: 14px;
-    clip-path: polygon(50% 0%, 61% 35%, 98% 35%, 68% 57%, 79% 91%, 50% 70%, 21% 91%, 32% 57%, 2% 35%, 39% 35%);
-    background: white;
+    font-size: 20px;
     animation: floatStar 12s ease-in-out infinite;
+    opacity: 0.9;
+    filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.2));
 }
 
 .concept-decoration.circle {
@@ -1490,6 +1496,26 @@ footer a:hover {
     100% {
         transform: translateY(-100vh) translateX(-30px) scale(0.8);
         opacity: 0;
+    }
+}
+
+@keyframes floatHeart {
+
+    0%,
+    100% {
+        transform: translate(0, 0) rotate(0deg) scale(1);
+    }
+
+    25% {
+        transform: translate(-20px, -25px) rotate(-10deg) scale(1.1);
+    }
+
+    50% {
+        transform: translate(10px, -40px) rotate(5deg) scale(0.95);
+    }
+
+    75% {
+        transform: translate(15px, -20px) rotate(-5deg) scale(1.05);
     }
 }
 
