@@ -485,6 +485,7 @@
 
         function extractWordInstances(answers) {
             const instances = new Map();
+            console.log(`📊 Processing ${answers.length} total answers`);
             answers.forEach((answer, idx) => {
                 if (!answer.answer_text) {
                     return;
@@ -497,6 +498,7 @@
                     instances.set(uniqueId, { text: token, weight: 1 });
                 }
             });
+            console.log(`📊 Created ${instances.size} word instances from ${answers.length} answers`);
             return instances;
         }
 
@@ -620,7 +622,9 @@
             }
 
             const sortedWords = [...frequencyMap.entries()].sort((a, b) => b[1].weight - a[1].weight);
+            console.log(`📊 Total unique instances: ${sortedWords.length}`);
             const limited = sortedWords.slice(0, MAX_WORDS).filter(([id, data]) => !hiddenWords.includes(data.text));
+            console.log(`📊 After MAX_WORDS limit (${MAX_WORDS}): ${limited.length}`);
             const newWordIds = new Set(limited.map(item => item[0]));
 
             wordParticles = wordParticles.filter(p => {
