@@ -32,27 +32,7 @@
             /* Smooth color transitions */
         }
 
-        /* Safari-specific fix for vertical text */
-        .concept-word-vertical {
-            writing-mode: vertical-rl !important;
-            text-orientation: upright !important;
-            letter-spacing: 0.05em !important;
-            word-spacing: 0.1em !important;
-            line-height: 1.25 !important;
-            white-space: nowrap !important;
-            /* Safari needs explicit dimensions */
-            min-width: auto !important;
-            width: auto !important;
-            height: auto !important;
-            display: inline-block !important;
-            /* Force proper spacing between characters */
-            -webkit-text-size-adjust: 100% !important;
-        }
-
-        .concept-word-vertical .concept-char {
-            display: block !important;
-            margin: 1px 0 !important;
-        }
+        /* Removed vertical word styling: all words stay horizontal */
     </style>
 </head>
 
@@ -273,24 +253,15 @@
                 return wordEl?.querySelectorAll('.concept-char');
             }
             const text = wordEl.textContent;
-            const isVertical = wordEl.classList.contains('concept-word-vertical');
 
             wordEl.textContent = '';
             const fragment = document.createDocumentFragment();
 
-            if (isVertical) {
-                // For vertical text: keep entire text as one block with spaces
-                const textSpan = document.createElement('span');
-                textSpan.className = 'concept-char concept-word-block';
-                textSpan.textContent = text;
-                fragment.appendChild(textSpan);
-            } else {
-                // For horizontal text: keep entire text as one block, don't split
-                const textSpan = document.createElement('span');
-                textSpan.className = 'concept-char concept-word-block';
-                textSpan.textContent = text;
-                fragment.appendChild(textSpan);
-            }
+            // Keep the word as one horizontal block; no vertical splitting needed
+            const textSpan = document.createElement('span');
+            textSpan.className = 'concept-char concept-word-block';
+            textSpan.textContent = text;
+            fragment.appendChild(textSpan);
 
             wordEl.appendChild(fragment);
             wordEl.dataset.charsSplit = '1';
