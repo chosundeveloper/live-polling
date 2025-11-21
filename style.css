@@ -1720,7 +1720,7 @@ footer a:hover {
     backdrop-filter: blur(10px);
     border: 1px solid rgba(255, 255, 255, 0.3);
     border-radius: 999px;
-    padding: 3px 2px;
+    padding: 6px 16px;
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2), inset 0 1px 2px rgba(255, 255, 255, 0.2);
     isolation: isolate;
 }
@@ -1789,7 +1789,7 @@ footer a:hover {
 }
 
 .concept-word-vertical {
-    padding: 3px 4px;
+    padding: 16px 6px;
     writing-mode: vertical-rl;
     text-orientation: upright;
     white-space: pre;
