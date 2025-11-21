@@ -141,12 +141,30 @@
             '헌신의 다짐을',
             '회개하는 심령'
         ];
-        const MAX_WORDS = 500;
         const FIXED_FONT_SIZE = 25; // Fixed font size for all words
         const MAX_PARTICLE_SPEED = 0.8;
         const MIN_SEPARATION = 500;
         const DEFAULT_PARTICLE_WIDTH = 200;
         const DEFAULT_PARTICLE_HEIGHT = 60;
+
+        // Calculate max words based on screen space
+        function calculateMaxWords() {
+            const { width: containerWidth, height: containerHeight } = getCloudBounds();
+            const avgWordWidth = 150; // Average word bubble width
+            const avgWordHeight = 50; // Average word bubble height
+            const padding = 10; // Space between words
+
+            const wordsPerRow = Math.floor(containerWidth / (avgWordWidth + padding));
+            const wordsPerColumn = Math.floor(containerHeight / (avgWordHeight + padding));
+            const maxCapacity = wordsPerRow * wordsPerColumn;
+
+            // Use 80% of capacity to avoid overcrowding
+            const MAX_WORDS = Math.floor(maxCapacity * 0.8);
+            console.log(`📐 Screen capacity: ${maxCapacity}, Using: ${MAX_WORDS} max words`);
+            return MAX_WORDS;
+        }
+
+        let MAX_WORDS = 500; // Will be recalculated dynamically
         const INTRO_DURATION_BASE = 180000; // extremely slow duration (3 minutes)
         const INTRO_DURATION_VARIANCE = 20000;
         const INTRO_BLOOM_JITTER = 0; // No bloom
@@ -623,6 +641,10 @@
 
             const sortedWords = [...frequencyMap.entries()].sort((a, b) => b[1].weight - a[1].weight);
             console.log(`📊 Total unique instances: ${sortedWords.length}`);
+
+            // Dynamically calculate max words based on screen space
+            MAX_WORDS = calculateMaxWords();
+
             const limited = sortedWords.slice(0, MAX_WORDS).filter(([id, data]) => !hiddenWords.includes(data.text));
             console.log(`📊 After MAX_WORDS limit (${MAX_WORDS}): ${limited.length}`);
             const newWordIds = new Set(limited.map(item => item[0]));
