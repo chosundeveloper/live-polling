@@ -674,8 +674,12 @@
                     const assignedColor = selectWordColor(weight / Math.max(...limited.map(item => item[1])), index);
                     wordEl.style.color = assignedColor;
 
-                    // Use fixed font size for all words
-                    wordEl.style.fontSize = `${FIXED_FONT_SIZE}px`;
+                    // Font size based on frequency (weight)
+                    const maxWeight = Math.max(...limited.map(item => item[1]));
+                    const minSize = 18;
+                    const maxSize = 60;
+                    const fontSize = minSize + (maxSize - minSize) * (weight / maxWeight);
+                    wordEl.style.fontSize = `${fontSize}px`;
 
                     // Random rainbow border color
                     const rainbowColors = [
