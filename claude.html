@@ -134,16 +134,16 @@
         ];
 
         const FIXED_FONT_SIZE = 25;
-        const MAX_WORDS = 80;
+        const MAX_WORDS = 60; // Reduced to prevent overcrowding
         const TIMER_DURATION_MS = 600 * 1000; // 10 minutes
-        const SPAWN_INTERVAL = 100; // Spawn new words every 100ms for smooth filling
+        const SPAWN_INTERVAL = 150; // Slower spawn rate
         const MOVEMENT_SPEED = 0.5; // Gentle movement speed
-        const MIN_DISTANCE = 150; // Minimum distance between words
-        const SPREAD_RADIUS_INCREMENT = 80; // How far each layer spreads from center
+        const MIN_DISTANCE = 200; // Increased minimum distance between words
+        const SPREAD_RADIUS_INCREMENT = 100; // Increased spread distance
 
         // Animation constants
         const EASE_DURATION = 2000; // 2 seconds to ease into position
-        const DRIFT_AMOUNT = 0.3; // Gentle drift after settling
+        const DRIFT_AMOUNT = 0.15; // Reduced drift to minimize overlap
 
         function getCloudBounds() {
             const rect = wordsLayer.getBoundingClientRect();
@@ -159,19 +159,22 @@
         }
 
         function findAvailablePosition(existingParticles, centerX, centerY, attempt = 0) {
-            const maxAttempts = 100;
+            const maxAttempts = 200; // More attempts to find good position
             if (attempt >= maxAttempts) {
-                // Fallback: random position
+                // Fallback: random position far from center
                 const { width, height } = getCloudBounds();
+                const angle = Math.random() * Math.PI * 2;
+                const radius = Math.min(width, height) * 0.35;
                 return {
-                    x: centerX + (Math.random() - 0.5) * width * 0.8,
-                    y: centerY + (Math.random() - 0.5) * height * 0.8
+                    x: centerX + Math.cos(angle) * radius,
+                    y: centerY + Math.sin(angle) * radius
                 };
             }
 
-            // Spiral outward from center
-            const angle = attempt * 0.5; // Golden angle-like distribution
-            const radius = SPREAD_RADIUS_INCREMENT * Math.sqrt(attempt);
+            // Spiral outward from center with golden angle
+            const GOLDEN_ANGLE = Math.PI * (3 - Math.sqrt(5));
+            const angle = attempt * GOLDEN_ANGLE;
+            const radius = SPREAD_RADIUS_INCREMENT * Math.sqrt(attempt + 1);
             const x = centerX + Math.cos(angle) * radius;
             const y = centerY + Math.sin(angle) * radius;
 
@@ -188,6 +191,13 @@
             }
 
             if (tooClose) {
+                return findAvailablePosition(existingParticles, centerX, centerY, attempt + 1);
+            }
+
+            // Keep within bounds
+            const { width, height } = getCloudBounds();
+            const padding = 80;
+            if (x < padding || x > width - padding || y < padding || y > height - padding) {
                 return findAvailablePosition(existingParticles, centerX, centerY, attempt + 1);
             }
 
