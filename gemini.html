@@ -708,6 +708,11 @@
                         }
                     }
                     particle.el.style.color = particle.color;
+
+                    // Force horizontal writing mode - prevent vertical text
+                    particle.el.style.writingMode = 'horizontal-tb';
+                    particle.el.style.textOrientation = 'mixed';
+                    particle.el.classList.remove('concept-word-vertical');
                 } else {
                     const wordEl = document.createElement('span');
                     wordEl.className = 'concept-word';
@@ -739,6 +744,10 @@
                     wordEl.style.border = 'none';
                     wordEl.style.backgroundColor = pastelColor;
                     wordEl.style.boxShadow = `0 4px 12px rgba(0, 0, 0, 0.08)`;
+
+                    // Force horizontal writing mode - prevent vertical text
+                    wordEl.style.writingMode = 'horizontal-tb';
+                    wordEl.style.textOrientation = 'mixed';
 
                     // Click to delete
                     wordEl.addEventListener('click', () => {
