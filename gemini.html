@@ -732,21 +732,21 @@
                     const fontSize = FIXED_FONT_SIZE;
                     wordEl.style.fontSize = `${fontSize}px`;
 
-                    // Pastel border styles with soft backgrounds
+                    // Pastel background colors (solid pastel fill, no border)
                     const pastelStyles = [
-                        { border: 'rgba(255, 183, 197, 0.9)', bg: 'rgba(255, 250, 251, 0.9)' }, // Pink border
-                        { border: 'rgba(255, 200, 150, 0.9)', bg: 'rgba(255, 252, 248, 0.9)' }, // Peach border
-                        { border: 'rgba(250, 200, 190, 0.9)', bg: 'rgba(255, 251, 249, 0.9)' }, // Coral border
-                        { border: 'rgba(180, 210, 255, 0.9)', bg: 'rgba(248, 251, 255, 0.9)' }, // Blue border
-                        { border: 'rgba(180, 235, 210, 0.9)', bg: 'rgba(248, 254, 251, 0.9)' }, // Mint border
-                        { border: 'rgba(210, 195, 255, 0.9)', bg: 'rgba(251, 249, 255, 0.9)' }, // Lavender border
-                        { border: 'rgba(255, 210, 210, 0.9)', bg: 'rgba(255, 251, 251, 0.9)' }, // Blush border
-                        { border: 'rgba(255, 220, 180, 0.9)', bg: 'rgba(255, 253, 249, 0.9)' }, // Apricot border
-                        { border: 'rgba(190, 225, 215, 0.9)', bg: 'rgba(249, 253, 251, 0.9)' }  // Teal border
+                        'rgba(255, 183, 197, 0.85)', // Pink
+                        'rgba(255, 214, 165, 0.85)', // Peach
+                        'rgba(250, 227, 217, 0.9)',  // Soft coral
+                        'rgba(224, 236, 255, 0.9)',  // Powder blue
+                        'rgba(210, 245, 227, 0.85)', // Mint
+                        'rgba(231, 223, 255, 0.9)',  // Lavender
+                        'rgba(255, 233, 233, 0.85)', // Blush
+                        'rgba(255, 240, 219, 0.85)', // Light apricot
+                        'rgba(219, 236, 227, 0.85)'  // Pastel teal
                     ];
-                    const pastel = pastelStyles[Math.floor(Math.random() * pastelStyles.length)];
-                    wordEl.style.border = `2px solid ${pastel.border}`;
-                    wordEl.style.backgroundColor = pastel.bg;
+                    const pastelColor = pastelStyles[Math.floor(Math.random() * pastelStyles.length)];
+                    wordEl.style.border = 'none';
+                    wordEl.style.backgroundColor = pastelColor;
                     wordEl.style.boxShadow = `0 4px 12px rgba(0, 0, 0, 0.08)`;
 
                     // Click to delete
