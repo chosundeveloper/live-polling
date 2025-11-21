@@ -1,0 +1,672 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Live Polling - Claude</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="supabase-config.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/motion@11.11.13/dist/motion.min.js"></script>
+</head>
+
+<body class="concept-body concept-display">
+    <div class="concept-wrapper">
+        <header class="concept-top">
+            <div class="concept-title-nav">
+                <div class="concept-question-display">
+                    <h2 id="conceptQuestion">질문 로딩 중...</h2>
+                </div>
+            </div>
+        </header>
+
+        <main class="concept-cloud">
+            <div class="concept-decorations">
+                <div class="concept-decoration bubble" style="top: 70%; left: 25%; animation-delay: 1s;"></div>
+                <div class="concept-decoration bubble" style="top: 60%; left: 90%; animation-delay: 2.5s;"></div>
+                <div class="concept-decoration bubble" style="top: 80%; left: 40%; animation-delay: 1.8s;"></div>
+                <div class="concept-decoration bubble" style="top: 75%; left: 5%; animation-delay: 0.5s;"></div>
+                <div class="concept-decoration bubble" style="top: 85%; left: 60%; animation-delay: 3.2s;"></div>
+                <div class="concept-decoration bubble" style="top: 65%; left: 75%; animation-delay: 2.0s;"></div>
+                <div class="concept-decoration bubble" style="top: 90%; left: 15%; animation-delay: 0.8s;"></div>
+                <div class="concept-decoration bubble" style="top: 55%; left: 50%; animation-delay: 4.0s;"></div>
+                <div class="concept-decoration bubble" style="top: 95%; left: 85%; animation-delay: 1.5s;"></div>
+                <div class="concept-decoration bubble" style="top: 70%; left: 95%; animation-delay: 3.5s;"></div>
+                <div class="concept-decoration bubble" style="top: 80%; left: 30%; animation-delay: 2.8s;"></div>
+                <div class="concept-decoration bubble" style="top: 88%; left: 70%; animation-delay: 0.3s;"></div>
+                <div class="concept-decoration bubble" style="top: 75%; left: 10%; animation-delay: 4.5s;"></div>
+                <div class="concept-decoration bubble" style="top: 92%; left: 55%; animation-delay: 1.2s;"></div>
+                <div class="concept-decoration bubble" style="top: 68%; left: 45%; animation-delay: 3.8s;"></div>
+            </div>
+            <div class="concept-words" id="conceptWords"></div>
+            <div class="concept-overlay concept-overlay-bottom-left">
+                <div class="concept-qr-card">
+                    <div class="concept-qr-box" id="conceptQrCode"></div>
+                </div>
+            </div>
+            <div class="concept-overlay concept-overlay-bottom-right">
+                <div class="concept-stats-card">
+                    <div>
+                        <p class="concept-label">누적 답변</p>
+                        <p class="concept-value" id="conceptTotal">0</p>
+                    </div>
+                    <div class="concept-timer-row">
+                        <div>
+                            <p class="concept-label">타이머</p>
+                            <p class="concept-value" id="conceptUpdated">10:00</p>
+                        </div>
+                        <button class="concept-action concept-action-ghost" id="toggleMock">모의</button>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        // Questions loaded from supabase-config.js
+        const PUBLIC_URL = 'https://chosundeveloper.github.io/live-polling';
+
+        // Timer state
+        let questionStartTime = null;
+
+        // --- DOM Elements ---
+        const conceptQuestion = document.getElementById('conceptQuestion');
+        const wordsLayer = document.getElementById('conceptWords');
+        const conceptTotal = document.getElementById('conceptTotal');
+        const conceptUpdated = document.getElementById('conceptUpdated');
+        const qrCodeContainer = document.getElementById('conceptQrCode');
+        const toggleMockBtn = document.getElementById('toggleMock');
+
+        // --- State ---
+        const params = new URLSearchParams(window.location.search);
+        let currentQuestionIndex = 0;
+        let isMockMode = params.get('mock') === '1';
+        let realtimeChannel = null;
+        let simulationInterval = null;
+        let mockAnswers = [];
+        let wordParticles = [];
+        let hiddenWords = [];
+        let qrCodeInstance = null;
+        let animationFrameId = null;
+        let timerInterval = null;
+        let timerDeadline = null;
+        let sessionStartTime = null;
+
+        // --- Constants ---
+        const TEXT_ANSWERS = [
+            '감사한 마음으로',
+            '기쁨이 넘치는',
+            '평안과 은혜가',
+            '회개와 회복의',
+            '찬양과 경배를',
+            '사랑의 충만함',
+            '소망과 믿음으로',
+            '겸손한 순종의',
+            '감격스러운 감사',
+            '간절한 기도제목',
+            '뜨거운 헌신으로',
+            '잔잔한 평온함',
+            '새로운 은혜를',
+            '깊은 갈망으로',
+            '진실한 고백을',
+            '축복의 시간들',
+            '치유와 회복을',
+            '새 힘을 얻음',
+            '감동의 순간들',
+            '충만한 기쁨과',
+            '따뜻한 사랑으로',
+            '간구하는 마음',
+            '경배와 찬양을',
+            '믿음의 고백으로',
+            '소망을 품고서',
+            '은혜로운 주님',
+            '감사와 기쁨의',
+            '사랑과 평안이',
+            '믿음으로 나아감',
+            '소망 가운데서',
+            '주의 은혜 안에',
+            '찬양하는 삶으로',
+            '기도하는 마음',
+            '헌신의 다짐을',
+            '회개하는 심령'
+        ];
+
+        const FIXED_FONT_SIZE = 25;
+        const MAX_WORDS = 80;
+        const TIMER_DURATION_MS = 600 * 1000; // 10 minutes
+        const SPAWN_INTERVAL = 100; // Spawn new words every 100ms for smooth filling
+        const MOVEMENT_SPEED = 0.5; // Gentle movement speed
+        const MIN_DISTANCE = 150; // Minimum distance between words
+        const SPREAD_RADIUS_INCREMENT = 80; // How far each layer spreads from center
+
+        // Animation constants
+        const EASE_DURATION = 2000; // 2 seconds to ease into position
+        const DRIFT_AMOUNT = 0.3; // Gentle drift after settling
+
+        function getCloudBounds() {
+            const rect = wordsLayer.getBoundingClientRect();
+            let width = rect.width;
+            let height = rect.height;
+            if (width > 10 && height > 10) {
+                return { width, height };
+            }
+            const parentRect = wordsLayer.parentElement?.getBoundingClientRect();
+            width = parentRect?.width || window.innerWidth;
+            height = parentRect?.height || window.innerHeight;
+            return { width, height };
+        }
+
+        function findAvailablePosition(existingParticles, centerX, centerY, attempt = 0) {
+            const maxAttempts = 100;
+            if (attempt >= maxAttempts) {
+                // Fallback: random position
+                const { width, height } = getCloudBounds();
+                return {
+                    x: centerX + (Math.random() - 0.5) * width * 0.8,
+                    y: centerY + (Math.random() - 0.5) * height * 0.8
+                };
+            }
+
+            // Spiral outward from center
+            const angle = attempt * 0.5; // Golden angle-like distribution
+            const radius = SPREAD_RADIUS_INCREMENT * Math.sqrt(attempt);
+            const x = centerX + Math.cos(angle) * radius;
+            const y = centerY + Math.sin(angle) * radius;
+
+            // Check distance from all existing particles
+            let tooClose = false;
+            for (const p of existingParticles) {
+                const dx = x - p.targetX;
+                const dy = y - p.targetY;
+                const dist = Math.sqrt(dx * dx + dy * dy);
+                if (dist < MIN_DISTANCE) {
+                    tooClose = true;
+                    break;
+                }
+            }
+
+            if (tooClose) {
+                return findAvailablePosition(existingParticles, centerX, centerY, attempt + 1);
+            }
+
+            return { x, y };
+        }
+
+        function updateParticlePhysics(timestamp) {
+            if (!wordParticles.length) return;
+
+            const { width, height } = getCloudBounds();
+            const centerX = width / 2;
+            const centerY = height / 2;
+
+            wordParticles.forEach(particle => {
+                if (!particle.spawnTime) particle.spawnTime = timestamp;
+                const elapsed = timestamp - particle.spawnTime;
+
+                // Easing function (ease-out cubic)
+                const progress = Math.min(1, elapsed / EASE_DURATION);
+                const easeProgress = 1 - Math.pow(1 - progress, 3);
+
+                // Move from center to target position
+                const currentX = particle.originX + (particle.targetX - particle.originX) * easeProgress;
+                const currentY = particle.originY + (particle.targetY - particle.originY) * easeProgress;
+
+                // Add gentle drift after settling
+                if (progress >= 1) {
+                    const driftX = Math.sin(timestamp * 0.0005 + particle.driftPhase) * DRIFT_AMOUNT;
+                    const driftY = Math.cos(timestamp * 0.0007 + particle.driftPhase) * DRIFT_AMOUNT;
+                    particle.x = currentX + driftX;
+                    particle.y = currentY + driftY;
+                } else {
+                    particle.x = currentX;
+                    particle.y = currentY;
+                }
+
+                // Keep within bounds
+                const padding = 50;
+                particle.x = Math.max(padding, Math.min(width - padding, particle.x));
+                particle.y = Math.max(padding, Math.min(height - padding, particle.y));
+
+                // Update DOM
+                particle.el.style.left = `${particle.x}px`;
+                particle.el.style.top = `${particle.y}px`;
+            });
+        }
+
+        function animationLoop(timestamp) {
+            updateParticlePhysics(timestamp);
+            animationFrameId = requestAnimationFrame(animationLoop);
+        }
+
+        function splitWordIntoCharacters(wordEl) {
+            if (!wordEl || wordEl.dataset.charsSplit === '1') {
+                return wordEl?.querySelectorAll('.concept-char');
+            }
+            const text = wordEl.textContent;
+            const isVertical = wordEl.classList.contains('concept-word-vertical');
+
+            wordEl.textContent = '';
+            const fragment = document.createDocumentFragment();
+
+            const textSpan = document.createElement('span');
+            textSpan.className = 'concept-char concept-word-block';
+            textSpan.textContent = text;
+            fragment.appendChild(textSpan);
+
+            wordEl.appendChild(fragment);
+            wordEl.dataset.charsSplit = '1';
+            return wordEl.querySelectorAll('.concept-char');
+        }
+
+        function animateWordEntry(wordEl) {
+            if (!wordEl) return;
+
+            const initialSize = FIXED_FONT_SIZE * 1.3;
+            const finalSize = FIXED_FONT_SIZE;
+
+            wordEl.style.fontSize = `${initialSize}px`;
+            wordEl.style.opacity = '0';
+            wordEl.style.transition = 'none';
+            wordEl.offsetHeight;
+
+            requestAnimationFrame(() => {
+                wordEl.style.transition = 'font-size 1.2s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 1.2s ease-out';
+                wordEl.style.fontSize = `${finalSize}px`;
+                wordEl.style.opacity = '1';
+            });
+
+            if (window.motion) {
+                const chars = splitWordIntoCharacters(wordEl);
+                if (chars && chars.length > 0) {
+                    const isVertical = wordEl.classList.contains('concept-word-vertical');
+                    const { animate, stagger, spring } = window.motion;
+                    const letterSpring = spring({ stiffness: 85, damping: 26, mass: 1.0 });
+
+                    animate(chars, {
+                        opacity: [0, 1],
+                        y: [isVertical ? 18 : 32, 0],
+                        x: [isVertical ? -12 : 0, 0],
+                        rotateX: [isVertical ? 0 : -24, 0],
+                        skewY: [isVertical ? -6 : 0, 0]
+                    }, {
+                        easing: letterSpring,
+                        duration: 1.35,
+                        delay: stagger(0.018)
+                    });
+                }
+            }
+        }
+
+        function stopTimer() {
+            if (timerInterval) {
+                clearInterval(timerInterval);
+                timerInterval = null;
+            }
+        }
+
+        function updateTimerDisplay() {
+            if (!timerDeadline) {
+                conceptUpdated.textContent = '10:00';
+                return;
+            }
+            const remaining = Math.max(0, timerDeadline - Date.now());
+            const minutes = Math.floor(remaining / 60000);
+            const seconds = String(Math.floor((remaining % 60000) / 1000)).padStart(2, '0');
+            conceptUpdated.textContent = `${minutes}:${seconds}`;
+            if (remaining <= 0) {
+                stopTimer();
+            }
+        }
+
+        function startTimer() {
+            stopTimer();
+            timerDeadline = Date.now() + TIMER_DURATION_MS;
+            updateTimerDisplay();
+            timerInterval = setInterval(updateTimerDisplay, 1000);
+        }
+
+        function updateQuestionMeta(question) {
+            conceptQuestion.textContent = question.question;
+            document.documentElement.style.setProperty('--concept-accent', question.color || '#7c3aed');
+
+            questionStartTime = Date.now();
+            timerDeadline = questionStartTime + TIMER_DURATION_MS;
+
+            const urlString = `${PUBLIC_URL}/answer.html?q=${question.id}&startTime=${questionStartTime}`;
+
+            if (qrCodeContainer) {
+                qrCodeContainer.innerHTML = '';
+            }
+
+            if (qrCodeInstance) {
+                qrCodeInstance.clear();
+                qrCodeInstance.makeCode(urlString);
+            } else {
+                qrCodeInstance = new QRCode(qrCodeContainer, {
+                    text: urlString,
+                    width: 192,
+                    height: 192,
+                    colorDark: "#0f172a",
+                    colorLight: "#ffffff",
+                    correctLevel: QRCode.CorrectLevel.H
+                });
+            }
+        }
+
+        function navigateToQuestion(index, options = {}) {
+            const { force = false } = options;
+            const newIndex = 0;
+            if (!force && newIndex === currentQuestionIndex && wordParticles.length > 0) {
+                return;
+            }
+
+            currentQuestionIndex = newIndex;
+            const question = QUESTIONS[currentQuestionIndex];
+
+            updateQuestionMeta(question);
+
+            resetDisplay();
+            if (isMockMode) startRealtimeSimulation();
+            else startRealtimeSubscription();
+        }
+
+        function extractWordInstances(answers) {
+            const instances = new Map();
+            answers.forEach((answer, idx) => {
+                if (!answer.answer_text) return;
+                const token = answer.answer_text.trim();
+                if (token.length > 0) {
+                    const uniqueId = answer.id ? `${answer.id}` : `temp_${idx}_${Date.now()}`;
+                    instances.set(uniqueId, { text: token, weight: 1 });
+                }
+            });
+            return instances;
+        }
+
+        function renderWords(frequencyMap) {
+            const existingParticles = new Map();
+            wordParticles.forEach(p => {
+                existingParticles.set(p.uniqueId, p);
+            });
+
+            if (frequencyMap.size === 0 && wordParticles.length === 0) {
+                wordsLayer.innerHTML = '<div class="concept-empty">첫 번째 단어를 기다리고 있어요</div>';
+                if (animationFrameId) {
+                    cancelAnimationFrame(animationFrameId);
+                    animationFrameId = null;
+                }
+                return;
+            } else if (frequencyMap.size > 0 && wordsLayer.querySelector('.concept-empty')) {
+                wordsLayer.innerHTML = '';
+            }
+
+            const sortedWords = [...frequencyMap.entries()].sort((a, b) => b[1].weight - a[1].weight);
+            const limited = sortedWords.slice(0, MAX_WORDS).filter(([id, data]) => !hiddenWords.includes(data.text));
+            const newWordIds = new Set(limited.map(item => item[0]));
+
+            // Remove old particles
+            wordParticles = wordParticles.filter(p => {
+                if (!newWordIds.has(p.uniqueId)) {
+                    p.el.classList.remove('concept-word-visible');
+                    p.el.classList.add('concept-word-hidden');
+                    setTimeout(() => p.el.remove(), 700);
+                    return false;
+                }
+                return true;
+            });
+
+            const { width, height } = getCloudBounds();
+            const centerX = width / 2;
+            const centerY = height / 2;
+
+            limited.forEach(([uniqueId, data], index) => {
+                const text = data.text;
+
+                let particle = existingParticles.get(uniqueId);
+                if (particle) {
+                    // Existing particle - keep as is
+                    return;
+                }
+
+                // New particle
+                const wordEl = document.createElement('span');
+                wordEl.className = 'concept-word';
+
+                const isVertical = Math.random() < 0.35;
+                if (isVertical) {
+                    wordEl.classList.add('concept-word-vertical');
+                }
+                wordEl.textContent = text;
+
+                wordEl.style.color = 'rgba(30, 41, 59, 0.9)';
+                wordEl.style.fontSize = `${FIXED_FONT_SIZE}px`;
+
+                // Random rainbow border
+                const rainbowColors = [
+                    'rgba(255, 0, 0, 0.6)',
+                    'rgba(255, 127, 0, 0.6)',
+                    'rgba(255, 255, 0, 0.6)',
+                    'rgba(0, 255, 0, 0.6)',
+                    'rgba(0, 0, 255, 0.6)',
+                    'rgba(75, 0, 130, 0.6)',
+                    'rgba(148, 0, 211, 0.6)'
+                ];
+                const randomBorderColor = rainbowColors[Math.floor(Math.random() * rainbowColors.length)];
+                wordEl.style.borderColor = randomBorderColor;
+
+                // Click to delete
+                wordEl.addEventListener('click', () => {
+                    hiddenWords.push(text);
+                    wordEl.classList.remove('concept-word-visible');
+                    wordEl.classList.add('concept-word-hidden');
+                    setTimeout(() => {
+                        wordEl.remove();
+                        wordParticles = wordParticles.filter(p => p.el !== wordEl);
+                        if (wordParticles.length === 0) {
+                            wordsLayer.innerHTML = '<div class="concept-empty">첫 번째 단어를 기다리고 있어요</div>';
+                            if (animationFrameId) {
+                                cancelAnimationFrame(animationFrameId);
+                                animationFrameId = null;
+                            }
+                        }
+                    }, 700);
+                });
+
+                wordsLayer.appendChild(wordEl);
+
+                // Find available position
+                const position = findAvailablePosition(wordParticles, centerX, centerY);
+
+                particle = {
+                    el: wordEl,
+                    uniqueId: uniqueId,
+                    x: centerX,
+                    y: centerY,
+                    originX: centerX,
+                    originY: centerY,
+                    targetX: position.x,
+                    targetY: position.y,
+                    spawnTime: null,
+                    driftPhase: Math.random() * Math.PI * 2
+                };
+
+                wordEl.style.left = `${centerX}px`;
+                wordEl.style.top = `${centerY}px`;
+                wordParticles.push(particle);
+
+                requestAnimationFrame(() => {
+                    wordEl.classList.add('concept-word-visible');
+                    animateWordEntry(wordEl);
+                });
+            });
+
+            if (!animationFrameId && wordParticles.length > 0) {
+                animationFrameId = requestAnimationFrame(animationLoop);
+            }
+        }
+
+        function stopAllIntervals() {
+            if (realtimeChannel) {
+                supabase.removeChannel(realtimeChannel);
+                realtimeChannel = null;
+            }
+            if (simulationInterval) clearInterval(simulationInterval);
+            if (animationFrameId) cancelAnimationFrame(animationFrameId);
+            simulationInterval = null;
+            animationFrameId = null;
+        }
+
+        function resetDisplay() {
+            stopAllIntervals();
+            mockAnswers = [];
+            wordParticles = [];
+            hiddenWords = [];
+            wordsLayer.innerHTML = '';
+            conceptTotal.textContent = '0';
+            stopTimer();
+            conceptUpdated.textContent = '10:00';
+        }
+
+        function startRealtimeSimulation() {
+            resetDisplay();
+            let count = 0;
+            const question = QUESTIONS[currentQuestionIndex];
+            startTimer();
+
+            function generateSingleMockAnswer(questionId, index) {
+                const currentQuestion = QUESTIONS.find(q => q.id === questionId);
+                let answer;
+
+                if (currentQuestion && currentQuestion.type === 'text') {
+                    answer = TEXT_ANSWERS[Math.floor(Math.random() * TEXT_ANSWERS.length)];
+                } else {
+                    answer = TEXT_ANSWERS[index % TEXT_ANSWERS.length];
+                }
+
+                // Apply 8 character limit (excluding spaces)
+                const textWithoutSpaces = answer.replace(/\s+/g, '');
+                if (textWithoutSpaces.length > 8) {
+                    let charCount = 0;
+                    let cutIndex = 0;
+                    for (let i = 0; i < answer.length; i++) {
+                        if (answer[i] !== ' ') charCount++;
+                        if (charCount === 8) {
+                            cutIndex = i + 1;
+                            break;
+                        }
+                    }
+                    answer = answer.substring(0, cutIndex);
+                }
+
+                return {
+                    id: `${questionId}-${index}-${Date.now()}`,
+                    question_id: questionId,
+                    answer: answer,
+                    answer_text: answer,
+                    created_at: new Date().toISOString()
+                };
+            }
+
+            simulationInterval = setInterval(() => {
+                if (count >= MAX_WORDS) {
+                    clearInterval(simulationInterval);
+                    simulationInterval = null;
+                    return;
+                }
+
+                const newAnswer = generateSingleMockAnswer(question.id, count);
+                mockAnswers.unshift(newAnswer);
+
+                const frequencyMap = extractWordInstances(mockAnswers);
+                renderWords(frequencyMap);
+                conceptTotal.textContent = mockAnswers.length;
+                count++;
+            }, SPAWN_INTERVAL);
+        }
+
+        async function startRealtimeSubscription() {
+            stopAllIntervals();
+            mockAnswers = [];
+            wordParticles = [];
+            hiddenWords = [];
+            wordsLayer.innerHTML = '';
+            conceptTotal.textContent = '0';
+            stopTimer();
+            conceptUpdated.textContent = '10:00';
+
+            const question = QUESTIONS[currentQuestionIndex];
+            if (!question) return;
+
+            startTimer();
+            sessionStartTime = Date.now();
+
+            simulationInterval = setInterval(async () => {
+                try {
+                    const { data: newAnswers, error } = await supabase
+                        .from('answers')
+                        .select('*')
+                        .eq('question_id', question.id)
+                        .gte('created_at', new Date(sessionStartTime).toISOString())
+                        .order('created_at', { ascending: false });
+
+                    if (error) {
+                        console.error('Polling error:', error);
+                        return;
+                    }
+
+                    if (newAnswers && newAnswers.length > 0) {
+                        const existingIds = new Set(mockAnswers.map(a => a.id));
+                        const trulyNew = newAnswers.filter(a => !existingIds.has(a.id));
+
+                        if (trulyNew.length > 0) {
+                            trulyNew.forEach(a => {
+                                const newAnswer = {
+                                    id: a.id,
+                                    question_id: a.question_id,
+                                    answer: a.answer_text,
+                                    answer_text: a.answer_text,
+                                    created_at: a.created_at
+                                };
+                                mockAnswers.unshift(newAnswer);
+                            });
+
+                            const frequencyMap = extractWordInstances(mockAnswers);
+                            renderWords(frequencyMap);
+                            conceptTotal.textContent = mockAnswers.length;
+                        }
+                    }
+                } catch (err) {
+                    console.error('Polling exception:', err);
+                }
+            }, 2000);
+        }
+
+        toggleMockBtn.addEventListener('click', () => {
+            isMockMode = !isMockMode;
+            toggleMockBtn.classList.toggle('active', isMockMode);
+            navigateToQuestion(currentQuestionIndex, { force: true });
+        });
+
+        window.addEventListener('resize', () => {
+            // Recalculate positions on resize if needed
+            const { width, height } = getCloudBounds();
+            const centerX = width / 2;
+            const centerY = height / 2;
+            wordParticles.forEach(p => {
+                const position = findAvailablePosition(wordParticles.filter(pp => pp !== p), centerX, centerY);
+                p.targetX = position.x;
+                p.targetY = position.y;
+            });
+        });
+
+        navigateToQuestion(0, { force: true });
+
+        if (isMockMode) {
+            toggleMockBtn.classList.add('active');
+        }
+    </script>
+</body>
+
+</html>
