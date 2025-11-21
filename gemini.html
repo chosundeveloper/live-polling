@@ -538,7 +538,7 @@
                 .alphaDecay(0.002) // Slower decay for smooth settling
                 .velocityDecay(0.4) // Lower friction for fluid movement
                 .alphaMin(0.001)
-                .force('charge', d3.forceManyBody().strength(-15)) // Minimal repulsion to allow tight packing
+                .force('charge', d3.forceManyBody().strength(-25)) // Stronger repulsion for natural spreading
                 .force('wallRepulsion', alpha => {
                     const padding = 80; // Distance from wall to start repelling
                     const strength = 0.5 * alpha; // Strength of repulsion
@@ -555,12 +555,11 @@
                 })
                 .force('collide', d3.forceCollide(d => {
                     const { width, height } = getParticleDimensions(d);
-                    // STRICT collision with MINIMAL padding
-                    // Use full bounding circle radius + 2px for very tight but non-overlapping packing
-                    return Math.hypot(width, height) / 2 + 2;
+                    // More relaxed collision with extra spacing for natural look
+                    return Math.hypot(width, height) / 2 + 15;
                 }).strength(1.0).iterations(16))
-                .force('x', d3.forceX(d => d.targetX || centerW).strength(0.03)) // Slightly stronger pull to target
-                .force('y', d3.forceY(d => d.targetY || centerH).strength(0.03))
+                .force('x', d3.forceX(d => d.targetX || centerW).strength(0.015)) // Weaker pull for more organic spread
+                .force('y', d3.forceY(d => d.targetY || centerH).strength(0.015))
                 .on('tick', () => {
                     wordParticles.forEach(p => {
                         if (p.fx !== null && p.fx !== undefined) return;
