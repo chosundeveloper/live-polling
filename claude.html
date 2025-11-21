@@ -10,6 +10,7 @@
     <script src="supabase-config.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/motion@11.11.13/dist/motion.min.js"></script>
+    <script src="https://d3js.org/d3.v7.min.js"></script>
 </head>
 
 <body class="concept-body concept-display">
@@ -93,6 +94,7 @@
         let timerInterval = null;
         let timerDeadline = null;
         let sessionStartTime = null;
+        let d3Simulation = null;
 
         // --- Constants ---
         const TEXT_ANSWERS = [
@@ -134,16 +136,10 @@
         ];
 
         const FIXED_FONT_SIZE = 25;
-        const MAX_WORDS = 40; // Much fewer words to prevent any overlap
+        const MAX_WORDS = 50;
         const TIMER_DURATION_MS = 600 * 1000; // 10 minutes
-        const SPAWN_INTERVAL = 200; // Much slower spawn rate
-        const MOVEMENT_SPEED = 0.5; // Gentle movement speed
-        const MIN_DISTANCE = 250; // Much larger minimum distance between words
-        const SPREAD_RADIUS_INCREMENT = 120; // Even more spread distance
-
-        // Animation constants
-        const EASE_DURATION = 2000; // 2 seconds to ease into position
-        const DRIFT_AMOUNT = 0; // No drift to prevent any overlap
+        const SPAWN_INTERVAL = 200;
+        const COLLISION_PADDING = 80; // Extra space between words
 
         function getCloudBounds() {
             const rect = wordsLayer.getBoundingClientRect();
@@ -158,152 +154,61 @@
             return { width, height };
         }
 
-        function findAvailablePosition(existingParticles, centerX, centerY, wordWidth = 180, wordHeight = 60, attempt = 0) {
-            const maxAttempts = 300; // More attempts to find good position
-            if (attempt >= maxAttempts) {
-                // Fallback: random position far from center
-                const { width, height } = getCloudBounds();
-                const angle = Math.random() * Math.PI * 2;
-                const radius = Math.min(width, height) * 0.4;
-                return {
-                    x: centerX + Math.cos(angle) * radius,
-                    y: centerY + Math.sin(angle) * radius
-                };
-            }
-
-            // Spiral outward from center with golden angle
+        function findAvailablePosition(existingParticles, centerX, centerY, wordWidth = 180, wordHeight = 60) {
+            // Use golden angle spiral for initial positioning
             const GOLDEN_ANGLE = Math.PI * (3 - Math.sqrt(5));
-            const angle = attempt * GOLDEN_ANGLE;
-            const radius = SPREAD_RADIUS_INCREMENT * Math.sqrt(attempt + 1);
+            const index = existingParticles.length;
+            const angle = index * GOLDEN_ANGLE;
+            const radius = 80 * Math.sqrt(index + 1); // Start spreading from center
+
             const x = centerX + Math.cos(angle) * radius;
             const y = centerY + Math.sin(angle) * radius;
-
-            // Check AABB (Axis-Aligned Bounding Box) collision with all existing particles
-            let tooClose = false;
-            const halfW = wordWidth / 2;
-            const halfH = wordHeight / 2;
-
-            for (const p of existingParticles) {
-                const pHalfW = (p.width || 180) / 2;
-                const pHalfH = (p.height || 60) / 2;
-
-                // Calculate rectangle overlap with padding
-                const padding = 60; // Extra space between word boxes
-                const overlapX = Math.abs(x - p.targetX) < (halfW + pHalfW + padding);
-                const overlapY = Math.abs(y - p.targetY) < (halfH + pHalfH + padding);
-
-                if (overlapX && overlapY) {
-                    tooClose = true;
-                    break;
-                }
-            }
-
-            if (tooClose) {
-                return findAvailablePosition(existingParticles, centerX, centerY, wordWidth, wordHeight, attempt + 1);
-            }
-
-            // Keep within bounds
-            const { width, height } = getCloudBounds();
-            const padding = 100;
-            if (x - halfW < padding || x + halfW > width - padding ||
-                y - halfH < padding || y + halfH > height - padding) {
-                return findAvailablePosition(existingParticles, centerX, centerY, wordWidth, wordHeight, attempt + 1);
-            }
 
             return { x, y };
         }
 
-        function checkCollision(p1, p2) {
-            const padding = 40; // Minimum gap between words
-            const p1HalfW = (p1.width || 180) / 2 + padding;
-            const p1HalfH = (p1.height || 60) / 2 + padding;
-            const p2HalfW = (p2.width || 180) / 2 + padding;
-            const p2HalfH = (p2.height || 60) / 2 + padding;
-
-            const overlapX = Math.abs(p1.x - p2.x) < (p1HalfW + p2HalfW);
-            const overlapY = Math.abs(p1.y - p2.y) < (p1HalfH + p2HalfH);
-
-            return overlapX && overlapY;
-        }
-
-        function resolveCollisions() {
-            // Separate overlapping particles
-            for (let i = 0; i < wordParticles.length; i++) {
-                for (let j = i + 1; j < wordParticles.length; j++) {
-                    const p1 = wordParticles[i];
-                    const p2 = wordParticles[j];
-
-                    if (checkCollision(p1, p2)) {
-                        // Calculate overlap and push apart
-                        const dx = p2.x - p1.x;
-                        const dy = p2.y - p1.y;
-                        const dist = Math.sqrt(dx * dx + dy * dy);
-
-                        if (dist < 0.1) continue; // Skip if exactly on top
-
-                        const minDist = (p1.width || 180) / 2 + (p2.width || 180) / 2 + 60;
-                        const overlap = minDist - dist;
-
-                        if (overlap > 0) {
-                            const nx = dx / dist;
-                            const ny = dy / dist;
-                            const separation = overlap / 2;
-
-                            p1.x -= nx * separation;
-                            p1.y -= ny * separation;
-                            p2.x += nx * separation;
-                            p2.y += ny * separation;
-                        }
-                    }
-                }
-            }
-        }
-
-        function updateParticlePhysics(timestamp) {
-            if (!wordParticles.length) return;
-
+        function initD3Simulation() {
             const { width, height } = getCloudBounds();
+            const centerX = width / 2;
+            const centerY = height / 2;
 
-            wordParticles.forEach(particle => {
-                if (!particle.spawnTime) particle.spawnTime = timestamp;
-                const elapsed = timestamp - particle.spawnTime;
+            if (d3Simulation) {
+                d3Simulation.stop();
+            }
 
-                // Easing function (ease-out cubic)
-                const progress = Math.min(1, elapsed / EASE_DURATION);
-                const easeProgress = 1 - Math.pow(1 - progress, 3);
+            d3Simulation = d3.forceSimulation(wordParticles)
+                .alphaDecay(0.01)
+                .velocityDecay(0.3)
+                .force('charge', d3.forceManyBody().strength(-200))
+                .force('collide', d3.forceCollide(d => {
+                    const w = d.width || 180;
+                    const h = d.height || 60;
+                    return Math.sqrt(w * w + h * h) / 2 + COLLISION_PADDING;
+                }).strength(1.0).iterations(3))
+                .force('x', d3.forceX(d => d.targetX || centerX).strength(0.05))
+                .force('y', d3.forceY(d => d.targetY || centerY).strength(0.05))
+                .on('tick', () => {
+                    wordParticles.forEach(p => {
+                        // Keep within bounds
+                        const padding = 100;
+                        const halfW = (p.width || 180) / 2;
+                        const halfH = (p.height || 60) / 2;
+                        p.x = Math.max(padding + halfW, Math.min(width - padding - halfW, p.x));
+                        p.y = Math.max(padding + halfH, Math.min(height - padding - halfH, p.y));
 
-                // Move from center to target position
-                const currentX = particle.originX + (particle.targetX - particle.originX) * easeProgress;
-                const currentY = particle.originY + (particle.targetY - particle.originY) * easeProgress;
+                        // Update DOM
+                        p.el.style.left = `${p.x}px`;
+                        p.el.style.top = `${p.y}px`;
+                    });
+                });
 
-                // No drift - stay exactly at target position once settled
-                if (progress >= 1) {
-                    particle.x = particle.targetX;
-                    particle.y = particle.targetY;
-                } else {
-                    particle.x = currentX;
-                    particle.y = currentY;
-                }
-
-                // Keep within bounds
-                const padding = 100;
-                particle.x = Math.max(padding, Math.min(width - padding, particle.x));
-                particle.y = Math.max(padding, Math.min(height - padding, particle.y));
-            });
-
-            // Resolve any collisions
-            resolveCollisions();
-
-            // Update DOM after collision resolution
-            wordParticles.forEach(particle => {
-                particle.el.style.left = `${particle.x}px`;
-                particle.el.style.top = `${particle.y}px`;
-            });
+            return d3Simulation;
         }
 
         function animationLoop(timestamp) {
-            updateParticlePhysics(timestamp);
-            animationFrameId = requestAnimationFrame(animationLoop);
+            if (d3Simulation && d3Simulation.alpha() > 0.01) {
+                animationFrameId = requestAnimationFrame(animationLoop);
+            }
         }
 
         function splitWordIntoCharacters(wordEl) {
@@ -575,8 +480,16 @@
                 });
             });
 
-            if (!animationFrameId && wordParticles.length > 0) {
-                animationFrameId = requestAnimationFrame(animationLoop);
+            if (wordParticles.length > 0) {
+                if (!d3Simulation) {
+                    initD3Simulation();
+                } else {
+                    d3Simulation.nodes(wordParticles);
+                    d3Simulation.alpha(0.3).restart();
+                }
+                if (!animationFrameId) {
+                    animationFrameId = requestAnimationFrame(animationLoop);
+                }
             }
         }
 
@@ -587,8 +500,10 @@
             }
             if (simulationInterval) clearInterval(simulationInterval);
             if (animationFrameId) cancelAnimationFrame(animationFrameId);
+            if (d3Simulation) d3Simulation.stop();
             simulationInterval = null;
             animationFrameId = null;
+            d3Simulation = null;
         }
 
         function resetDisplay() {
