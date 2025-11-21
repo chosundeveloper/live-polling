@@ -158,13 +158,13 @@
             return { width, height };
         }
 
-        function findAvailablePosition(existingParticles, centerX, centerY, attempt = 0) {
-            const maxAttempts = 200; // More attempts to find good position
+        function findAvailablePosition(existingParticles, centerX, centerY, wordWidth = 180, wordHeight = 60, attempt = 0) {
+            const maxAttempts = 300; // More attempts to find good position
             if (attempt >= maxAttempts) {
                 // Fallback: random position far from center
                 const { width, height } = getCloudBounds();
                 const angle = Math.random() * Math.PI * 2;
-                const radius = Math.min(width, height) * 0.35;
+                const radius = Math.min(width, height) * 0.4;
                 return {
                     x: centerX + Math.cos(angle) * radius,
                     y: centerY + Math.sin(angle) * radius
@@ -178,27 +178,36 @@
             const x = centerX + Math.cos(angle) * radius;
             const y = centerY + Math.sin(angle) * radius;
 
-            // Check distance from all existing particles
+            // Check AABB (Axis-Aligned Bounding Box) collision with all existing particles
             let tooClose = false;
+            const halfW = wordWidth / 2;
+            const halfH = wordHeight / 2;
+
             for (const p of existingParticles) {
-                const dx = x - p.targetX;
-                const dy = y - p.targetY;
-                const dist = Math.sqrt(dx * dx + dy * dy);
-                if (dist < MIN_DISTANCE) {
+                const pHalfW = (p.width || 180) / 2;
+                const pHalfH = (p.height || 60) / 2;
+
+                // Calculate rectangle overlap with padding
+                const padding = 60; // Extra space between word boxes
+                const overlapX = Math.abs(x - p.targetX) < (halfW + pHalfW + padding);
+                const overlapY = Math.abs(y - p.targetY) < (halfH + pHalfH + padding);
+
+                if (overlapX && overlapY) {
                     tooClose = true;
                     break;
                 }
             }
 
             if (tooClose) {
-                return findAvailablePosition(existingParticles, centerX, centerY, attempt + 1);
+                return findAvailablePosition(existingParticles, centerX, centerY, wordWidth, wordHeight, attempt + 1);
             }
 
             // Keep within bounds
             const { width, height } = getCloudBounds();
-            const padding = 80;
-            if (x < padding || x > width - padding || y < padding || y > height - padding) {
-                return findAvailablePosition(existingParticles, centerX, centerY, attempt + 1);
+            const padding = 100;
+            if (x - halfW < padding || x + halfW > width - padding ||
+                y - halfH < padding || y + halfH > height - padding) {
+                return findAvailablePosition(existingParticles, centerX, centerY, wordWidth, wordHeight, attempt + 1);
             }
 
             return { x, y };
@@ -482,8 +491,13 @@
 
                 wordsLayer.appendChild(wordEl);
 
-                // Find available position
-                const position = findAvailablePosition(wordParticles, centerX, centerY);
+                // Measure actual word dimensions after adding to DOM
+                const rect = wordEl.getBoundingClientRect();
+                const actualWidth = rect.width || 180;
+                const actualHeight = rect.height || 60;
+
+                // Find available position using actual dimensions
+                const position = findAvailablePosition(wordParticles, centerX, centerY, actualWidth, actualHeight);
 
                 particle = {
                     el: wordEl,
@@ -494,6 +508,8 @@
                     originY: centerY,
                     targetX: position.x,
                     targetY: position.y,
+                    width: actualWidth,
+                    height: actualHeight,
                     spawnTime: null,
                     driftPhase: Math.random() * Math.PI * 2
                 };
