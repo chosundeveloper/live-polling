@@ -957,7 +957,7 @@
 
             simulationInterval = setInterval(() => {
                 const TARGET_MOCK_WORDS = 200; // Increased to 200 for mock mode
-                const MAX_VISIBLE_WORDS = 90; // Auto-delete when over 90
+                const MAX_VISIBLE_WORDS = 80; // Auto-delete when over 80
 
                 if (count >= 2000) {
                     clearInterval(simulationInterval);
@@ -973,7 +973,7 @@
                     return;
                 }
 
-                // Auto-delete oldest words if over 90
+                // Auto-delete oldest words if over 80
                 if (mockAnswers.length > MAX_VISIBLE_WORDS) {
                     const toRemove = mockAnswers.length - MAX_VISIBLE_WORDS;
                     mockAnswers = mockAnswers.slice(0, MAX_VISIBLE_WORDS);
