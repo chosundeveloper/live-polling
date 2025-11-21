@@ -1352,9 +1352,9 @@ footer a:hover {
     color: #ffffff;
     font-family: '강원교육모두', cursive;
     font-weight: 700;
-    background: rgba(30, 41, 59, 0.9);
+    background: #5670e4;
     backdrop-filter: blur(10px);
-    border: 2px solid #5670e4;
+    border: none;
     border-radius: 20px;
     padding: 12px 20px;
     box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
