@@ -1813,44 +1813,44 @@ footer a:hover {
     pointer-events: none;
 }
 
-/* Vertical word styling disabled - all words stay horizontal */
-/*.concept-word-vertical .concept-char {
-    display: block;
-    line-height: 0.3;
-    margin: 0;
-    padding: 0;
+/* Override vertical styling - force horizontal */
+.concept-word-vertical .concept-char {
+    display: inline !important;
+    line-height: 1.2 !important;
+    margin: 0 !important;
+    padding: 0 !important;
 }
 
 .concept-word-vertical .concept-word-block {
-    display: inline-block;
-    white-space: nowrap;
-    line-height: 0.3;
-    margin: 0;
-    padding: 0;
+    display: inline !important;
+    white-space: normal !important;
+    line-height: 1.2 !important;
+    margin: 0 !important;
+    padding: 0 !important;
 }
 
 .concept-word-vertical .concept-char:not(.concept-word-block) {
-    display: none;
-}*/
+    display: inline !important;
+}
 
 .concept-word-visible {
     opacity: 0.96;
     --concept-scale: 1;
 }
 
-/* Disabled: all words stay horizontal */
-/*.concept-word-vertical {
-    padding: 8px 3px;
-    writing-mode: vertical-rl;
-    text-orientation: upright;
-    white-space: pre;
-    letter-spacing: 0;
-    line-height: 1;
-    word-spacing: -0.85em;
-    max-height: 80vh;
-    overflow: hidden;
-    text-overflow: ellipsis;
-}*/
+/* Override: force all words to stay horizontal */
+.concept-word-vertical {
+    padding: 8px 16px !important;
+    writing-mode: horizontal-tb !important;
+    text-orientation: mixed !important;
+    white-space: normal !important;
+    letter-spacing: normal !important;
+    line-height: 1.2 !important;
+    word-spacing: normal !important;
+    max-height: none !important;
+    overflow: visible !important;
+    text-overflow: clip !important;
+}
 
 .concept-word:hover {
     transform: translate(-50%, -50%) scale(1.08);
