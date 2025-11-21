@@ -136,6 +136,7 @@
         ];
 
         const FIXED_FONT_SIZE = 25;
+        const MAX_INPUT_CHARS = 12;
         const MAX_WORDS = 200; // Allow 200+ words
         const TIMER_DURATION_MS = 600 * 1000; // 10 minutes
         const SPAWN_INTERVAL = 50; // Faster spawn rate
@@ -533,14 +534,14 @@
                     answer = TEXT_ANSWERS[index % TEXT_ANSWERS.length];
                 }
 
-                // Apply 8 character limit (excluding spaces)
+                // Apply 12 character limit (excluding spaces)
                 const textWithoutSpaces = answer.replace(/\s+/g, '');
-                if (textWithoutSpaces.length > 8) {
+                if (textWithoutSpaces.length > MAX_INPUT_CHARS) {
                     let charCount = 0;
                     let cutIndex = 0;
                     for (let i = 0; i < answer.length; i++) {
                         if (answer[i] !== ' ') charCount++;
-                        if (charCount === 8) {
+                        if (charCount === MAX_INPUT_CHARS) {
                             cutIndex = i + 1;
                             break;
                         }

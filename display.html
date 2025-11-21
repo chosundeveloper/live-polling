@@ -203,6 +203,7 @@
         const MIN_WORD_LIFETIME = 7000;
         const MOCK_BATCH_INTERVAL = 400; // Add new words more slowly
         const MOCK_BATCH_SIZE = 2; // Small batch to prevent sudden crowding
+        const MAX_INPUT_CHARS = 12;
         const TIMER_DURATION_MS = 600 * 1000; // 600 seconds (10 minutes)
         const COLOR_PALETTE = ['#5e4fa2', '#3288bd', '#66c2a5', '#abdda4', '#e6f598', '#fee08b', '#fdae61', '#f46d43', '#d53e4f', '#9e0142'];
         // Exclude yellow (#e6f598 index 4), lime green (#abdda4 index 3), light orange (#fee08b index 5), orange (#fdae61 index 6), and dark red (#9e0142 index 9)
@@ -895,15 +896,15 @@
                     answer = KEYWORDS[Math.floor(Math.random() * KEYWORDS.length)] || KEYWORDS[index % KEYWORDS.length];
                 }
 
-                // Apply 8 character limit (excluding spaces)
+                // Apply 12 character limit (excluding spaces)
                 const textWithoutSpaces = answer.replace(/\s+/g, '');
-                if (textWithoutSpaces.length > 8) {
-                    // Find the position in original string that gives us 8 non-space characters
-                    let count = 0;
+                if (textWithoutSpaces.length > MAX_INPUT_CHARS) {
+                    // Find the position in original string that gives us MAX_INPUT_CHARS non-space characters
+                    let charCount = 0;
                     let cutIndex = 0;
                     for (let i = 0; i < answer.length; i++) {
-                        if (answer[i] !== ' ') count++;
-                        if (count === 8) {
+                        if (answer[i] !== ' ') charCount++;
+                        if (charCount === MAX_INPUT_CHARS) {
                             cutIndex = i + 1;
                             break;
                         }

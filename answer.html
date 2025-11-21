@@ -37,11 +37,11 @@
                     id="answerInput"
                     class="answer-input"
                     rows="5"
-                    placeholder="여기에 답변을 입력하세요... (띄어쓰기 제외 최대 8글자)"
+                    placeholder="여기에 답변을 입력하세요... (띄어쓰기 제외 최대 12글자)"
                     required
                 ></textarea>
                 <div class="char-count">
-                    <span id="charCount">0</span> / 8 (띄어쓰기 제외)
+                    <span id="charCount">0</span> / 12 (띄어쓰기 제외)
                 </div>
             </div>
 
@@ -83,6 +83,7 @@
                 this.input = document.getElementById('answerInput');
                 this.submitBtn = document.getElementById('submitBtn');
                 this.charCount = document.getElementById('charCount');
+                this.maxChars = 12;
 
                 // 타이머
                 this.timeLeft = 600; // 600초 (10분)
@@ -193,16 +194,17 @@
                 const length = textWithoutSpaces.length;
                 this.charCount.textContent = length;
 
-                if (length > 8) {
+                const warnThreshold = this.maxChars - 2;
+                if (length > this.maxChars) {
                     this.charCount.style.color = '#dc3545';
-                } else if (length > 6) {
+                } else if (length > warnThreshold) {
                     this.charCount.style.color = '#ffc107';
                 } else {
                     this.charCount.style.color = '#6c757d';
                 }
 
-                // Prevent input if exceeds 8 characters (without spaces)
-                if (length > 8) {
+                // Prevent input if exceeds max characters (without spaces)
+                if (length > this.maxChars) {
                     this.input.value = this.input.value.slice(0, -1);
                     this.updateCharCount();
                 }
@@ -224,8 +226,8 @@
                     return;
                 }
 
-                if (textWithoutSpaces.length > 8) {
-                    this.showError('띄어쓰기 제외 최대 8글자까지 입력 가능합니다.');
+                if (textWithoutSpaces.length > this.maxChars) {
+                    this.showError('띄어쓰기 제외 최대 12글자까지 입력 가능합니다.');
                     return;
                 }
 
