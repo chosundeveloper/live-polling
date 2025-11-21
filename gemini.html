@@ -284,29 +284,29 @@
         function getWordLines(rawText = '') {
             const normalized = rawText.replace(/\s+/g, ' ').trim();
             const cleanLength = normalized.replace(/\s+/g, '').length;
-            if (cleanLength <= LINE_BREAK_THRESHOLD) {
-                return { lines: normalized ? [normalized] : [], multiline: false, normalized };
-            }
-            let charCount = 0;
-            let breakIndex = -1;
-            for (let i = 0; i < normalized.length; i++) {
-                const char = normalized[i];
-                if (char !== ' ') {
-                    charCount++;
-                } else if (charCount > LINE_BREAK_THRESHOLD) {
-                    breakIndex = i;
-                    break;
+            // If more than 6 characters (7+), check for space to break into two lines
+            if (cleanLength > LINE_BREAK_THRESHOLD) {
+                let charCount = 0;
+                let breakIndex = -1;
+                for (let i = 0; i < normalized.length; i++) {
+                    const char = normalized[i];
+                    if (char !== ' ') {
+                        charCount++;
+                    } else if (charCount > LINE_BREAK_THRESHOLD) {
+                        breakIndex = i;
+                        break;
+                    }
+                }
+                if (breakIndex !== -1) {
+                    const firstLine = normalized.slice(0, breakIndex).trim();
+                    const secondLine = normalized.slice(breakIndex + 1).trim();
+                    if (firstLine && secondLine) {
+                        return { lines: [firstLine, secondLine], multiline: true, normalized };
+                    }
                 }
             }
-            if (breakIndex === -1) {
-                return { lines: normalized ? [normalized] : [], multiline: false, normalized };
-            }
-            const firstLine = normalized.slice(0, breakIndex).trim();
-            const secondLine = normalized.slice(breakIndex + 1).trim();
-            if (!firstLine || !secondLine) {
-                return { lines: normalized ? [normalized] : [], multiline: false, normalized };
-            }
-            return { lines: [firstLine, secondLine], multiline: true, normalized };
+            // Default: single line
+            return { lines: normalized ? [normalized] : [], multiline: false, normalized };
         }
 
         function applyWordLayout(wordEl, rawText = '') {
