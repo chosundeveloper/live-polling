@@ -1762,6 +1762,9 @@ footer a:hover {
     /* Force horizontal writing mode - prevent vertical text */
     writing-mode: horizontal-tb !important;
     text-orientation: mixed !important;
+    /* Ensure clicks work properly */
+    z-index: 10;
+    pointer-events: auto;
 }
 
 .concept-word-multiline {
