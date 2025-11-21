@@ -275,7 +275,7 @@
             return MAX_WORDS;
         }
 
-        let MAX_WORDS = 500; // Will be recalculated dynamically
+        let MAX_WORDS = 90; // Maximum 90 words visible at once
         const INTRO_DURATION_BASE = 180000; // extremely slow duration (3 minutes)
         const INTRO_DURATION_VARIANCE = 20000;
         const INTRO_BLOOM_JITTER = 0; // No bloom
@@ -688,27 +688,26 @@
             const sortedWords = [...frequencyMap.entries()].sort((a, b) => b[1].weight - a[1].weight);
             console.log(`📊 Total unique instances: ${sortedWords.length}`);
 
-            // Dynamically calculate max words based on screen space
-            MAX_WORDS = calculateMaxWords();
+            // Keep MAX_WORDS at 90 (no dynamic calculation)
+            // MAX_WORDS is already set to 90
 
             const limited = sortedWords.slice(0, MAX_WORDS).filter(([id, data]) => !hiddenWords.includes(data.text));
             console.log(`📊 After MAX_WORDS limit (${MAX_WORDS}): ${limited.length}`);
             const newWordIds = new Set(limited.map(item => item[0]));
 
-            // DISABLED: Auto-deletion of old words
-            // Keep all words visible - only manual deletion via click
-            // wordParticles = wordParticles.filter(p => {
-            //     if (!newWordIds.has(p.uniqueId)) {
-            //         if (now - (p.bornAt || now) < MIN_WORD_LIFETIME) {
-            //             return true;
-            //         }
-            //         p.el.classList.remove('concept-word-visible');
-            //         p.el.classList.add('concept-word-hidden');
-            //         setTimeout(() => p.el.remove(), 700);
-            //         return false;
-            //     }
-            //     return true;
-            // });
+            // Auto-deletion of old words when exceeding MAX_WORDS (90)
+            wordParticles = wordParticles.filter(p => {
+                if (!newWordIds.has(p.uniqueId)) {
+                    if (now - (p.bornAt || now) < MIN_WORD_LIFETIME) {
+                        return true;
+                    }
+                    p.el.classList.remove('concept-word-visible');
+                    p.el.classList.add('concept-word-hidden');
+                    setTimeout(() => p.el.remove(), 700);
+                    return false;
+                }
+                return true;
+            });
 
 
             const { width: containerWidth, height: containerHeight } = getCloudBounds();
@@ -957,7 +956,7 @@
 
             simulationInterval = setInterval(() => {
                 const TARGET_MOCK_WORDS = 200; // Increased to 200 for mock mode
-                const MAX_VISIBLE_WORDS = 80; // Auto-delete when over 80
+                const MAX_VISIBLE_WORDS = 90; // Auto-delete when over 90
 
                 if (count >= 2000) {
                     clearInterval(simulationInterval);
@@ -973,7 +972,7 @@
                     return;
                 }
 
-                // Auto-delete oldest words if over 80
+                // Auto-delete oldest words if over 90
                 if (mockAnswers.length > MAX_VISIBLE_WORDS) {
                     const toRemove = mockAnswers.length - MAX_VISIBLE_WORDS;
                     mockAnswers = mockAnswers.slice(0, MAX_VISIBLE_WORDS);

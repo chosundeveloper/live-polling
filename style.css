@@ -1759,6 +1759,9 @@ footer a:hover {
     padding: 2px 8px;
     box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15), inset 0 0.5px 1px rgba(255, 255, 255, 0.15);
     isolation: isolate;
+    /* Force horizontal writing mode - prevent vertical text */
+    writing-mode: horizontal-tb !important;
+    text-orientation: mixed !important;
 }
 
 .concept-word-multiline {
