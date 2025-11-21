@@ -284,27 +284,20 @@
         function getWordLines(rawText = '') {
             const normalized = rawText.replace(/\s+/g, ' ').trim();
             const cleanLength = normalized.replace(/\s+/g, '').length;
-            // If more than 6 characters (7+), check for space to break into two lines
-            if (cleanLength > LINE_BREAK_THRESHOLD) {
-                let charCount = 0;
-                let breakIndex = -1;
-                for (let i = 0; i < normalized.length; i++) {
-                    const char = normalized[i];
-                    if (char !== ' ') {
-                        charCount++;
-                    } else if (charCount > LINE_BREAK_THRESHOLD) {
-                        breakIndex = i;
-                        break;
-                    }
-                }
-                if (breakIndex !== -1) {
-                    const firstLine = normalized.slice(0, breakIndex).trim();
-                    const secondLine = normalized.slice(breakIndex + 1).trim();
+
+            // If more than 6 characters (7+) and has space, break into two lines
+            if (cleanLength > LINE_BREAK_THRESHOLD && normalized.includes(' ')) {
+                // Find first space to split
+                const spaceIndex = normalized.indexOf(' ');
+                if (spaceIndex > 0) {
+                    const firstLine = normalized.slice(0, spaceIndex).trim();
+                    const secondLine = normalized.slice(spaceIndex + 1).trim();
                     if (firstLine && secondLine) {
                         return { lines: [firstLine, secondLine], multiline: true, normalized };
                     }
                 }
             }
+
             // Default: single line
             return { lines: normalized ? [normalized] : [], multiline: false, normalized };
         }
@@ -732,17 +725,17 @@
                     const fontSize = FIXED_FONT_SIZE;
                     wordEl.style.fontSize = `${fontSize}px`;
 
-                    // Pastel background colors (solid pastel fill, no border)
+                    // Solid pastel background colors (no transparency)
                     const pastelStyles = [
-                        'rgba(255, 183, 197, 0.85)', // Pink
-                        'rgba(255, 214, 165, 0.85)', // Peach
-                        'rgba(250, 227, 217, 0.9)',  // Soft coral
-                        'rgba(224, 236, 255, 0.9)',  // Powder blue
-                        'rgba(210, 245, 227, 0.85)', // Mint
-                        'rgba(231, 223, 255, 0.9)',  // Lavender
-                        'rgba(255, 233, 233, 0.85)', // Blush
-                        'rgba(255, 240, 219, 0.85)', // Light apricot
-                        'rgba(219, 236, 227, 0.85)'  // Pastel teal
+                        '#FFB7C5', // Pink
+                        '#FFD6A5', // Peach
+                        '#FAE3D9', // Soft coral
+                        '#E0ECFF', // Powder blue
+                        '#D2F5E3', // Mint
+                        '#E7DFFF', // Lavender
+                        '#FFE9E9', // Blush
+                        '#FFF0DB', // Light apricot
+                        '#DBECE3'  // Pastel teal
                     ];
                     const pastelColor = pastelStyles[Math.floor(Math.random() * pastelStyles.length)];
                     wordEl.style.border = 'none';
