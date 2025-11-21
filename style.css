@@ -1431,17 +1431,27 @@ footer a:hover {
 /* No extra background on decorations for display view */
 
 .concept-decoration.heart {
-    font-size: 24px;
+    font-size: 28px;
+    color: rgba(255, 50, 50, 0.7);
     animation: floatHeart 8s ease-in-out infinite;
-    opacity: 0.85;
-    filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.2));
+    filter: drop-shadow(0 2px 6px rgba(255, 0, 0, 0.3));
+    text-shadow: 0 0 10px rgba(255, 50, 50, 0.5);
 }
 
 .concept-decoration.star {
-    font-size: 20px;
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    background: radial-gradient(circle at 30% 30%,
+            rgba(255, 255, 255, 0.8) 0%,
+            rgba(255, 255, 255, 0.6) 40%,
+            rgba(255, 255, 255, 0.4) 70%,
+            rgba(255, 255, 255, 0.2) 100%);
+    border: 2px solid rgba(255, 255, 255, 0.6);
+    box-shadow:
+        inset 0 0 10px rgba(255, 255, 255, 0.6),
+        0 0 15px rgba(255, 255, 255, 0.4);
     animation: floatStar 12s ease-in-out infinite;
-    opacity: 0.9;
-    filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.2));
 }
 
 .concept-decoration.circle {
