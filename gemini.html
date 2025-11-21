@@ -181,8 +181,10 @@
             const maxCapacity = Math.max(wordsPerRow * wordsPerColumn, 1);
 
             // Use 60% of capacity to show much more words while maintaining some spacing
-            const MAX_WORDS = Math.floor(maxCapacity * 0.60);
-            console.log(`📐 Screen capacity: ${maxCapacity}, Using: ${MAX_WORDS} max words (60% to prevent overlap)`);
+            // Ensure at least 200 words if screen allows, but respect physical limits
+            const calculatedMax = Math.floor(maxCapacity * 0.60);
+            const MAX_WORDS = Math.max(200, calculatedMax);
+            console.log(`📐 Screen capacity: ${maxCapacity}, Using: ${MAX_WORDS} max words (Targeting 200+, or 60% of capacity)`);
             return MAX_WORDS;
         }
 
