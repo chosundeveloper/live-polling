@@ -11,6 +11,24 @@
     <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/motion@11.11.13/dist/motion.min.js"></script>
     <script src="https://d3js.org/d3.v7.min.js"></script>
+    <style>
+        @font-face {
+            font-family: 'NanumGyuriDiary';
+            src: url('https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_two@1.0/NanumGyuriDiary.woff') format('woff');
+            font-weight: normal;
+            font-style: normal;
+        }
+
+        body.concept-display,
+        .concept-word {
+            font-family: 'NanumGyuriDiary', cursive !important;
+        }
+
+        .concept-word {
+            padding: 4px 6px !important;
+            border-width: 2px !important;
+        }
+    </style>
 </head>
 
 <body class="concept-body concept-display">
@@ -147,20 +165,23 @@
         const DEFAULT_PARTICLE_WIDTH = 200;
         const DEFAULT_PARTICLE_HEIGHT = 60;
 
+        const MAX_OCCUPANCY_RATIO = 0.2; // use only 20% of theoretical grid to leave empty space
+        const WORD_PADDING = 100; // px, additional breathing room between bubbles
+
         // Calculate max words based on screen space
         function calculateMaxWords() {
             const { width: containerWidth, height: containerHeight } = getCloudBounds();
             const avgWordWidth = 180; // Average word bubble width (increased)
             const avgWordHeight = 60; // Average word bubble height (increased)
-            const padding = 80; // Very large space between words to prevent any touching
+            const padding = WORD_PADDING; // Extra space between words to prevent touching
 
-            const wordsPerRow = Math.floor(containerWidth / (avgWordWidth + padding));
-            const wordsPerColumn = Math.floor(containerHeight / (avgWordHeight + padding));
-            const maxCapacity = wordsPerRow * wordsPerColumn;
+            const wordsPerRow = Math.max(1, Math.floor(containerWidth / (avgWordWidth + padding)));
+            const wordsPerColumn = Math.max(1, Math.floor(containerHeight / (avgWordHeight + padding)));
+            const maxCapacity = Math.max(wordsPerRow * wordsPerColumn, 1);
 
-            // Use only 30% of capacity to ensure absolutely no overlap
-            const MAX_WORDS = Math.floor(maxCapacity * 0.30);
-            console.log(`📐 Screen capacity: ${maxCapacity}, Using: ${MAX_WORDS} max words (30% to prevent overlap)`);
+            // Use 60% of capacity to show much more words while maintaining some spacing
+            const MAX_WORDS = Math.floor(maxCapacity * 0.60);
+            console.log(`📐 Screen capacity: ${maxCapacity}, Using: ${MAX_WORDS} max words (60% to prevent overlap)`);
             return MAX_WORDS;
         }
 
@@ -180,6 +201,8 @@
         const TARGET_ATTRACTION_FORCE = 0.000001;
         const RADIAL_FORCE = 0.000004;
         const MIN_WORD_LIFETIME = 7000;
+        const MOCK_BATCH_INTERVAL = 400; // Add new words more slowly
+        const MOCK_BATCH_SIZE = 2; // Small batch to prevent sudden crowding
         const TIMER_DURATION_MS = 600 * 1000; // 600 seconds (10 minutes)
         const COLOR_PALETTE = ['#5e4fa2', '#3288bd', '#66c2a5', '#abdda4', '#e6f598', '#fee08b', '#fdae61', '#f46d43', '#d53e4f', '#9e0142'];
         // Exclude yellow (#e6f598 index 4), lime green (#abdda4 index 3), light orange (#fee08b index 5), orange (#fdae61 index 6), and dark red (#9e0142 index 9)
@@ -537,9 +560,9 @@
                 .force('charge', d3.forceManyBody().strength(-150)) // Very strong repulsion to prevent overlap
                 .force('collide', d3.forceCollide(d => {
                     const { width, height } = getParticleDimensions(d);
-                    // Diagonal radius + very large padding to prevent any touching
-                    return Math.sqrt(width * width + height * height) / 2 + 60;
-                }).strength(1.0).iterations(20)) // More iterations for better collision
+                    // Diagonal radius + extra padding to prevent any touching
+                    return Math.sqrt(width * width + height * height) / 2 + 90;
+                }).strength(1.0).iterations(24)) // More iterations for better collision
                 .force('x', d3.forceX(d => d.targetX || centerW).strength(0.008)) // Very gentle attraction
                 .force('y', d3.forceY(d => d.targetY || centerH).strength(0.008))
                 .on('tick', () => {
@@ -860,6 +883,7 @@
             let count = 0;
             const question = QUESTIONS[currentQuestionIndex];
             startTimer();
+            MAX_WORDS = calculateMaxWords();
 
             function generateSingleMockAnswer(questionId, index) {
                 const currentQuestion = QUESTIONS.find(q => q.id === questionId);
@@ -902,16 +926,25 @@
                     simulationInterval = null;
                     return;
                 }
-                // Add multiple answers per tick for faster population
-                for (let i = 0; i < 5; i++) {
+
+                const remainingSlots = Math.max(0, MAX_WORDS - mockAnswers.length);
+                if (remainingSlots <= 0) {
+                    console.log('🛑 Mock capacity reached. Stopping additional word generation to avoid overlap.');
+                    clearInterval(simulationInterval);
+                    simulationInterval = null;
+                    return;
+                }
+
+                const batchSize = Math.min(MOCK_BATCH_SIZE, remainingSlots);
+                for (let i = 0; i < batchSize; i++) {
                     const newAnswer = generateSingleMockAnswer(question.id, count + i);
                     mockAnswers.unshift(newAnswer);
                 }
                 const frequencyMap = extractWordInstances(mockAnswers);
                 renderWords(frequencyMap);
                 conceptTotal.textContent = mockAnswers.length;
-                count += 5;
-            }, 100);
+                count += batchSize;
+            }, MOCK_BATCH_INTERVAL);
 
             // Simulation loop is started by renderWords if words exist
         }
