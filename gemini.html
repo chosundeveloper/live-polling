@@ -278,6 +278,7 @@
         const LAYOUT_CLAMP_BUFFER_Y = 14;
         const MAX_DISPLAYED_WORDS = 100;
         const MIN_TARGET_WORDS = 80;
+        const MAX_VISIBLE_WORDS = 85;
 
         // Calculate max words based on screen space
         function calculateMaxWords() {
@@ -855,8 +856,10 @@
             // Keep MAX_WORDS at 90 (no dynamic calculation)
             // MAX_WORDS is already set to 90
 
-            const limited = sortedWords.filter(([id, data]) => !hiddenWords.includes(data.text));
-            console.log(`📊 Displaying all words without MAX_WORDS truncation: ${limited.length}`);
+            const limited = sortedWords
+                .filter(([id, data]) => !hiddenWords.includes(data.text))
+                .slice(0, MAX_VISIBLE_WORDS);
+            console.log(`📊 Displaying ${limited.length}/${sortedWords.length} words (cap ${MAX_VISIBLE_WORDS})`);
             const newWordIds = new Set(limited.map(item => item[0]));
 
             // Auto-deletion of old words when exceeding MAX_WORDS (90)
@@ -1135,6 +1138,11 @@
                     const newAnswer = generateSingleMockAnswer(question.id, count + i);
                     mockAnswers.unshift(newAnswer);
                 }
+                if (mockAnswers.length > MAX_VISIBLE_WORDS) {
+                    const removed = mockAnswers.length - MAX_VISIBLE_WORDS;
+                    mockAnswers = mockAnswers.slice(0, MAX_VISIBLE_WORDS);
+                    console.log(`🧹 Trimmed ${removed} mock answers to keep latest ${MAX_VISIBLE_WORDS}`);
+                }
                 const frequencyMap = extractWordInstances(mockAnswers);
                 renderWords(frequencyMap);
                 conceptTotal.textContent = mockAnswers.length;
@@ -1225,6 +1233,12 @@
                                 };
                                 mockAnswers.unshift(newAnswer);
                             });
+
+                            if (mockAnswers.length > MAX_VISIBLE_WORDS) {
+                                const removed = mockAnswers.length - MAX_VISIBLE_WORDS;
+                                mockAnswers = mockAnswers.slice(0, MAX_VISIBLE_WORDS);
+                                console.log(`🧹 Trimmed ${removed} realtime answers to keep latest ${MAX_VISIBLE_WORDS}`);
+                            }
 
                             const frequencyMap = extractWordInstances(mockAnswers);
                             renderWords(frequencyMap);
