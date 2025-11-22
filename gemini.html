@@ -851,6 +851,7 @@
 
             const layout = getLayoutMetrics();
             const geometry = getSpiralGeometry(layout, limited.length);
+            const { centerW, centerH } = layout;
 
             // Helper function to add click-to-delete functionality
             function addClickToDelete(wordEl, text) {
