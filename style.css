@@ -1,15 +1,7 @@
 @font-face {
-    font-family: '강원교육모두';
-    src: url('./fonts/GangwonEdu_OTFBoldA.woff') format('woff');
-    font-weight: 700;
-    font-style: normal;
-    font-display: swap;
-}
-
-@font-face {
-    font-family: '강원교육모두';
-    src: url('./fonts/GangwonEdu_OTFLightA.woff') format('woff');
-    font-weight: 300;
+    font-family: 'NanumSonGeulssiDiary';
+    src: url('./fonts/나눔손글씨 규리의 일기.ttf') format('truetype');
+    font-weight: 400;
     font-style: normal;
     font-display: swap;
 }
@@ -34,7 +26,7 @@
 }
 
 body {
-    font-family: '강원교육모두', cursive, -apple-system, BlinkMacSystemFont, sans-serif;
+    font-family: 'NanumSonGeulssiDiary', 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif, -apple-system, BlinkMacSystemFont, sans-serif;
     background: linear-gradient(135deg, var(--color-deep) 0%, var(--color-sky) 100%);
     min-height: 100vh;
     color: var(--ink-primary);
@@ -307,7 +299,7 @@ body.display-body {
     background: #f8f9fa;
     padding: 2px 8px;
     border-radius: 4px;
-    font-family: '강원교육모두', cursive;
+    font-family: 'NanumSonGeulssiDiary', 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif;
     color: #e83e8c;
 }
 
@@ -806,7 +798,7 @@ body.display-body {
     justify-content: center;
     min-height: 100vh;
     padding: 20px;
-    font-family: '강원교육모두', cursive;
+    font-family: 'NanumSonGeulssiDiary', 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif;
 
     font-size: 16px;
 }
@@ -959,7 +951,7 @@ body.display-body {
     border: 1.5px solid #e2e8f0;
     border-radius: 8px;
     font-size: 0.9em;
-    font-family: '강원교육모두', cursive;
+    font-family: 'NanumSonGeulssiDiary', 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif;
 
     resize: vertical;
     transition: border-color 0.2s ease, box-shadow 0.2s ease;
@@ -1255,7 +1247,7 @@ footer a:hover {
     width: 100vw;
     background: #000 url('back.jpeg') center center / cover no-repeat fixed;
     color: var(--ink-primary);
-    font-family: '강원교육모두', cursive;
+    font-family: 'NanumSonGeulssiDiary', 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif;
     overflow: hidden;
     margin: 0;
     padding: 0;
@@ -1350,7 +1342,7 @@ footer a:hover {
     margin: 0;
 
     color: #ffffff;
-    font-family: '강원교육모두', cursive;
+    font-family: 'NanumSonGeulssiDiary', 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif;
     font-weight: 700;
     background: #5670e4;
     backdrop-filter: blur(10px);
@@ -1739,7 +1731,7 @@ footer a:hover {
 
 .concept-word {
     position: absolute;
-    font-family: '강원교육모두', cursive;
+    font-family: 'NanumSonGeulssiDiary', 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif;
     font-weight: 300;
 
     -webkit-text-stroke: 0.8px rgba(30, 41, 59, 0.6);
@@ -1970,7 +1962,7 @@ footer a:hover {
     font-size: 1.1rem;
 
     color: var(--ink-primary);
-    font-family: '강원교육모두', cursive;
+    font-family: 'NanumSonGeulssiDiary', 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif;
 }
 
 .concept-label {
