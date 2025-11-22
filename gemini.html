@@ -143,6 +143,7 @@
         let timerDeadline = null;
         let d3Simulation = null;
         let isTimerExpired = false;
+        let sessionStartTime = null; // 실제 모드에서 새 응답만 표시
 
         // --- Constants ---
         const KEYWORDS = ['감사한 마음', '기쁨이 넘침', '평안과 은혜', '회개와 회복', '찬양과 경배', '사랑의 충만함', '소망과 믿음', '겸손한 순종', '감격스러운 감사', '간절한 기도', '뜨거운 헌신', '잔잔한 평온', '새로운 은혜', '깊은 갈망', '진실한 고백', '축복의 시간', '치유와 회복', '새 힘을 얻음', '감동의 순간', '충만한 기쁨', '따뜻한 사랑', '간구하는 마음', '경배와 찬양', '믿음의 고백', '소망을 품음'];
@@ -1162,14 +1163,17 @@
 
             startTimer();
 
-            // Poll for new answers every 2 seconds
+            // Poll for new answers every 2 seconds (only show answers submitted after this viewer started)
             console.log('🔄 Starting polling for new answers...');
+            sessionStartTime = Date.now();
+            console.log('📍 Session started at:', new Date(sessionStartTime).toISOString());
             simulationInterval = setInterval(async () => {
                 try {
                     const { data: newAnswers, error } = await supabase
                         .from('answers')
                         .select('*')
                         .eq('question_id', question.id)
+                        .gte('created_at', new Date(sessionStartTime).toISOString())
                         .order('created_at', { ascending: false })
                         .limit(200);
 
@@ -1181,28 +1185,26 @@
                     if (newAnswers && newAnswers.length > 0) {
                         console.log(`🔄 Polled ${newAnswers.length} answers`);
 
-                        const normalized = newAnswers.map(a => ({
-                            id: a.id,
-                            question_id: a.question_id,
-                            answer: a.answer_text,
-                            answer_text: a.answer_text,
-                            created_at: a.created_at
-                        }));
+                        const existingIds = new Set(mockAnswers.map(a => a.id));
+                        const trulyNew = newAnswers.filter(a => !existingIds.has(a.id));
 
-                        if (mockAnswers.length === 0) {
-                            mockAnswers = normalized;
-                        } else {
-                            const existingIds = new Set(mockAnswers.map(a => a.id));
-                            normalized.forEach(a => {
-                                if (!existingIds.has(a.id)) {
-                                    mockAnswers.unshift(a);
-                                }
+                        if (trulyNew.length > 0) {
+                            console.log(`✨ Found ${trulyNew.length} new answers`);
+                            trulyNew.forEach(a => {
+                                const newAnswer = {
+                                    id: a.id,
+                                    question_id: a.question_id,
+                                    answer: a.answer_text,
+                                    answer_text: a.answer_text,
+                                    created_at: a.created_at
+                                };
+                                mockAnswers.unshift(newAnswer);
                             });
-                        }
 
-                        const frequencyMap = extractWordInstances(mockAnswers);
-                        renderWords(frequencyMap);
-                        conceptTotal.textContent = mockAnswers.length;
+                            const frequencyMap = extractWordInstances(mockAnswers);
+                            renderWords(frequencyMap);
+                            conceptTotal.textContent = mockAnswers.length;
+                        }
                     }
                 } catch (err) {
                     console.error('Polling exception:', err);
