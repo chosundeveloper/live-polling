@@ -677,6 +677,62 @@
             animationFrameId = requestAnimationFrame(simulationLoop);
         }
 
+        function removeWordElement(wordEl, sourceText = '') {
+            if (!wordEl || wordEl.classList.contains('concept-word-removing')) {
+                return;
+            }
+
+            const normalizedText = (sourceText || wordEl.dataset.originalText || wordEl.textContent || '').trim();
+            if (normalizedText && !hiddenWords.includes(normalizedText)) {
+                hiddenWords.push(normalizedText);
+            }
+
+            wordEl.classList.add('concept-word-removing');
+
+            const particleIndex = wordParticles.findIndex(p => p.el === wordEl);
+            if (particleIndex !== -1) {
+                wordParticles.splice(particleIndex, 1);
+            }
+
+            const finalizeRemoval = () => {
+                if (wordEl.parentNode) {
+                    wordEl.remove();
+                }
+
+                if (wordParticles.length > 0) {
+                    updateParticleTargets();
+                    if (d3Simulation) {
+                        d3Simulation.nodes(wordParticles);
+                        d3Simulation.alpha(0.3).restart();
+                    }
+                    if (!animationFrameId) {
+                        simulationLoop(performance.now());
+                    }
+                } else {
+                    wordsLayer.innerHTML = '<div class="concept-empty">첫 번째 단어를 기다리고 있어요</div>';
+                    if (animationFrameId) {
+                        cancelAnimationFrame(animationFrameId);
+                        animationFrameId = null;
+                    }
+                }
+            };
+
+            if (window.d3) {
+                d3.select(wordEl)
+                    .transition()
+                    .duration(500)
+                    .ease(d3.easeCubicOut)
+                    .style('opacity', 0)
+                    .style('transform', 'translate(-50%, -50%) scale(0.3)')
+                    .on('end', finalizeRemoval);
+            } else {
+                wordEl.style.transition = 'opacity 0.5s ease-out, transform 0.5s ease-out';
+                wordEl.style.opacity = '0';
+                wordEl.style.transform = 'translate(-50%, -50%) scale(0.3)';
+                setTimeout(finalizeRemoval, 500);
+            }
+        }
+
         function renderWords(frequencyMap) {
             const existingParticles = new Map();
             const now = performance.now();
@@ -750,77 +806,7 @@
 
                 wordEl.addEventListener('click', (e) => {
                     e.stopPropagation(); // Prevent event bubbling
-
-                    // Prevent multiple clicks
-                    if (wordEl.classList.contains('concept-word-removing')) return;
-                    wordEl.classList.add('concept-word-removing');
-
-                    console.log('🖱️ Word clicked:', text);
-
-                    // Add to hidden words to prevent re-rendering
-                    if (!hiddenWords.includes(text)) {
-                        hiddenWords.push(text);
-                    }
-
-                    // Find and remove particle immediately
-                    const particleIndex = wordParticles.findIndex(p => p.el === wordEl);
-                    if (particleIndex !== -1) {
-                        wordParticles.splice(particleIndex, 1);
-                    }
-
-                    // D3 transition for smooth fade out
-                    if (window.d3) {
-                        d3.select(wordEl)
-                            .transition()
-                            .duration(500)
-                            .ease(d3.easeCubicOut)
-                            .style('opacity', 0)
-                            .style('transform', 'translate(-50%, -50%) scale(0.3)')
-                            .on('end', () => {
-                                console.log('✅ Word removed:', text);
-                                if (wordEl.parentNode) {
-                                    wordEl.remove();
-                                }
-
-                                // Update simulation
-                                if (wordParticles.length > 0) {
-                                    updateParticleTargets();
-                                    if (d3Simulation) {
-                                        d3Simulation.nodes(wordParticles);
-                                        d3Simulation.alpha(0.3).restart();
-                                    }
-                                    if (!animationFrameId) simulationLoop(performance.now());
-                                } else {
-                                    wordsLayer.innerHTML = '<div class="concept-empty">첫 번째 단어를 기다리고 있어요</div>';
-                                    if (animationFrameId) {
-                                        cancelAnimationFrame(animationFrameId);
-                                        animationFrameId = null;
-                                    }
-                                }
-                            });
-                    } else {
-                        // Fallback without D3
-                        wordEl.style.transition = 'opacity 0.5s ease-out, transform 0.5s ease-out';
-                        wordEl.style.opacity = '0';
-                        wordEl.style.transform = 'translate(-50%, -50%) scale(0.3)';
-
-                        setTimeout(() => {
-                            if (wordEl.parentNode) {
-                                wordEl.remove();
-                            }
-
-                            if (wordParticles.length > 0) {
-                                updateParticleTargets();
-                                if (!animationFrameId) simulationLoop(performance.now());
-                            } else {
-                                wordsLayer.innerHTML = '<div class="concept-empty">첫 번째 단어를 기다리고 있어요</div>';
-                                if (animationFrameId) {
-                                    cancelAnimationFrame(animationFrameId);
-                                    animationFrameId = null;
-                                }
-                            }
-                        }, 500);
-                    }
+                    removeWordElement(wordEl, text);
                 });
             }
 
@@ -1137,6 +1123,15 @@
         }
 
         // --- Event Listeners ---
+        if (wordsLayer) {
+            wordsLayer.addEventListener('click', (event) => {
+                const target = event.target.closest('.concept-word');
+                if (!target) return;
+                const text = target.dataset.originalText || target.textContent || '';
+                removeWordElement(target, text);
+            }, true);
+        }
+
         toggleMockBtn.addEventListener('click', () => {
             console.log('toggleMockBtn clicked. isMockMode before:', isMockMode);
             isMockMode = !isMockMode;
