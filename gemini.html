@@ -302,6 +302,15 @@
         const MAX_CELL_SPREAD_RATIO = 0.45; // Increased to use more screen space
         const INNER_CORE_RATIO = 0.06; // Inner core that stays stable (very small)
         const PUSH_THRESHOLD_RATIO = 0.10; // Start pushing outward very early
+        const EDGE_PADDING_RATIO = 0.12; // Keep words away from extreme edges
+        const MIN_EDGE_PADDING = 80;
+
+        function getBoundaryPadding(width, height) {
+            return {
+                x: Math.max(width * EDGE_PADDING_RATIO, MIN_EDGE_PADDING),
+                y: Math.max(height * EDGE_PADDING_RATIO, MIN_EDGE_PADDING)
+            };
+        }
 
         function selectWordColor(weightRatio, index) {
             // Always return navy color
@@ -416,7 +425,10 @@
         const GOLDEN_ANGLE = Math.PI * (3 - Math.sqrt(5));
 
         function getSpiralGeometry(width, height, wordCount = MAX_WORDS) {
-            const usableRadius = Math.min(width, height) * MAX_CELL_SPREAD_RATIO;
+            const { x: padX, y: padY } = getBoundaryPadding(width, height);
+            const baseRadius = Math.min(width, height) * MAX_CELL_SPREAD_RATIO;
+            const maxAvailableRadius = Math.max(60, Math.min(width / 2 - padX, height / 2 - padY));
+            const usableRadius = Math.max(60, Math.min(baseRadius, maxAvailableRadius));
             const maxRadius = usableRadius * 0.95; // Slightly smaller to stay within bounds
             const minRadius = Math.max(25, maxRadius * 0.12);
             const count = Math.max(1, wordCount);
@@ -575,23 +587,24 @@
                 d3Simulation.stop();
             }
 
+            const { x: paddingX, y: paddingY } = getBoundaryPadding(containerWidth, containerHeight);
+
             d3Simulation = d3.forceSimulation(wordParticles)
                 .alphaDecay(0.002) // Slower decay for smooth settling
                 .velocityDecay(0.4) // Lower friction for fluid movement
                 .alphaMin(0.001)
                 .force('charge', d3.forceManyBody().strength(-25)) // Stronger repulsion for natural spreading
                 .force('wallRepulsion', alpha => {
-                    const padding = 80; // Distance from wall to start repelling
                     const strength = 0.5 * alpha; // Strength of repulsion
                     wordParticles.forEach(p => {
                         const halfW = (p.width || DEFAULT_PARTICLE_WIDTH) / 2;
                         const halfH = (p.height || DEFAULT_PARTICLE_HEIGHT) / 2;
 
                         // Apply force away from walls
-                        if (p.x - halfW < padding) p.vx += (padding - (p.x - halfW)) * strength;
-                        if (p.x + halfW > containerWidth - padding) p.vx -= ((p.x + halfW) - (containerWidth - padding)) * strength;
-                        if (p.y - halfH < padding) p.vy += (padding - (p.y - halfH)) * strength;
-                        if (p.y + halfH > containerHeight - padding) p.vy -= ((p.y + halfH) - (containerHeight - padding)) * strength;
+                        if (p.x - halfW < paddingX) p.vx += (paddingX - (p.x - halfW)) * strength;
+                        if (p.x + halfW > containerWidth - paddingX) p.vx -= ((p.x + halfW) - (containerWidth - paddingX)) * strength;
+                        if (p.y - halfH < paddingY) p.vy += (paddingY - (p.y - halfH)) * strength;
+                        if (p.y + halfH > containerHeight - paddingY) p.vy -= ((p.y + halfH) - (containerHeight - paddingY)) * strength;
                     });
                 })
                 .force('collide', d3.forceCollide(d => {
@@ -614,28 +627,29 @@
                         }
 
                         // Boundary Constraint with bounce
-                        const padding = 20;
+                        const paddingXWithClamp = Math.max(paddingX, 40);
+                        const paddingYWithClamp = Math.max(paddingY, 40);
                         const halfW = (p.width || DEFAULT_PARTICLE_WIDTH) / 2;
                         const halfH = (p.height || DEFAULT_PARTICLE_HEIGHT) / 2;
 
                         let nextX = p.x + p.vx;
                         let nextY = p.y + p.vy;
 
-                        if (nextX < padding + halfW) {
-                            p.x = padding + halfW;
+                        if (nextX < paddingXWithClamp + halfW) {
+                            p.x = paddingXWithClamp + halfW;
                             p.vx *= -0.2;
-                        } else if (nextX > containerWidth - padding - halfW) {
-                            p.x = containerWidth - padding - halfW;
+                        } else if (nextX > containerWidth - paddingXWithClamp - halfW) {
+                            p.x = containerWidth - paddingXWithClamp - halfW;
                             p.vx *= -0.2;
                         } else {
                             p.x = nextX;
                         }
 
-                        if (nextY < padding + halfH) {
-                            p.y = padding + halfH;
+                        if (nextY < paddingYWithClamp + halfH) {
+                            p.y = paddingYWithClamp + halfH;
                             p.vy *= -0.2;
-                        } else if (nextY > containerHeight - padding - halfH) {
-                            p.y = containerHeight - padding - halfH;
+                        } else if (nextY > containerHeight - paddingYWithClamp - halfH) {
+                            p.y = containerHeight - paddingYWithClamp - halfH;
                             p.vy *= -0.2;
                         } else {
                             p.y = nextY;
