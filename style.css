@@ -1888,6 +1888,13 @@ footer a:hover {
     pointer-events: none;
 }
 
+.concept-word-removing {
+    opacity: 0 !important;
+    transform: translate(-50%, -50%) scale(0.3) !important;
+    filter: blur(2px) !important;
+    pointer-events: none !important;
+}
+
 .concept-empty {
     position: absolute;
     left: 50%;

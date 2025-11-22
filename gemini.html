@@ -717,20 +717,30 @@
                 }
             };
 
-            if (window.d3) {
-                d3.select(wordEl)
-                    .transition()
-                    .duration(500)
-                    .ease(d3.easeCubicOut)
-                    .style('opacity', 0)
-                    .style('transform', 'translate(-50%, -50%) scale(0.3)')
-                    .on('end', finalizeRemoval);
-            } else {
-                wordEl.style.transition = 'opacity 0.5s ease-out, transform 0.5s ease-out';
+            const fallbackRemoval = () => {
+                wordEl.style.transition = 'opacity 0.45s ease-out, transform 0.45s ease-out';
                 wordEl.style.opacity = '0';
                 wordEl.style.transform = 'translate(-50%, -50%) scale(0.3)';
-                setTimeout(finalizeRemoval, 500);
+                setTimeout(finalizeRemoval, 460);
+            };
+
+            if (window.d3 && typeof window.d3.select === 'function') {
+                try {
+                    window.d3.select(wordEl)
+                        .transition()
+                        .duration(450)
+                        .ease(window.d3.easeCubicOut)
+                        .style('opacity', 0)
+                        .style('transform', 'translate(-50%, -50%) scale(0.3)')
+                        .on('end', finalizeRemoval)
+                        .on('interrupt', finalizeRemoval);
+                    return;
+                } catch (error) {
+                    console.warn('D3 removal failed, falling back to CSS animation:', error);
+                }
             }
+
+            fallbackRemoval();
         }
 
         function renderWords(frequencyMap) {
