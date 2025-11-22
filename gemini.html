@@ -593,33 +593,36 @@
         }
 
         // --- Core Functions ---
-        function updateQuestionMeta(question) {
+        function updateQuestionMeta(question, options = {}) {
+            const { preserveQr = false } = options;
             conceptQuestion.textContent = question.question;
             document.documentElement.style.setProperty('--concept-accent', question.color || '#7c3aed');
 
-            // Set question start time for timer sync
-            questionStartTime = Date.now();
-            timerDeadline = questionStartTime + TIMER_DURATION_MS;
+            if (!preserveQr) {
+                // Set question start time for timer sync
+                questionStartTime = Date.now();
+                timerDeadline = questionStartTime + TIMER_DURATION_MS;
 
-            // Pass START TIME (not deadline) so timer syncs correctly
-            const urlString = `${PUBLIC_URL}/answer.html?q=${question.id}&startTime=${questionStartTime}`;
+                // Pass START TIME (not deadline) so timer syncs correctly
+                const urlString = `${PUBLIC_URL}/answer.html?q=${question.id}&startTime=${questionStartTime}`;
 
-            // Clear and regenerate QR code
-            if (qrCodeContainer) {
-                qrCodeContainer.innerHTML = '';
-            }
+                // Clear and regenerate QR code
+                if (qrCodeContainer) {
+                    qrCodeContainer.innerHTML = '';
+                }
 
-            if (qrCodeInstance) {
-                qrCodeInstance.clear();
-                qrCodeInstance.makeCode(urlString);
-            } else {
-                qrCodeInstance = new QRCode(qrCodeContainer, { text: urlString, width: 192, height: 192, colorDark: "#0f172a", colorLight: "#ffffff", correctLevel: QRCode.CorrectLevel.H });
+                if (qrCodeInstance) {
+                    qrCodeInstance.clear();
+                    qrCodeInstance.makeCode(urlString);
+                } else {
+                    qrCodeInstance = new QRCode(qrCodeContainer, { text: urlString, width: 192, height: 192, colorDark: "#0f172a", colorLight: "#ffffff", correctLevel: QRCode.CorrectLevel.H });
+                }
             }
             ensureQrVisible();
         }
 
         function navigateToQuestion(index, options = {}) {
-            const { force = false } = options;
+            const { force = false, preserveQr = false } = options;
             const newIndex = 0; // Always use first question
             if (!force && newIndex === currentQuestionIndex && wordParticles.length > 0) {
                 return;
@@ -628,10 +631,9 @@
             currentQuestionIndex = newIndex;
             const question = QUESTIONS[currentQuestionIndex];
 
-            updateQuestionMeta(question);
+            updateQuestionMeta(question, { preserveQr });
 
-            resetDisplay();
-            if (isMockMode) startRealtimeSimulation();
+            if (isMockMode) startRealtimeSimulation({ reset: true });
             else startRealtimeSubscription();
         }
 
@@ -866,7 +868,7 @@
             // MAX_WORDS is already set to 90
 
             const limited = sortedWords
-                .filter(([id, data]) => !hiddenWords.includes(data.text))
+                .filter(([id, data]) => !hiddenWords.includes((data.text || '').trim()))
                 .slice(0, MAX_VISIBLE_WORDS);
             console.log(`📊 Displaying ${limited.length}/${sortedWords.length} words (cap ${MAX_VISIBLE_WORDS})`);
             const newWordIds = new Set(limited.map(item => item[0]));
@@ -890,19 +892,15 @@
             const geometry = getSpiralGeometry(layout, limited.length);
             const { centerW, centerH } = layout;
 
-            function addClickToDelete(wordEl, text, uniqueId) {
+            function addClickToDelete(wordEl, text) {
                 if (!wordEl || wordEl.dataset.hasClickHandler === '1') return;
                 wordEl.dataset.hasClickHandler = '1';
                 wordEl.style.cursor = 'pointer';
                 wordEl.addEventListener('click', (event) => {
                     event.stopPropagation();
-                    if (hiddenWords.length >= MAX_VISIBLE_WORDS) return;
-                    const normalizedText = text.trim();
-                    if (normalizedText && !hiddenWords.includes(normalizedText)) {
-                        hiddenWords.push(normalizedText);
-                    }
-                    removeWordElement(wordEl, normalizedText, { trackHidden: false });
-                }, { once: true });
+                    const normalizedText = (text || wordEl.dataset.originalText || '').trim();
+                    removeWordElement(wordEl, normalizedText, { trackHidden: true });
+                });
             }
 
             limited.forEach(([uniqueId, data], index) => {
@@ -933,7 +931,7 @@
                     particle.el.classList.remove('concept-word-vertical');
 
                     // Ensure click handler is attached to existing particles
-                    addClickToDelete(particle.el, text, uniqueId);
+                    addClickToDelete(particle.el, text);
                 } else {
                     const wordEl = document.createElement('span');
                     wordEl.className = 'concept-word';
@@ -963,7 +961,7 @@
                     wordEl.style.textOrientation = 'mixed';
 
                     // Add click to delete functionality
-                    addClickToDelete(wordEl, text, uniqueId);
+                    addClickToDelete(wordEl, text);
 
 
                     wordsLayer.appendChild(wordEl);
@@ -1279,7 +1277,7 @@
                     isMockMode = true;
                     isMockPaused = false;
                     updateMockButtonState();
-                    navigateToQuestion(currentQuestionIndex, { force: true });
+                    navigateToQuestion(currentQuestionIndex, { force: true, preserveQr: true });
                     return;
                 }
 
