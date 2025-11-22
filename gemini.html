@@ -127,6 +127,7 @@
         const conceptTotal = document.getElementById('conceptTotal');
         const conceptUpdated = document.getElementById('conceptUpdated');
         const qrCodeContainer = document.getElementById('conceptQrCode');
+        const qrCard = document.querySelector('.concept-qr-card');
         const toggleMockBtn = document.getElementById('toggleMock');
 
         function updateMockButtonState() {
@@ -138,6 +139,13 @@
             toggleMockBtn.textContent = label;
             toggleMockBtn.classList.toggle('active', isMockMode);
             toggleMockBtn.classList.toggle('paused', isMockPaused);
+        }
+
+        function ensureQrVisible() {
+            if (!qrCard) return;
+            qrCard.style.display = 'flex';
+            qrCard.style.visibility = 'visible';
+            qrCard.style.opacity = '1';
         }
 
         // --- State ---
@@ -607,6 +615,7 @@
             } else {
                 qrCodeInstance = new QRCode(qrCodeContainer, { text: urlString, width: 192, height: 192, colorDark: "#0f172a", colorLight: "#ffffff", correctLevel: QRCode.CorrectLevel.H });
             }
+            ensureQrVisible();
         }
 
         function navigateToQuestion(index, options = {}) {
@@ -1070,6 +1079,7 @@
             pausedTimerRemaining = null;
             mockGeneratedCount = 0;
             updateMockButtonState();
+            ensureQrVisible();
         }
 
         function startRealtimeSimulation(options = {}) {
@@ -1286,6 +1296,7 @@
         });
 
         updateMockButtonState();
+        ensureQrVisible();
 
         // --- Initial Load ---
         navigateToQuestion(0, { force: true });
