@@ -1026,7 +1026,7 @@
                 particle.el.classList.toggle('concept-word-accent', isAccent);
             });
 
-            pruneOldestParticles(MAX_DISPLAYED_WORDS);
+            pruneOldestParticles(MAX_DISPLAYED_WORDS + 20);
 
             if (!animationFrameId && wordParticles.length > 0) {
                 simulationLoop(performance.now());
