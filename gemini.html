@@ -1267,6 +1267,7 @@
 
             // Poll for new answers every 2 seconds (only show answers submitted after this viewer started)
             console.log('🔄 Starting polling for new answers...');
+            seenAnswerIds.clear();
             sessionStartTime = Date.now();
             console.log('📍 Session started at:', new Date(sessionStartTime).toISOString());
             simulationInterval = setInterval(async () => {
@@ -1275,6 +1276,7 @@
                         .from('answers')
                         .select('*')
                         .eq('question_id', question.id)
+                        .gte('created_at', new Date(sessionStartTime).toISOString())
                         .order('created_at', { ascending: false })
                         .limit(200);
 
