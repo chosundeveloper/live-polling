@@ -964,7 +964,7 @@
                     const pastelBase = pastelStyles[Math.floor(Math.random() * pastelStyles.length)].base;
                     wordEl.style.border = 'none';
                     wordEl.style.backgroundColor = `${pastelBase}1a`; // subtle fill
-                    wordEl.style.boxShadow = `0 1px 4px ${pastelBase}33`;
+                    wordEl.style.boxShadow = 'none';
 
                     // Force horizontal writing mode - prevent vertical text
                     wordEl.style.writingMode = 'horizontal-tb';
