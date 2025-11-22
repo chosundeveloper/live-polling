@@ -90,6 +90,10 @@
             <div class="concept-overlay concept-overlay-bottom-left">
                 <div class="concept-qr-card">
                     <div class="concept-qr-box" id="conceptQrCode"></div>
+                    <div class="concept-qr-meta">
+                        <span class="concept-label">휴대폰 참여</span>
+                        <a class="concept-link" id="conceptLink" href="#" target="_blank" rel="noopener">링크 준비 중</a>
+                    </div>
                 </div>
             </div>
             <div class="concept-overlay concept-overlay-bottom-right">
@@ -127,6 +131,7 @@
         const conceptTotal = document.getElementById('conceptTotal');
         const conceptUpdated = document.getElementById('conceptUpdated');
         const qrCodeContainer = document.getElementById('conceptQrCode');
+        const conceptLink = document.getElementById('conceptLink');
         const qrCard = document.querySelector('.concept-qr-card');
         const toggleMockBtn = document.getElementById('toggleMock');
 
@@ -616,6 +621,11 @@
                     qrCodeInstance.makeCode(urlString);
                 } else {
                     qrCodeInstance = new QRCode(qrCodeContainer, { text: urlString, width: 192, height: 192, colorDark: "#0f172a", colorLight: "#ffffff", correctLevel: QRCode.CorrectLevel.H });
+                }
+
+                if (conceptLink) {
+                    conceptLink.textContent = urlString;
+                    conceptLink.href = urlString;
                 }
             }
             ensureQrVisible();
@@ -1178,6 +1188,7 @@
             stopMockSimulation();
             stopTimer();
             updateMockButtonState();
+            startRealtimeSubscription({ preserveScene: true });
         }
 
         function resumeMockSimulation() {
@@ -1196,22 +1207,33 @@
             updateMockButtonState();
         }
 
-        async function startRealtimeSubscription() {
-            console.log('startRealtimeSubscription called');
-            stopAllIntervals();
-            mockAnswers = [];
-            wordParticles = [];
-            hiddenWords = [];
-            wordsLayer.innerHTML = '';
-            conceptTotal.textContent = '0';
-            stopTimer();
-            conceptUpdated.textContent = '02:00';
-            isTimerExpired = false;
+        async function startRealtimeSubscription(options = {}) {
+            const { preserveScene = false } = options;
+            console.log('startRealtimeSubscription called', preserveScene ? '(preserving scene)' : '');
+
+            if (preserveScene) {
+                if (simulationInterval) {
+                    clearInterval(simulationInterval);
+                    simulationInterval = null;
+                }
+            } else {
+                stopAllIntervals();
+                mockAnswers = [];
+                wordParticles = [];
+                hiddenWords = [];
+                wordsLayer.innerHTML = '';
+                conceptTotal.textContent = '0';
+                stopTimer();
+                conceptUpdated.textContent = '02:00';
+                isTimerExpired = false;
+            }
 
             const question = QUESTIONS[currentQuestionIndex];
             if (!question) return;
 
-            startTimer();
+            if (!preserveScene) {
+                startTimer();
+            }
 
             // Poll for new answers every 2 seconds (only show answers submitted after this viewer started)
             console.log('🔄 Starting polling for new answers...');

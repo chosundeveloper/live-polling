@@ -1729,6 +1729,17 @@ footer a:hover {
     gap: 20px;
 }
 
+.concept-link {
+    font-size: 0.75rem;
+    color: #0ea5e9;
+    text-decoration: none;
+    word-break: break-all;
+}
+
+.concept-link:hover {
+    text-decoration: underline;
+}
+
 .concept-action-ghost {
     border: 1px solid rgba(15, 23, 42, 0.15);
     background: transparent;
