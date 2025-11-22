@@ -370,7 +370,7 @@ body.display-body {
     align-items: center;
     gap: 10px;
     background: rgba(100, 141, 163, 0.3);
-    backdrop-filter: blur(10px);
+    backdrop-filter: blur(5px);
     padding: 10px 20px;
     border-radius: 30px;
     font-size: 1.1em;
@@ -1801,8 +1801,8 @@ footer a:hover {
             rgba(255, 255, 255, 0.15) 0%,
             rgba(255, 255, 255, 0.06) 50%,
             rgba(255, 255, 255, 0.09) 100%);
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
 }
 
 .concept-word-tetris::before {
@@ -1884,14 +1884,14 @@ footer a:hover {
 .concept-word-hidden {
     opacity: 0;
     transform: translate(-50%, -50%) scale(0.84);
-    filter: blur(1px);
+    filter: blur(0.4px);
     pointer-events: none;
 }
 
 .concept-word-removing {
     opacity: 0 !important;
     transform: translate(-50%, -50%) scale(0.3) !important;
-    filter: blur(2px) !important;
+    filter: blur(1px) !important;
     pointer-events: none !important;
 }
 
