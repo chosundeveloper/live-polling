@@ -951,19 +951,19 @@
 
                     // Extremely transparent pastel colors (CELL logo visible through)
                     const pastelStyles = [
-                        { base: '#ffb6c1' }, // Pink
-                        { base: '#ffd7ba' }, // Peach
-                        { base: '#fbe4d5' }, // Soft coral
-                        { base: '#dce8ff' }, // Powder blue
-                        { base: '#d7f5ea' }, // Mint
-                        { base: '#e8defe' }, // Lavender
-                        { base: '#ffe5e5' }, // Blush
-                        { base: '#ffeccb' }, // Light apricot
-                        { base: '#d8efe4' }  // Pastel teal
+                        { base: '#ffb6c1' },
+                        { base: '#ffd7ba' },
+                        { base: '#fbe4d5' },
+                        { base: '#dce8ff' },
+                        { base: '#d7f5ea' },
+                        { base: '#e8defe' },
+                        { base: '#ffe5e5' },
+                        { base: '#ffeccb' },
+                        { base: '#d8efe4' }
                     ];
                     const pastelBase = pastelStyles[Math.floor(Math.random() * pastelStyles.length)].base;
                     wordEl.style.border = 'none';
-                    wordEl.style.backgroundColor = `${pastelBase}1a`; // subtle fill
+                    wordEl.style.backgroundColor = `${pastelBase}0b`; // ultra light fill (~7%)
                     wordEl.style.boxShadow = 'none';
 
                     // Force horizontal writing mode - prevent vertical text
