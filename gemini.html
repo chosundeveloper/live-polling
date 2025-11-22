@@ -253,18 +253,24 @@
         const DEFAULT_PARTICLE_HEIGHT = 60; // Reverted to match display.html
 
         const WORD_PADDING = 100; // Reverted to match display.html
+        const EDGE_PADDING_RATIO_X = 0.05;
+        const EDGE_PADDING_RATIO_Y = 0.05;
+        const MIN_EDGE_PADDING_X = 50;
+        const MIN_EDGE_PADDING_Y = 50;
+        const RIGHT_EDGE_EXTRA_PADDING_RATIO = 0.14;
+        const MIN_RIGHT_EDGE_EXTRA_PADDING = 120;
+        const LAYOUT_CLAMP_BUFFER_X = 32;
+        const LAYOUT_CLAMP_BUFFER_Y = 26;
 
         // Calculate max words based on screen space
         function calculateMaxWords() {
-            const { width: containerWidth, height: containerHeight } = getCloudBounds();
-            // Match display.html dimensions
+            const layout = getLayoutMetrics();
             const avgWordWidth = 180;
             const avgWordHeight = 60;
-            // Tighter padding for calculation to allow higher density
             const padding = 30;
 
-            const wordsPerRow = Math.max(1, Math.floor(containerWidth / (avgWordWidth + padding)));
-            const wordsPerColumn = Math.max(1, Math.floor(containerHeight / (avgWordHeight + padding)));
+            const wordsPerRow = Math.max(1, Math.floor(layout.usableWidth / (avgWordWidth + padding)));
+            const wordsPerColumn = Math.max(1, Math.floor(layout.usableHeight / (avgWordHeight + padding)));
             const maxCapacity = Math.max(wordsPerRow * wordsPerColumn, 1);
 
             // Target exactly 100 words if space permits
@@ -303,13 +309,38 @@
         const MAX_CELL_SPREAD_RATIO = 0.45; // Increased to use more screen space
         const INNER_CORE_RATIO = 0.06; // Inner core that stays stable (very small)
         const PUSH_THRESHOLD_RATIO = 0.10; // Start pushing outward very early
-        const EDGE_PADDING_RATIO = 0.12; // Keep words away from extreme edges
-        const MIN_EDGE_PADDING = 80;
+        function clampValue(value, min, max) {
+            if (Number.isNaN(value)) return min;
+            return Math.min(Math.max(value, min), max);
+        }
 
         function getBoundaryPadding(width, height) {
+            const baseX = Math.max(width * EDGE_PADDING_RATIO_X, MIN_EDGE_PADDING_X);
+            const baseY = Math.max(height * EDGE_PADDING_RATIO_Y, MIN_EDGE_PADDING_Y);
+            const extraRight = Math.max(width * RIGHT_EDGE_EXTRA_PADDING_RATIO, MIN_RIGHT_EDGE_EXTRA_PADDING);
             return {
-                x: Math.max(width * EDGE_PADDING_RATIO, MIN_EDGE_PADDING),
-                y: Math.max(height * EDGE_PADDING_RATIO, MIN_EDGE_PADDING)
+                left: baseX,
+                right: baseX + extraRight,
+                top: baseY,
+                bottom: baseY
+            };
+        }
+
+        function getLayoutMetrics() {
+            const bounds = getCloudBounds();
+            const padding = getBoundaryPadding(bounds.width, bounds.height);
+            const usableWidth = Math.max(120, bounds.width - padding.left - padding.right);
+            const usableHeight = Math.max(120, bounds.height - padding.top - padding.bottom);
+            const centerW = padding.left + usableWidth / 2;
+            const centerH = padding.top + usableHeight / 2;
+            return {
+                width: bounds.width,
+                height: bounds.height,
+                padding,
+                usableWidth,
+                usableHeight,
+                centerW,
+                centerH
             };
         }
 
@@ -425,11 +456,11 @@
 
         const GOLDEN_ANGLE = Math.PI * (3 - Math.sqrt(5));
 
-        function getSpiralGeometry(width, height, wordCount = MAX_WORDS) {
-            const { x: padX, y: padY } = getBoundaryPadding(width, height);
-            const baseRadius = Math.min(width, height) * MAX_CELL_SPREAD_RATIO;
-            const maxAvailableRadius = Math.max(60, Math.min(width / 2 - padX, height / 2 - padY));
-            const usableRadius = Math.max(60, Math.min(baseRadius, maxAvailableRadius));
+        function getSpiralGeometry(layout, wordCount = MAX_WORDS) {
+            const baseDiameter = Math.min(layout.usableWidth, layout.usableHeight);
+            const baseRadius = (baseDiameter / 2) * MAX_CELL_SPREAD_RATIO;
+            const limitedRadius = Math.max(60, Math.min(baseRadius, baseDiameter / 2));
+            const usableRadius = Math.max(60, limitedRadius);
             const maxRadius = usableRadius * 0.95; // Slightly smaller to stay within bounds
             const minRadius = Math.max(25, maxRadius * 0.12);
             const count = Math.max(1, wordCount);
@@ -453,15 +484,21 @@
             return { rings, count };
         }
 
-        function assignParticleTarget(particle, centerW, centerH, geometry, spiralIndex = 0) {
+        function assignParticleTarget(particle, layout, geometry, spiralIndex = 0) {
             const clampedIndex = Math.max(0, Math.min(spiralIndex, geometry.count - 1));
             const ring = geometry.rings.find(r => clampedIndex < r.end) || geometry.rings[geometry.rings.length - 1];
             const radius = ring.radius;
             const angle = clampedIndex * GOLDEN_ANGLE;
             const jitterAngle = angle + (Math.random() - 0.5) * 0.04;
             const jitterRadius = radius + (Math.random() - 0.5) * Math.max(6, radius * 0.02);
-            particle.targetX = centerW + Math.cos(jitterAngle) * jitterRadius;
-            particle.targetY = centerH + Math.sin(jitterAngle) * jitterRadius;
+            const rawX = layout.centerW + Math.cos(jitterAngle) * jitterRadius;
+            const rawY = layout.centerH + Math.sin(jitterAngle) * jitterRadius;
+            const minX = layout.padding.left + LAYOUT_CLAMP_BUFFER_X;
+            const maxX = layout.width - layout.padding.right - LAYOUT_CLAMP_BUFFER_X;
+            const minY = layout.padding.top + LAYOUT_CLAMP_BUFFER_Y;
+            const maxY = layout.height - layout.padding.bottom - LAYOUT_CLAMP_BUFFER_Y;
+            particle.targetX = clampValue(rawX, minX, maxX);
+            particle.targetY = clampValue(rawY, minY, maxY);
             particle.spiralIndex = clampedIndex;
             particle.ringRadius = radius;
             particle.ringAngle = jitterAngle;
@@ -517,15 +554,13 @@
 
         function updateParticleTargets() {
             if (!wordParticles.length) return;
-            const { width, height } = getCloudBounds();
-            const centerW = width / 2;
-            const centerH = height / 2;
-            const geometry = getSpiralGeometry(width, height, wordParticles.length);
-            wordParticles.forEach(p => assignParticleTarget(p, centerW, centerH, geometry, p.spiralIndex || 0));
+            const layout = getLayoutMetrics();
+            const geometry = getSpiralGeometry(layout, wordParticles.length);
+            wordParticles.forEach(p => assignParticleTarget(p, layout, geometry, p.spiralIndex || 0));
 
             // Reinitialize D3 simulation with updated targets
             if (d3Simulation) {
-                initD3Simulation();
+                initD3Simulation(layout);
             }
         }
 
@@ -591,16 +626,17 @@
         }
 
         // --- D3 Force Simulation Setup ---
-        function initD3Simulation() {
-            const { width: containerWidth, height: containerHeight } = getCloudBounds();
-            const centerW = containerWidth / 2;
-            const centerH = containerHeight / 2;
+        function initD3Simulation(layoutContext = null) {
+            const layout = layoutContext || getLayoutMetrics();
+            const containerWidth = layout.width;
+            const containerHeight = layout.height;
+            const centerW = layout.centerW;
+            const centerH = layout.centerH;
+            const paddingVals = layout.padding;
 
             if (d3Simulation) {
                 d3Simulation.stop();
             }
-
-            const { x: paddingX, y: paddingY } = getBoundaryPadding(containerWidth, containerHeight);
 
             d3Simulation = d3.forceSimulation(wordParticles)
                 .alphaDecay(0.002) // Slower decay for smooth settling
@@ -614,10 +650,10 @@
                         const halfH = (p.height || DEFAULT_PARTICLE_HEIGHT) / 2;
 
                         // Apply force away from walls
-                        if (p.x - halfW < paddingX) p.vx += (paddingX - (p.x - halfW)) * strength;
-                        if (p.x + halfW > containerWidth - paddingX) p.vx -= ((p.x + halfW) - (containerWidth - paddingX)) * strength;
-                        if (p.y - halfH < paddingY) p.vy += (paddingY - (p.y - halfH)) * strength;
-                        if (p.y + halfH > containerHeight - paddingY) p.vy -= ((p.y + halfH) - (containerHeight - paddingY)) * strength;
+                        if (p.x - halfW < paddingVals.left) p.vx += (paddingVals.left - (p.x - halfW)) * strength;
+                        if (p.x + halfW > containerWidth - paddingVals.right) p.vx -= ((p.x + halfW) - (containerWidth - paddingVals.right)) * strength;
+                        if (p.y - halfH < paddingVals.top) p.vy += (paddingVals.top - (p.y - halfH)) * strength;
+                        if (p.y + halfH > containerHeight - paddingVals.bottom) p.vy -= ((p.y + halfH) - (containerHeight - paddingVals.bottom)) * strength;
                     });
                 })
                 .force('collide', d3.forceCollide(d => {
@@ -640,29 +676,29 @@
                         }
 
                         // Boundary Constraint with bounce
-                        const paddingXWithClamp = Math.max(paddingX, 40);
-                        const paddingYWithClamp = Math.max(paddingY, 40);
+                        const paddingXWithClamp = Math.max(paddingVals.left, 40);
+                        const paddingYWithClamp = Math.max(paddingVals.top, 40);
                         const halfW = (p.width || DEFAULT_PARTICLE_WIDTH) / 2;
                         const halfH = (p.height || DEFAULT_PARTICLE_HEIGHT) / 2;
 
                         let nextX = p.x + p.vx;
                         let nextY = p.y + p.vy;
 
-                        if (nextX < paddingXWithClamp + halfW) {
-                            p.x = paddingXWithClamp + halfW;
+                        if (nextX < paddingVals.left + halfW) {
+                            p.x = paddingVals.left + halfW;
                             p.vx *= -0.2;
-                        } else if (nextX > containerWidth - paddingXWithClamp - halfW) {
-                            p.x = containerWidth - paddingXWithClamp - halfW;
+                        } else if (nextX > containerWidth - paddingVals.right - halfW) {
+                            p.x = containerWidth - paddingVals.right - halfW;
                             p.vx *= -0.2;
                         } else {
                             p.x = nextX;
                         }
 
-                        if (nextY < paddingYWithClamp + halfH) {
-                            p.y = paddingYWithClamp + halfH;
+                        if (nextY < paddingVals.top + halfH) {
+                            p.y = paddingVals.top + halfH;
                             p.vy *= -0.2;
-                        } else if (nextY > containerHeight - paddingYWithClamp - halfH) {
-                            p.y = containerHeight - paddingYWithClamp - halfH;
+                        } else if (nextY > containerHeight - paddingVals.bottom - halfH) {
+                            p.y = containerHeight - paddingVals.bottom - halfH;
                             p.vy *= -0.2;
                         } else {
                             p.y = nextY;
@@ -814,10 +850,8 @@
             });
 
 
-            const { width: containerWidth, height: containerHeight } = getCloudBounds();
-            const centerW = containerWidth / 2;
-            const centerH = containerHeight / 2;
-            const geometry = getSpiralGeometry(containerWidth, containerHeight, limited.length);
+            const layout = getLayoutMetrics();
+            const geometry = getSpiralGeometry(layout, limited.length);
 
             // Helper function to add click-to-delete functionality
             function addClickToDelete(wordEl, text) {
@@ -859,7 +893,7 @@
                     // Existing particle - keep fixed font size, no changes
                     if (particle.phase !== 'intro') {
                         const oldSpiralIndex = particle.spiralIndex;
-                        assignParticleTarget(particle, centerW, centerH, geometry, spiralIndex);
+                        assignParticleTarget(particle, layout, geometry, spiralIndex);
 
                         // 순위(위치)가 변경된 경우에만 고정 해제하여 이동 허용
                         if (oldSpiralIndex !== spiralIndex) {
@@ -943,13 +977,19 @@
                         bornAt: now,
                         color: assignedColor
                     };
-                    assignParticleTarget(particle, centerW, centerH, geometry, spiralIndex);
+                    assignParticleTarget(particle, layout, geometry, spiralIndex);
 
                     // Start near target position with some randomness to prevent clumping
                     // This prevents words from appearing in a line at the top
                     const randomOffset = 100; // pixels
-                    particle.x = particle.targetX + (Math.random() - 0.5) * randomOffset;
-                    particle.y = particle.targetY + (Math.random() - 0.5) * randomOffset;
+                    const xJitter = particle.targetX + (Math.random() - 0.5) * randomOffset;
+                    const yJitter = particle.targetY + (Math.random() - 0.5) * randomOffset;
+                    const minX = layout.padding.left + LAYOUT_CLAMP_BUFFER_X;
+                    const maxX = layout.width - layout.padding.right - LAYOUT_CLAMP_BUFFER_X;
+                    const minY = layout.padding.top + LAYOUT_CLAMP_BUFFER_Y;
+                    const maxY = layout.height - layout.padding.bottom - LAYOUT_CLAMP_BUFFER_Y;
+                    particle.x = clampValue(xJitter, minX, maxX);
+                    particle.y = clampValue(yJitter, minY, maxY);
                     particle.prevX = particle.x;
                     particle.prevY = particle.y;
                     wordEl.style.left = `${particle.x}px`;
