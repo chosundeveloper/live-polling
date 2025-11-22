@@ -950,20 +950,20 @@
 
                     // Extremely transparent pastel colors (CELL logo visible through)
                     const pastelStyles = [
-                        { bg: 'rgba(255, 183, 197, 0.12)', border: 'rgba(255, 183, 197, 0.24)' }, // Pink
-                        { bg: 'rgba(255, 214, 165, 0.12)', border: 'rgba(255, 214, 165, 0.24)' }, // Peach
-                        { bg: 'rgba(250, 227, 217, 0.12)', border: 'rgba(250, 227, 217, 0.24)' }, // Soft coral
-                        { bg: 'rgba(224, 236, 255, 0.12)', border: 'rgba(224, 236, 255, 0.24)' }, // Powder blue
-                        { bg: 'rgba(210, 245, 227, 0.12)', border: 'rgba(210, 245, 227, 0.24)' }, // Mint
-                        { bg: 'rgba(231, 223, 255, 0.12)', border: 'rgba(231, 223, 255, 0.24)' }, // Lavender
-                        { bg: 'rgba(255, 233, 233, 0.12)', border: 'rgba(255, 233, 233, 0.24)' }, // Blush
-                        { bg: 'rgba(255, 240, 219, 0.12)', border: 'rgba(255, 240, 219, 0.24)' }, // Light apricot
-                        { bg: 'rgba(219, 236, 227, 0.12)', border: 'rgba(219, 236, 227, 0.24)' }  // Pastel teal
+                        { base: '#ffb6c1' }, // Pink
+                        { base: '#ffd7ba' }, // Peach
+                        { base: '#fbe4d5' }, // Soft coral
+                        { base: '#dce8ff' }, // Powder blue
+                        { base: '#d7f5ea' }, // Mint
+                        { base: '#e8defe' }, // Lavender
+                        { base: '#ffe5e5' }, // Blush
+                        { base: '#ffeccb' }, // Light apricot
+                        { base: '#d8efe4' }  // Pastel teal
                     ];
-                    const pastelStyle = pastelStyles[Math.floor(Math.random() * pastelStyles.length)];
-                    wordEl.style.border = `2px solid ${pastelStyle.border}`;
-                    wordEl.style.backgroundColor = pastelStyle.bg;
-                    wordEl.style.boxShadow = `0 4px 12px rgba(0, 0, 0, 0.08)`;
+                    const pastelBase = pastelStyles[Math.floor(Math.random() * pastelStyles.length)].base;
+                    wordEl.style.border = `2px solid ${pastelBase}`;
+                    wordEl.style.backgroundColor = `${pastelBase}0f`; // subtle fill
+                    wordEl.style.boxShadow = `0 1px 6px ${pastelBase}33`;
 
                     // Force horizontal writing mode - prevent vertical text
                     wordEl.style.writingMode = 'horizontal-tb';
