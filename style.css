@@ -370,7 +370,7 @@ body.display-body {
     align-items: center;
     gap: 10px;
     background: rgba(100, 141, 163, 0.3);
-    backdrop-filter: blur(2px);
+    backdrop-filter: blur(0.5px);
     padding: 10px 20px;
     border-radius: 30px;
     font-size: 1.1em;
@@ -1798,8 +1798,8 @@ footer a:hover {
             rgba(255, 255, 255, 0.15) 0%,
             rgba(255, 255, 255, 0.06) 50%,
             rgba(255, 255, 255, 0.09) 100%);
-    backdrop-filter: blur(3px);
-    -webkit-backdrop-filter: blur(3px);
+    backdrop-filter: blur(1px);
+    -webkit-backdrop-filter: blur(1px);
 }
 
 .concept-word-tetris::before {
