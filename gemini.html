@@ -98,16 +98,16 @@
             </div>
             <div class="concept-overlay concept-overlay-bottom-right">
                 <div class="concept-stats-card">
-                    <div>
+                    <div class="concept-total-block">
                         <p class="concept-label">누적 답변</p>
                         <p class="concept-value" id="conceptTotal">0</p>
                     </div>
                     <div class="concept-timer-row">
                         <div>
                             <p class="concept-label">현재 시간</p>
-                            <p class="concept-value" id="conceptClock">--:--:--</p>
+                            <p class="concept-value concept-clock-value" id="conceptClock">--:--:--</p>
                         </div>
-                        <div>
+                        <div class="concept-timer-block">
                             <p class="concept-label">타이머</p>
                             <p class="concept-value" id="conceptUpdated">02:00</p>
                         </div>
@@ -197,6 +197,7 @@
         let mockGeneratedCount = 0;
         let totalAnswerCount = 0;
         let clockInterval = null;
+        const seenAnswerIds = new Set();
 
         // --- Constants ---
         const KEYWORDS = ['감사한 마음', '기쁨이 넘침', '평안과 은혜', '회개와 회복', '찬양과 경배', '사랑의 충만함', '소망과 믿음', '겸손한 순종', '감격스러운 감사', '간절한 기도', '뜨거운 헌신', '잔잔한 평온', '새로운 은혜', '깊은 갈망', '진실한 고백', '축복의 시간', '치유와 회복', '새 힘을 얻음', '감동의 순간', '충만한 기쁨', '따뜻한 사랑', '간구하는 마음', '경배와 찬양', '믿음의 고백', '소망을 품음'];
@@ -1112,6 +1113,7 @@
             isMockPaused = false;
             pausedTimerRemaining = null;
             mockGeneratedCount = 0;
+            seenAnswerIds.clear();
             updateMockButtonState();
             ensureQrVisible();
         }
@@ -1254,6 +1256,7 @@
                 stopTimer();
                 conceptUpdated.textContent = '02:00';
                 isTimerExpired = false;
+                seenAnswerIds.clear();
             }
 
             const question = QUESTIONS[currentQuestionIndex];
@@ -1273,7 +1276,6 @@
                         .from('answers')
                         .select('*')
                         .eq('question_id', question.id)
-                        .gte('created_at', new Date(sessionStartTime).toISOString())
                         .order('created_at', { ascending: false })
                         .limit(200);
 
@@ -1285,12 +1287,17 @@
                     if (newAnswers && newAnswers.length > 0) {
                         console.log(`🔄 Polled ${newAnswers.length} answers`);
 
-                        const existingIds = new Set(mockAnswers.map(a => a.id));
-                        const trulyNew = newAnswers.filter(a => !existingIds.has(a.id));
+                        const freshAnswers = [];
+                        newAnswers.forEach(a => {
+                            if (!seenAnswerIds.has(a.id)) {
+                                seenAnswerIds.add(a.id);
+                                freshAnswers.push(a);
+                            }
+                        });
 
-                        if (trulyNew.length > 0) {
-                            console.log(`✨ Found ${trulyNew.length} new answers`);
-                            trulyNew.forEach(a => {
+                        if (freshAnswers.length > 0) {
+                            console.log(`✨ Found ${freshAnswers.length} new answers`);
+                            freshAnswers.forEach(a => {
                                 const newAnswer = {
                                     id: a.id,
                                     question_id: a.question_id,
@@ -1309,7 +1316,7 @@
 
                             const frequencyMap = extractWordInstances(mockAnswers);
                             renderWords(frequencyMap);
-                            totalAnswerCount += trulyNew.length;
+                            totalAnswerCount += freshAnswers.length;
                             conceptTotal.textContent = totalAnswerCount.toString();
                         }
                     }

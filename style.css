@@ -841,11 +841,7 @@ body.display-body {
 
 /* 타이머 */
 .timer-container {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 6px;
-    margin-bottom: 16px;
+    display: none;
 }
 
 .timer-circle {
@@ -1729,11 +1725,22 @@ footer a:hover {
     gap: 20px;
 }
 
+.concept-total-block,
+.concept-timer-block {
+    display: none !important;
+}
+
 .concept-link {
     font-size: 0.75rem;
     color: #0ea5e9;
     text-decoration: none;
     word-break: break-all;
+}
+
+.concept-clock-value {
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: #ffffff;
 }
 
 .concept-link:hover {
