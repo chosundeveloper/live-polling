@@ -252,14 +252,14 @@
         const DEFAULT_PARTICLE_HEIGHT = 60; // Reverted to match display.html
 
         const WORD_PADDING = 100; // Reverted to match display.html
-        const EDGE_PADDING_RATIO_X = 0.05;
-        const EDGE_PADDING_RATIO_Y = 0.12;
-        const MIN_EDGE_PADDING_X = 50;
-        const MIN_EDGE_PADDING_Y = 90;
-        const RIGHT_EDGE_EXTRA_PADDING_RATIO = 0.14;
-        const MIN_RIGHT_EDGE_EXTRA_PADDING = 120;
-        const LAYOUT_CLAMP_BUFFER_X = 32;
-        const LAYOUT_CLAMP_BUFFER_Y = 26;
+        const EDGE_PADDING_RATIO_X = 0.03;
+        const EDGE_PADDING_RATIO_Y = 0.08;
+        const MIN_EDGE_PADDING_X = 30;
+        const MIN_EDGE_PADDING_Y = 70;
+        const RIGHT_EDGE_EXTRA_PADDING_RATIO = 0.08;
+        const MIN_RIGHT_EDGE_EXTRA_PADDING = 80;
+        const LAYOUT_CLAMP_BUFFER_X = 20;
+        const LAYOUT_CLAMP_BUFFER_Y = 20;
 
         // Calculate max words based on screen space
         function calculateMaxWords() {
@@ -457,7 +457,7 @@
 
         function getSpiralGeometry(layout, wordCount = MAX_WORDS) {
             const baseDiameter = Math.min(layout.usableWidth, layout.usableHeight);
-            const baseRadius = (baseDiameter / 2) * MAX_CELL_SPREAD_RATIO;
+            const baseRadius = (baseDiameter / 2) * (MAX_CELL_SPREAD_RATIO + 0.08);
             const limitedRadius = Math.max(60, Math.min(baseRadius, baseDiameter / 2));
             const usableRadius = Math.max(60, limitedRadius);
             const maxRadius = usableRadius * 0.95; // Slightly smaller to stay within bounds
