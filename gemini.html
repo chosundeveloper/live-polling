@@ -104,6 +104,10 @@
                     </div>
                     <div class="concept-timer-row">
                         <div>
+                            <p class="concept-label">현재 시간</p>
+                            <p class="concept-value" id="conceptClock">--:--:--</p>
+                        </div>
+                        <div>
                             <p class="concept-label">타이머</p>
                             <p class="concept-value" id="conceptUpdated">02:00</p>
                         </div>
@@ -130,6 +134,7 @@
         const wordsLayer = document.getElementById('conceptWords');
         const conceptTotal = document.getElementById('conceptTotal');
         const conceptUpdated = document.getElementById('conceptUpdated');
+        const conceptClock = document.getElementById('conceptClock');
         const qrCodeContainer = document.getElementById('conceptQrCode');
         const conceptLink = document.getElementById('conceptLink');
         const qrCard = document.querySelector('.concept-qr-card');
@@ -153,6 +158,24 @@
             qrCard.style.opacity = '1';
         }
 
+        function updateCurrentTime() {
+            if (!conceptClock) return;
+            const now = new Date();
+            const hours = String(now.getHours()).padStart(2, '0');
+            const minutes = String(now.getMinutes()).padStart(2, '0');
+            const seconds = String(now.getSeconds()).padStart(2, '0');
+            conceptClock.textContent = `${hours}:${minutes}:${seconds}`;
+        }
+
+        function startClock() {
+            if (!conceptClock) return;
+            if (clockInterval) {
+                clearInterval(clockInterval);
+            }
+            updateCurrentTime();
+            clockInterval = setInterval(updateCurrentTime, 1000);
+        }
+
         // --- State ---
         const params = new URLSearchParams(window.location.search);
         let currentQuestionIndex = 0;
@@ -172,6 +195,8 @@
         let isMockPaused = false;
         let pausedTimerRemaining = null;
         let mockGeneratedCount = 0;
+        let totalAnswerCount = 0;
+        let clockInterval = null;
 
         // --- Constants ---
         const KEYWORDS = ['감사한 마음', '기쁨이 넘침', '평안과 은혜', '회개와 회복', '찬양과 경배', '사랑의 충만함', '소망과 믿음', '겸손한 순종', '감격스러운 감사', '간절한 기도', '뜨거운 헌신', '잔잔한 평온', '새로운 은혜', '깊은 갈망', '진실한 고백', '축복의 시간', '치유와 회복', '새 힘을 얻음', '감동의 순간', '충만한 기쁨', '따뜻한 사랑', '간구하는 마음', '경배와 찬양', '믿음의 고백', '소망을 품음'];
@@ -1078,6 +1103,7 @@
             wordParticles = [];
             hiddenWords = [];
             wordsLayer.innerHTML = '';
+            totalAnswerCount = 0;
             conceptTotal.textContent = '0';
             stopTimer();
             conceptUpdated.textContent = '02:00';
@@ -1172,7 +1198,8 @@
                 }
                 const frequencyMap = extractWordInstances(mockAnswers);
                 renderWords(frequencyMap);
-                conceptTotal.textContent = mockAnswers.length;
+                totalAnswerCount += batchSize;
+                conceptTotal.textContent = totalAnswerCount.toString();
                 count += batchSize;
                 mockGeneratedCount = count;
             }, MOCK_BATCH_INTERVAL);
@@ -1222,6 +1249,7 @@
                 wordParticles = [];
                 hiddenWords = [];
                 wordsLayer.innerHTML = '';
+                totalAnswerCount = 0;
                 conceptTotal.textContent = '0';
                 stopTimer();
                 conceptUpdated.textContent = '02:00';
@@ -1281,7 +1309,8 @@
 
                             const frequencyMap = extractWordInstances(mockAnswers);
                             renderWords(frequencyMap);
-                            conceptTotal.textContent = mockAnswers.length;
+                            totalAnswerCount += trulyNew.length;
+                            conceptTotal.textContent = totalAnswerCount.toString();
                         }
                     }
                 } catch (err) {
@@ -1320,6 +1349,7 @@
 
         updateMockButtonState();
         ensureQrVisible();
+        startClock();
 
         // --- Initial Load ---
         navigateToQuestion(0, { force: true });

@@ -1752,6 +1752,13 @@ footer a:hover {
     display: flex;
     align-items: center;
     gap: 12px;
+    flex-wrap: wrap;
+}
+
+.concept-timer-row > div {
+    display: flex;
+    flex-direction: column;
+    min-width: 110px;
 }
 
 
