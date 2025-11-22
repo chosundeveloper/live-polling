@@ -881,10 +881,19 @@
             const geometry = getSpiralGeometry(layout, limited.length);
             const { centerW, centerH } = layout;
 
-            // Helper exists for legacy compatibility but we intentionally disable removals
-            function addClickToDelete(wordEl) {
+            function addClickToDelete(wordEl, text, uniqueId) {
+                if (!wordEl || wordEl.dataset.hasClickHandler === '1') return;
                 wordEl.dataset.hasClickHandler = '1';
-                wordEl.style.cursor = 'default';
+                wordEl.style.cursor = 'pointer';
+                wordEl.addEventListener('click', (event) => {
+                    event.stopPropagation();
+                    if (hiddenWords.length >= MAX_VISIBLE_WORDS) return;
+                    const normalizedText = text.trim();
+                    if (normalizedText && !hiddenWords.includes(normalizedText)) {
+                        hiddenWords.push(normalizedText);
+                    }
+                    removeWordElement(wordEl, normalizedText, { trackHidden: false });
+                }, { once: true });
             }
 
             limited.forEach(([uniqueId, data], index) => {
@@ -915,7 +924,7 @@
                     particle.el.classList.remove('concept-word-vertical');
 
                     // Ensure click handler is attached to existing particles
-                    addClickToDelete(particle.el, text);
+                    addClickToDelete(particle.el, text, uniqueId);
                 } else {
                     const wordEl = document.createElement('span');
                     wordEl.className = 'concept-word';
@@ -945,7 +954,7 @@
                     wordEl.style.textOrientation = 'mixed';
 
                     // Add click to delete functionality
-                    addClickToDelete(wordEl, text);
+                    addClickToDelete(wordEl, text, uniqueId);
 
 
                     wordsLayer.appendChild(wordEl);
