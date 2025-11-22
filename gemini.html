@@ -261,6 +261,7 @@
         const MIN_RIGHT_EDGE_EXTRA_PADDING = 80;
         const LAYOUT_CLAMP_BUFFER_X = 20;
         const LAYOUT_CLAMP_BUFFER_Y = 20;
+        const MAX_DISPLAYED_WORDS = 90;
 
         // Calculate max words based on screen space
         function calculateMaxWords() {
@@ -276,13 +277,13 @@
             // Target exactly 100 words if space permits
             // Use 80% capacity to allow reaching 100 words while relying on physics to prevent overlap
             const densityLimit = Math.max(10, Math.floor(maxCapacity * 0.65));
-            const MAX_WORDS = Math.min(70, densityLimit);
+            const MAX_WORDS = Math.min(MAX_DISPLAYED_WORDS, densityLimit);
 
             console.log(`📐 Screen capacity: ${maxCapacity}, Density Limit: ${densityLimit}, Using: ${MAX_WORDS} max words (Target 100)`);
             return MAX_WORDS;
         }
 
-        let MAX_WORDS = 70; // Maximum 70 words visible at once
+        let MAX_WORDS = MAX_DISPLAYED_WORDS; // Maximum visible words capped by density
         const INTRO_DURATION_BASE = 180000; // extremely slow duration (3 minutes)
         const INTRO_DURATION_VARIANCE = 20000;
         const INTRO_BLOOM_JITTER = 0; // No bloom
@@ -740,13 +741,14 @@
             animationFrameId = requestAnimationFrame(simulationLoop);
         }
 
-        function removeWordElement(wordEl, sourceText = '') {
+        function removeWordElement(wordEl, sourceText = '', options = {}) {
+            const { trackHidden = true } = options;
             if (!wordEl || wordEl.classList.contains('concept-word-removing')) {
                 return;
             }
 
             const normalizedText = (sourceText || wordEl.dataset.originalText || wordEl.textContent || '').trim();
-            if (normalizedText && !hiddenWords.includes(normalizedText)) {
+            if (trackHidden && normalizedText && !hiddenWords.includes(normalizedText)) {
                 hiddenWords.push(normalizedText);
             }
 
@@ -804,6 +806,24 @@
             }
 
             fallbackRemoval();
+        }
+
+        function pruneOldestParticles(maxCount = MAX_DISPLAYED_WORDS) {
+            if (wordParticles.length <= maxCount) {
+                return;
+            }
+
+            const overflow = wordParticles.length - maxCount;
+            const candidates = [...wordParticles]
+                .filter(p => p && p.el && !p.el.classList.contains('concept-word-removing'))
+                .sort((a, b) => (a.bornAt || 0) - (b.bornAt || 0));
+
+            for (let i = 0; i < overflow && i < candidates.length; i++) {
+                const particle = candidates[i];
+                if (particle?.el) {
+                    removeWordElement(particle.el, particle.el.dataset.originalText || '', { trackHidden: false });
+                }
+            }
         }
 
         function renderWords(frequencyMap) {
@@ -1011,6 +1031,8 @@
                 particle.el.classList.toggle('concept-word-hero', isHero);
                 particle.el.classList.toggle('concept-word-accent', isAccent);
             });
+
+            pruneOldestParticles(MAX_DISPLAYED_WORDS);
 
             if (!animationFrameId && wordParticles.length > 0) {
                 simulationLoop(performance.now());
