@@ -1635,13 +1635,13 @@ footer a:hover {
 }
 
 .concept-overlay-bottom-left {
-    bottom: 26px;
-    left: 26px;
+    bottom: 12px;
+    left: 12px;
 }
 
 .concept-overlay-bottom-right {
-    bottom: 26px;
-    right: 26px;
+    bottom: 12px;
+    right: 12px;
 }
 
 
@@ -1740,6 +1740,10 @@ footer a:hover {
 .concept-clock-value {
     font-size: 1.5rem;
     font-weight: 600;
+    color: #ffffff;
+}
+
+.concept-clock-label {
     color: #ffffff;
 }
 
