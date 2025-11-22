@@ -262,6 +262,7 @@
         const LAYOUT_CLAMP_BUFFER_X = 20;
         const LAYOUT_CLAMP_BUFFER_Y = 20;
         const MAX_DISPLAYED_WORDS = 90;
+        const MIN_TARGET_WORDS = 90;
 
         // Calculate max words based on screen space
         function calculateMaxWords() {
@@ -276,7 +277,8 @@
 
             // Target exactly 100 words if space permits
             // Use 80% capacity to allow reaching 100 words while relying on physics to prevent overlap
-            const densityLimit = Math.max(10, Math.floor(maxCapacity * 0.65));
+            const desiredDensity = Math.floor(maxCapacity * 0.95);
+            const densityLimit = Math.min(maxCapacity, Math.max(MIN_TARGET_WORDS, desiredDensity));
             const MAX_WORDS = Math.min(MAX_DISPLAYED_WORDS, densityLimit);
 
             console.log(`📐 Screen capacity: ${maxCapacity}, Density Limit: ${densityLimit}, Using: ${MAX_WORDS} max words (Target 100)`);
