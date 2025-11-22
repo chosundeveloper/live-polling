@@ -1743,13 +1743,6 @@ footer a:hover {
     color: #ffffff;
 }
 
-.concept-label.concept-clock-label {
-    color: #ffffff;
-    text-transform: none;
-    letter-spacing: 0.02em;
-    font-size: 1.4rem;
-}
-
 .concept-clock-wrapper {
     margin-left: auto;
     align-items: flex-end;
