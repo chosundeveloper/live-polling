@@ -129,6 +129,17 @@
         const qrCodeContainer = document.getElementById('conceptQrCode');
         const toggleMockBtn = document.getElementById('toggleMock');
 
+        function updateMockButtonState() {
+            if (!toggleMockBtn) return;
+            let label = '모의';
+            if (isMockMode) {
+                label = isMockPaused ? '모의 재개' : '모의 일시정지';
+            }
+            toggleMockBtn.textContent = label;
+            toggleMockBtn.classList.toggle('active', isMockMode);
+            toggleMockBtn.classList.toggle('paused', isMockPaused);
+        }
+
         // --- State ---
         const params = new URLSearchParams(window.location.search);
         let currentQuestionIndex = 0;
@@ -145,6 +156,9 @@
         let d3Simulation = null;
         let isTimerExpired = false;
         let sessionStartTime = null; // 실제 모드에서 새 응답만 표시
+        let isMockPaused = false;
+        let pausedTimerRemaining = null;
+        let mockGeneratedCount = 0;
 
         // --- Constants ---
         const KEYWORDS = ['감사한 마음', '기쁨이 넘침', '평안과 은혜', '회개와 회복', '찬양과 경배', '사랑의 충만함', '소망과 믿음', '겸손한 순종', '감격스러운 감사', '간절한 기도', '뜨거운 헌신', '잔잔한 평온', '새로운 은혜', '깊은 갈망', '진실한 고백', '축복의 시간', '치유와 회복', '새 힘을 얻음', '감동의 순간', '충만한 기쁨', '따뜻한 사랑', '간구하는 마음', '경배와 찬양', '믿음의 고백', '소망을 품음'];
@@ -544,6 +558,7 @@
             stopTimer();
             isTimerExpired = false;
             timerDeadline = Date.now() + TIMER_DURATION_MS;
+            pausedTimerRemaining = null;
             updateTimerDisplay();
             timerInterval = setInterval(updateTimerDisplay, 1000);
         }
@@ -1038,14 +1053,24 @@
             stopTimer();
             conceptUpdated.textContent = '02:00';
             isTimerExpired = false;
+            timerDeadline = null;
+            isMockPaused = false;
+            pausedTimerRemaining = null;
+            mockGeneratedCount = 0;
+            updateMockButtonState();
         }
 
-        function startRealtimeSimulation() {
-            console.log('startRealtimeSimulation called');
-            resetDisplay();
-            let count = 0;
+        function startRealtimeSimulation(options = {}) {
+            const { reset = true } = options;
+            console.log('startRealtimeSimulation called', reset ? '(with reset)' : '(resume)');
+            if (reset) {
+                resetDisplay();
+                startTimer();
+            } else {
+                stopMockSimulation();
+            }
+            let count = reset ? 0 : mockGeneratedCount;
             const question = QUESTIONS[currentQuestionIndex];
-            startTimer();
             MAX_WORDS = calculateMaxWords();
 
             function generateSingleMockAnswer(questionId, index) {
@@ -1114,9 +1139,36 @@
                 renderWords(frequencyMap);
                 conceptTotal.textContent = mockAnswers.length;
                 count += batchSize;
+                mockGeneratedCount = count;
             }, MOCK_BATCH_INTERVAL);
 
             // Simulation loop is started by renderWords if words exist
+        }
+
+        function pauseMockSimulation() {
+            if (!isMockMode || isMockPaused) return;
+            console.log('⏸️ Pausing mock simulation');
+            isMockPaused = true;
+            pausedTimerRemaining = timerDeadline ? Math.max(0, timerDeadline - Date.now()) : null;
+            stopMockSimulation();
+            stopTimer();
+            updateMockButtonState();
+        }
+
+        function resumeMockSimulation() {
+            if (!isMockMode || !isMockPaused) return;
+            console.log('▶️ Resuming mock simulation');
+            isMockPaused = false;
+            if (pausedTimerRemaining !== null) {
+                timerDeadline = Date.now() + pausedTimerRemaining;
+                updateTimerDisplay();
+                timerInterval = setInterval(updateTimerDisplay, 1000);
+                pausedTimerRemaining = null;
+            } else {
+                startTimer();
+            }
+            startRealtimeSimulation({ reset: false });
+            updateMockButtonState();
         }
 
         async function startRealtimeSubscription() {
@@ -1188,25 +1240,32 @@
         // --- Event Listeners ---
         // Intentionally no click-to-remove handler so displayed words persist
 
-        toggleMockBtn.addEventListener('click', () => {
-            console.log('toggleMockBtn clicked. isMockMode before:', isMockMode);
-            isMockMode = !isMockMode;
-            toggleMockBtn.classList.toggle('active', isMockMode);
-            console.log('toggleMockBtn clicked. isMockMode after:', isMockMode);
-            navigateToQuestion(currentQuestionIndex, { force: true });
-        });
+        if (toggleMockBtn) {
+            toggleMockBtn.addEventListener('click', () => {
+                if (!isMockMode) {
+                    isMockMode = true;
+                    isMockPaused = false;
+                    updateMockButtonState();
+                    navigateToQuestion(currentQuestionIndex, { force: true });
+                    return;
+                }
+
+                if (isMockPaused) {
+                    resumeMockSimulation();
+                } else {
+                    pauseMockSimulation();
+                }
+            });
+        }
 
         window.addEventListener('resize', () => {
             updateParticleTargets();
         });
 
+        updateMockButtonState();
+
         // --- Initial Load ---
         navigateToQuestion(0, { force: true });
-
-        // 초기 버튼 상태 설정
-        if (isMockMode) {
-            toggleMockBtn.classList.add('active');
-        }
     </script>
 </body>
 
