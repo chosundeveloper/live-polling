@@ -310,7 +310,7 @@
         const COLOR_PALETTE = ['#5e4fa2', '#3288bd', '#66c2a5', '#abdda4', '#e6f598', '#fee08b', '#fdae61', '#f46d43', '#d53e4f', '#9e0142'];
         // Exclude yellow (#e6f598 index 4), lime green (#abdda4 index 3), light orange (#fee08b index 5), orange (#fdae61 index 6), and dark red (#9e0142 index 9)
         const EXCLUDED_COLOR_INDICES = [3, 4, 5, 6, 9];
-        const MAX_CELL_SPREAD_RATIO = 0.45; // Increased to use more screen space
+        const MAX_CELL_SPREAD_RATIO = 0.35; // Slightly tighter spiral radius for denser layout
         const INNER_CORE_RATIO = 0.06; // Inner core that stays stable (very small)
         const PUSH_THRESHOLD_RATIO = 0.10; // Start pushing outward very early
         function clampValue(value, min, max) {
@@ -646,7 +646,7 @@
                 .alphaDecay(0.002) // Slower decay for smooth settling
                 .velocityDecay(0.4) // Lower friction for fluid movement
                 .alphaMin(0.001)
-                .force('charge', d3.forceManyBody().strength(-25)) // Stronger repulsion for natural spreading
+                .force('charge', d3.forceManyBody().strength(-15)) // Slightly weaker repulsion for tighter packing
                 .force('wallRepulsion', alpha => {
                     const strength = 0.5 * alpha; // Strength of repulsion
                     wordParticles.forEach(p => {
@@ -662,9 +662,8 @@
                 })
                 .force('collide', d3.forceCollide(d => {
                     const { width, height } = getParticleDimensions(d);
-                    // Encourage larger minimum gaps between words
-                    return Math.max(width, height) / 2 + 30;
-                }).strength(1.2).iterations(32))
+                    return Math.max(width, height) / 2 + 10;
+                }).strength(1.0).iterations(24))
                 .force('x', d3.forceX(d => d.targetX || centerW).strength(0.015)) // Weaker pull for more organic spread
                 .force('y', d3.forceY(d => d.targetY || centerH).strength(0.015))
                 .on('tick', () => {
@@ -951,11 +950,11 @@
 
                     // Extremely transparent pastel colors (CELL logo visible through)
                     const pastelStyles = [
-                        '#f9a8d4', '#fed7aa', '#ffe4c4', '#bfdbfe', '#c7f9e9', '#ddd6fe', '#ffe0e0', '#ffe8bb', '#c9efe0'
+                        '#f472b6', '#fbbf24', '#facc15', '#60a5fa', '#34d399', '#a78bfa', '#fda4af', '#fcd34d', '#6ee7b7'
                     ];
                     const pastelBase = pastelStyles[Math.floor(Math.random() * pastelStyles.length)];
                     wordEl.style.border = 'none';
-                    wordEl.style.backgroundColor = `${pastelBase}33`; // 20% alpha
+                    wordEl.style.backgroundColor = `${pastelBase}18`; // ~9% alpha
                     wordEl.style.boxShadow = 'none';
 
                     // Force horizontal writing mode - prevent vertical text
@@ -997,7 +996,7 @@
 
                     // Start near target position with some randomness to prevent clumping
                     // This prevents words from appearing in a line at the top
-                    const randomOffset = 60; // pixels
+                    const randomOffset = 30; // tighter spawn radius
                     const xJitter = particle.targetX + (Math.random() - 0.5) * randomOffset;
                     const yJitter = particle.targetY + (Math.random() - 0.5) * randomOffset;
                     const minX = layout.padding.left + LAYOUT_CLAMP_BUFFER_X;
