@@ -790,6 +790,7 @@
 
                     // Click to delete
                     wordEl.addEventListener('click', () => {
+                        console.log('🖱️ Word clicked:', text);
                         hiddenWords.push(text);
 
                         // D3 transition for smooth fade out
@@ -799,8 +800,9 @@
                                 .duration(600)
                                 .ease(d3.easeCubicOut)
                                 .style('opacity', 0)
-                                .style('transform', 'scale(0.7)')
+                                .style('transform', 'translate(-50%, -50%) scale(0.5)')
                                 .on('end', () => {
+                                    console.log('✅ Word removed:', text);
                                     wordEl.remove();
                                     wordParticles = wordParticles.filter(p => p.el !== wordEl);
                                     if (wordParticles.length > 0) {
