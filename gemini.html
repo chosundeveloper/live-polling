@@ -1277,13 +1277,16 @@
                     isMockMode = true;
                     isMockPaused = false;
                     updateMockButtonState();
+                    ensureQrVisible();
                     navigateToQuestion(currentQuestionIndex, { force: true, preserveQr: true });
                     return;
                 }
 
                 if (isMockPaused) {
+                    ensureQrVisible();
                     resumeMockSimulation();
                 } else {
+                    ensureQrVisible();
                     pauseMockSimulation();
                 }
             });
