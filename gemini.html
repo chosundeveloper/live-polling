@@ -254,12 +254,12 @@
         const DEFAULT_PARTICLE_HEIGHT = 60; // Reverted to match display.html
 
         const WORD_PADDING = 100; // Reverted to match display.html
-        const EDGE_PADDING_RATIO_X = 0.015;
-        const EDGE_PADDING_RATIO_Y = 0.08;
-        const MIN_EDGE_PADDING_X = 20;
-        const MIN_EDGE_PADDING_Y = 70;
-        const RIGHT_EDGE_EXTRA_PADDING_RATIO = 0.04;
-        const MIN_RIGHT_EDGE_EXTRA_PADDING = 40;
+        const EDGE_PADDING_RATIO_X = 0.01;
+        const EDGE_PADDING_RATIO_Y = 0.05;
+        const MIN_EDGE_PADDING_X = 12;
+        const MIN_EDGE_PADDING_Y = 40;
+        const RIGHT_EDGE_EXTRA_PADDING_RATIO = 0.02;
+        const MIN_RIGHT_EDGE_EXTRA_PADDING = 20;
         const LAYOUT_CLAMP_BUFFER_X = 16;
         const LAYOUT_CLAMP_BUFFER_Y = 20;
         const MAX_DISPLAYED_WORDS = 70;
@@ -310,7 +310,7 @@
         const COLOR_PALETTE = ['#5e4fa2', '#3288bd', '#66c2a5', '#abdda4', '#e6f598', '#fee08b', '#fdae61', '#f46d43', '#d53e4f', '#9e0142'];
         // Exclude yellow (#e6f598 index 4), lime green (#abdda4 index 3), light orange (#fee08b index 5), orange (#fdae61 index 6), and dark red (#9e0142 index 9)
         const EXCLUDED_COLOR_INDICES = [3, 4, 5, 6, 9];
-        const MAX_CELL_SPREAD_RATIO = 0.35; // Slightly tighter spiral radius for denser layout
+        const MAX_CELL_SPREAD_RATIO = 0.5; // Allow words to occupy more of the canvas
         const INNER_CORE_RATIO = 0.06; // Inner core that stays stable (very small)
         const PUSH_THRESHOLD_RATIO = 0.10; // Start pushing outward very early
         function clampValue(value, min, max) {
@@ -646,7 +646,7 @@
                 .alphaDecay(0.002) // Slower decay for smooth settling
                 .velocityDecay(0.4) // Lower friction for fluid movement
                 .alphaMin(0.001)
-                .force('charge', d3.forceManyBody().strength(-15)) // Slightly weaker repulsion for tighter packing
+                .force('charge', d3.forceManyBody().strength(-10))
                 .force('wallRepulsion', alpha => {
                     const strength = 0.5 * alpha; // Strength of repulsion
                     wordParticles.forEach(p => {
@@ -664,8 +664,8 @@
                     const { width, height } = getParticleDimensions(d);
                     return Math.max(width, height) / 2 + 10;
                 }).strength(1.0).iterations(24))
-                .force('x', d3.forceX(d => d.targetX || centerW).strength(0.015)) // Weaker pull for more organic spread
-                .force('y', d3.forceY(d => d.targetY || centerH).strength(0.015))
+                .force('x', d3.forceX(d => d.targetX || centerW).strength(0.02))
+                .force('y', d3.forceY(d => d.targetY || centerH).strength(0.02))
                 .on('tick', () => {
                     wordParticles.forEach(p => {
                         if (p.fx !== null && p.fx !== undefined) return;
