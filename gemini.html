@@ -275,14 +275,14 @@
 
             // Target exactly 100 words if space permits
             // Use 80% capacity to allow reaching 100 words while relying on physics to prevent overlap
-            const densityLimit = Math.floor(maxCapacity * 0.80);
-            const MAX_WORDS = Math.min(100, densityLimit);
+            const densityLimit = Math.floor(maxCapacity * 0.65);
+            const MAX_WORDS = Math.min(70, densityLimit);
 
             console.log(`📐 Screen capacity: ${maxCapacity}, Density Limit: ${densityLimit}, Using: ${MAX_WORDS} max words (Target 100)`);
             return MAX_WORDS;
         }
 
-        let MAX_WORDS = 90; // Maximum 90 words visible at once
+        let MAX_WORDS = 70; // Maximum 70 words visible at once
         const INTRO_DURATION_BASE = 180000; // extremely slow duration (3 minutes)
         const INTRO_DURATION_VARIANCE = 20000;
         const INTRO_BLOOM_JITTER = 0; // No bloom
@@ -658,9 +658,9 @@
                 })
                 .force('collide', d3.forceCollide(d => {
                     const { width, height } = getParticleDimensions(d);
-                    // More relaxed collision with extra spacing for natural look
-                    return Math.hypot(width, height) / 2 + 15;
-                }).strength(1.0).iterations(16))
+                    // Encourage larger minimum gaps between words
+                    return Math.max(width, height) / 2 + 30;
+                }).strength(1.2).iterations(32))
                 .force('x', d3.forceX(d => d.targetX || centerW).strength(0.015)) // Weaker pull for more organic spread
                 .force('y', d3.forceY(d => d.targetY || centerH).strength(0.015))
                 .on('tick', () => {
@@ -981,7 +981,7 @@
 
                     // Start near target position with some randomness to prevent clumping
                     // This prevents words from appearing in a line at the top
-                    const randomOffset = 100; // pixels
+                    const randomOffset = 60; // pixels
                     const xJitter = particle.targetX + (Math.random() - 0.5) * randomOffset;
                     const yJitter = particle.targetY + (Math.random() - 0.5) * randomOffset;
                     const minX = layout.padding.left + LAYOUT_CLAMP_BUFFER_X;
