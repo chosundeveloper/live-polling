@@ -262,8 +262,8 @@
         const MIN_RIGHT_EDGE_EXTRA_PADDING = 10;
         const LAYOUT_CLAMP_BUFFER_X = 10;
         const LAYOUT_CLAMP_BUFFER_Y = 14;
-        const MAX_DISPLAYED_WORDS = 70;
-        const MIN_TARGET_WORDS = 70;
+        const MAX_DISPLAYED_WORDS = 100;
+        const MIN_TARGET_WORDS = 80;
 
         // Calculate max words based on screen space
         function calculateMaxWords() {
@@ -811,21 +811,8 @@
         }
 
         function pruneOldestParticles(maxCount = MAX_DISPLAYED_WORDS) {
-            if (wordParticles.length <= maxCount) {
-                return;
-            }
-
-            const overflow = wordParticles.length - maxCount;
-            const candidates = [...wordParticles]
-                .filter(p => p && p.el && !p.el.classList.contains('concept-word-removing'))
-                .sort((a, b) => (a.bornAt || 0) - (b.bornAt || 0));
-
-            for (let i = 0; i < overflow && i < candidates.length; i++) {
-                const particle = candidates[i];
-                if (particle?.el) {
-                    removeWordElement(particle.el, particle.el.dataset.originalText || '', { trackHidden: false });
-                }
-            }
+            // Intentionally noop: keep every word on screen regardless of count
+            return;
         }
 
         function renderWords(frequencyMap) {
@@ -876,32 +863,10 @@
             const geometry = getSpiralGeometry(layout, limited.length);
             const { centerW, centerH } = layout;
 
-            // Helper function to add click-to-delete functionality
-            function addClickToDelete(wordEl, text) {
-                // Check if already has click handler
-                if (wordEl.dataset.hasClickHandler === '1') return;
+            // Helper exists for legacy compatibility but we intentionally disable removals
+            function addClickToDelete(wordEl) {
                 wordEl.dataset.hasClickHandler = '1';
-
-                // Add cursor pointer for better UX
-                wordEl.style.cursor = 'pointer';
-
-                // Add hover effect
-                wordEl.addEventListener('mouseenter', () => {
-                    if (!wordEl.classList.contains('concept-word-removing')) {
-                        wordEl.style.opacity = '0.7';
-                    }
-                });
-
-                wordEl.addEventListener('mouseleave', () => {
-                    if (!wordEl.classList.contains('concept-word-removing')) {
-                        wordEl.style.opacity = '1';
-                    }
-                });
-
-                wordEl.addEventListener('click', (e) => {
-                    e.stopPropagation(); // Prevent event bubbling
-                    removeWordElement(wordEl, text);
-                });
+                wordEl.style.cursor = 'default';
             }
 
             limited.forEach(([uniqueId, data], index) => {
@@ -1229,14 +1194,7 @@
         }
 
         // --- Event Listeners ---
-        if (wordsLayer) {
-            wordsLayer.addEventListener('click', (event) => {
-                const target = event.target.closest('.concept-word');
-                if (!target) return;
-                const text = target.dataset.originalText || target.textContent || '';
-                removeWordElement(target, text);
-            }, true);
-        }
+        // Intentionally no click-to-remove handler so displayed words persist
 
         toggleMockBtn.addEventListener('click', () => {
             console.log('toggleMockBtn clicked. isMockMode before:', isMockMode);
