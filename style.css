@@ -1346,12 +1346,9 @@ footer a:hover {
 }
 
 .concept-question-display {
-    text-align: center;
+    text-align: left;
     flex-grow: 1;
     padding: 0 20px;
-    display: flex;
-    justify-content: center;
-    width: 100%;
 }
 
 .concept-question-display h2 {
@@ -1365,15 +1362,11 @@ footer a:hover {
     backdrop-filter: blur(10px);
     border: 2px solid rgba(255, 255, 255, 0.35);
     border-radius: 999px;
-    padding: 16px clamp(40px, 6vw, 140px);
+    padding: 16px clamp(36px, 5vw, 110px);
     box-shadow: 0 10px 35px rgba(86, 112, 228, 0.35);
-    display: flex;
-    width: 100%;
-    max-width: 1100px;
-    justify-content: center;
+    display: inline-flex;
     align-items: center;
     text-align: center;
-    margin: 0 auto;
 }
 
 .concept-question-desc {
