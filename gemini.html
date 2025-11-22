@@ -142,6 +142,7 @@
         let timerInterval = null;
         let timerDeadline = null;
         let d3Simulation = null;
+        let isTimerExpired = false;
         let sessionStartTime = null; // 페이지 로드 시점
 
         // --- Constants ---
@@ -492,14 +493,26 @@
             conceptUpdated.textContent = `${minutes}:${seconds}`;
             if (remaining <= 0) {
                 stopTimer();
+                if (!isTimerExpired) {
+                    handleTimerExpiration();
+                }
             }
         }
 
         function startTimer() {
             stopTimer();
+            isTimerExpired = false;
             timerDeadline = Date.now() + TIMER_DURATION_MS;
             updateTimerDisplay();
             timerInterval = setInterval(updateTimerDisplay, 1000);
+        }
+
+        function handleTimerExpiration() {
+            isTimerExpired = true;
+            console.log('⏰ Timer completed');
+            if (isMockMode) {
+                stopMockSimulation();
+            }
         }
 
         function updateParticleTargets() {
@@ -972,6 +985,13 @@
         // --- Data Fetching & Control ---
         // No longer needed - using broadcast only
 
+        function stopMockSimulation() {
+            if (simulationInterval) {
+                clearInterval(simulationInterval);
+                simulationInterval = null;
+            }
+        }
+
         function stopAllIntervals() {
             if (realtimeChannel) {
                 supabase.removeChannel(realtimeChannel);
@@ -995,6 +1015,7 @@
             conceptTotal.textContent = '0';
             stopTimer();
             conceptUpdated.textContent = '02:00';
+            isTimerExpired = false;
         }
 
         function startRealtimeSimulation() {
@@ -1041,6 +1062,11 @@
             }
 
             simulationInterval = setInterval(() => {
+                if (isTimerExpired) {
+                    console.log('⏹️ Mock generator halted: timer expired');
+                    stopMockSimulation();
+                    return;
+                }
                 const TARGET_MOCK_WORDS = 200; // Increased to 200 for mock mode
                 const MAX_VISIBLE_WORDS = 90; // Auto-delete when over 90
 
@@ -1089,6 +1115,7 @@
             conceptTotal.textContent = '0';
             stopTimer();
             conceptUpdated.textContent = '02:00';
+            isTimerExpired = false;
 
             const question = QUESTIONS[currentQuestionIndex];
             if (!question) return;
