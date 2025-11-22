@@ -1788,7 +1788,7 @@ footer a:hover {
 .concept-word {
     position: absolute;
     font-family: 'GangwonEduAll', 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif;
-    font-weight: 400;
+    font-weight: 600;
 
     -webkit-text-stroke: 0;
     text-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
