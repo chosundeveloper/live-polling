@@ -42,6 +42,7 @@ body {
 
     font-size: 15px;
     /* Default font size */
+    font-weight: 600;
 }
 
 body.display-body {
