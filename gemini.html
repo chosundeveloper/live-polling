@@ -726,6 +726,54 @@
             const centerH = containerHeight / 2;
             const geometry = getSpiralGeometry(containerWidth, containerHeight, limited.length);
 
+            // Helper function to add click-to-delete functionality
+            function addClickToDelete(wordEl, text) {
+                // Check if already has click handler
+                if (wordEl.dataset.hasClickHandler === '1') return;
+                wordEl.dataset.hasClickHandler = '1';
+
+                wordEl.addEventListener('click', () => {
+                    console.log('🖱️ Word clicked:', text);
+                    hiddenWords.push(text);
+
+                    // D3 transition for smooth fade out
+                    if (window.d3) {
+                        d3.select(wordEl)
+                            .transition()
+                            .duration(600)
+                            .ease(d3.easeCubicOut)
+                            .style('opacity', 0)
+                            .style('transform', 'translate(-50%, -50%) scale(0.5)')
+                            .on('end', () => {
+                                console.log('✅ Word removed:', text);
+                                wordEl.remove();
+                                wordParticles = wordParticles.filter(p => p.el !== wordEl);
+                                if (wordParticles.length > 0) {
+                                    updateParticleTargets();
+                                    if (!animationFrameId) simulationLoop(performance.now());
+                                } else {
+                                    wordsLayer.innerHTML = '<div class="concept-empty">첫 번째 단어를 기다리고 있어요</div>';
+                                    if (animationFrameId) { cancelAnimationFrame(animationFrameId); animationFrameId = null; }
+                                }
+                            });
+                    } else {
+                        wordEl.classList.remove('concept-word-visible');
+                        wordEl.classList.add('concept-word-hidden');
+                        setTimeout(() => {
+                            wordEl.remove();
+                            wordParticles = wordParticles.filter(p => p.el !== wordEl);
+                            if (wordParticles.length > 0) {
+                                updateParticleTargets();
+                                if (!animationFrameId) simulationLoop(performance.now());
+                            } else {
+                                wordsLayer.innerHTML = '<div class="concept-empty">첫 번째 단어를 기다리고 있어요</div>';
+                                if (animationFrameId) { cancelAnimationFrame(animationFrameId); animationFrameId = null; }
+                            }
+                        }, 700);
+                    }
+                });
+            }
+
             limited.forEach(([uniqueId, data], index) => {
                 const text = data.text;
                 const weight = data.weight;
@@ -752,6 +800,9 @@
                     particle.el.style.writingMode = 'horizontal-tb';
                     particle.el.style.textOrientation = 'mixed';
                     particle.el.classList.remove('concept-word-vertical');
+
+                    // Ensure click handler is attached to existing particles
+                    addClickToDelete(particle.el, text);
                 } else {
                     const wordEl = document.createElement('span');
                     wordEl.className = 'concept-word';
@@ -788,47 +839,9 @@
                     wordEl.style.writingMode = 'horizontal-tb';
                     wordEl.style.textOrientation = 'mixed';
 
-                    // Click to delete
-                    wordEl.addEventListener('click', () => {
-                        console.log('🖱️ Word clicked:', text);
-                        hiddenWords.push(text);
+                    // Add click to delete functionality
+                    addClickToDelete(wordEl, text);
 
-                        // D3 transition for smooth fade out
-                        if (window.d3) {
-                            d3.select(wordEl)
-                                .transition()
-                                .duration(600)
-                                .ease(d3.easeCubicOut)
-                                .style('opacity', 0)
-                                .style('transform', 'translate(-50%, -50%) scale(0.5)')
-                                .on('end', () => {
-                                    console.log('✅ Word removed:', text);
-                                    wordEl.remove();
-                                    wordParticles = wordParticles.filter(p => p.el !== wordEl);
-                                    if (wordParticles.length > 0) {
-                                        updateParticleTargets();
-                                        if (!animationFrameId) simulationLoop(performance.now());
-                                    } else {
-                                        wordsLayer.innerHTML = '<div class="concept-empty">첫 번째 단어를 기다리고 있어요</div>';
-                                        if (animationFrameId) { cancelAnimationFrame(animationFrameId); animationFrameId = null; }
-                                    }
-                                });
-                        } else {
-                            wordEl.classList.remove('concept-word-visible');
-                            wordEl.classList.add('concept-word-hidden');
-                            setTimeout(() => {
-                                wordEl.remove();
-                                wordParticles = wordParticles.filter(p => p.el !== wordEl);
-                                if (wordParticles.length > 0) {
-                                    updateParticleTargets();
-                                    if (!animationFrameId) simulationLoop(performance.now());
-                                } else {
-                                    wordsLayer.innerHTML = '<div class="concept-empty">첫 번째 단어를 기다리고 있어요</div>';
-                                    if (animationFrameId) { cancelAnimationFrame(animationFrameId); animationFrameId = null; }
-                                }
-                            }, 700);
-                        }
-                    });
 
                     wordsLayer.appendChild(wordEl);
 
